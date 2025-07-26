@@ -1,0 +1,595 @@
+import { Hono } from "hono";
+import { string, z } from "zod"
+import { ID, Query } from "node-appwrite";
+import { zValidator } from "@hono/zod-validator";
+
+import { getMember } from "@/features/members/utils";
+import { createSubTaskSchema, createTaskSchema } from "../schema";
+import { Task, TaskStatus } from "../types";
+import { ProjectType } from "@/features/projects/types";
+import { requireAuth } from "@/lib/require-auth";
+import { db } from "@/lib/db";
+import { endOfMonth, startOfMonth } from "date-fns";
+import { logActivity } from "@/lib/log-activity";
+
+
+const app = new Hono()
+    .delete("/:taskId",
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const { taskId } = c.req.param()
+
+
+            const task = await db.task.findUnique({
+                where: {
+                    id: taskId
+                }
+            })
+            if (!task) {
+                return c.json({ error: "task not found" }, 400)
+            }
+            const member = await getMember({
+                workspaceId: task.workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                return c.json({ error: "Unauthorized" }, 401)
+            }
+
+
+            await db.task.delete({
+                where: {
+                    id: taskId
+                }
+            })
+
+            return c.json({ data: { id: task.id } })
+        }
+    )
+    .get("/",
+        zValidator(
+            "query",
+            z.object({
+                workspaceId: z.string(),
+                projectId: z.string().nullish(),
+                assignedToId: z.string().nullish(),
+                status: z.nativeEnum(TaskStatus).nullish(),
+                search: z.string().nullish(),
+                dueDate: z.string().nullish(),
+            })
+        ),
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+
+            const { workspaceId,
+                projectId,
+                assignedToId,
+                status,
+                search,
+                dueDate
+            } = c.req.valid("query")
+            console.log(workspaceId,
+                projectId,
+                assignedToId,
+                status,
+                search,
+                dueDate)
+
+            const member = await getMember({
+                workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                return c.json({ error: "unauthorized" }, 401)
+            }
+            let query: Record<string, any> = {}
+
+            query.workspaceId = workspaceId
+
+
+            if (projectId) {
+                query.projectId = projectId
+            }
+            if (assignedToId) {
+                query.assignedToId = assignedToId
+            }
+            if (search) {
+                query.name = {
+                    contains: search,
+                    mode: "insensitive"
+                }
+            }
+            if (status) {
+                query.status = {
+                    equals: status
+                }
+            }
+
+            if (dueDate) {
+                query.dueDate = {
+                    equals: dueDate
+                }
+            }
+
+            const tasks = await db.task.findMany({
+                where: query,
+                orderBy: {
+                    createdAt: "desc"
+                },
+                include: {
+                    assignedTo: {
+                        select: {
+                            id: true,
+                            user: {
+                                select: {
+                                    name: true,
+                                    email: true
+                                }
+                            }
+                        }
+                    },
+                    project: {
+                        select: {
+                            id: true,
+                            name: true,
+                            imageUrl: true
+                        }
+                    }
+                }
+
+            })
+
+            if (tasks.length == 0) {
+                return c.json({
+                    data: {
+                        documents: [],
+                        total: 0
+                    }
+                })
+            }
+
+            return c.json({
+                data: {
+                    documents: tasks,
+                    total: tasks.length
+
+                }
+            })
+        }
+    )
+    .post("/",
+        zValidator("json", createTaskSchema),
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const {
+                name,
+                status,
+                workspaceId,
+                projectId,
+                dueDate,
+                startDate,
+                assignedToId,
+                description,
+                priority,
+                tags,
+                subTask,
+                comment
+            } = c.req.valid("json")
+            console.log("bava", c.req.valid("json"))
+
+            const member = await getMember({
+                workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                c.json({ error: "Unauthorized" }, 401)
+            }
+            const highestPositionTask = await db.task.findMany({
+                where: {
+                    status,
+                    workspaceId
+                },
+                orderBy: {
+                    position: "asc"
+                },
+                take: 1
+            })
+
+            const newPosition = highestPositionTask.length > 0 ? highestPositionTask[0].position + 1000 : 1000
+
+            const tagRecords = await Promise.all(
+                tags.map(async (tag: string) => {
+                    const normalized = tag.trim()
+                    return db.tags.upsert({
+                        where: {
+                            workspaceId_name: {
+                                workspaceId: workspaceId as string,
+                                name: normalized
+                            }
+                        },
+                        update: {},
+                        create: {
+                            workspaceId,
+                            name: normalized
+                        }
+                    })
+                })
+            )
+
+            const now = new Date()
+            const thisMonthStart = startOfMonth(now)
+            const thisMonthEnd = endOfMonth(now)
+            const task = await db.task.create({
+                data: {
+                    name,
+                    status,
+                    workspaceId,
+                    projectId,
+                    startDate: startDate ?? thisMonthStart,
+                    dueDate: dueDate ?? thisMonthEnd,
+                    assignedToId,
+                    position: newPosition,
+                    description,
+                    priority
+                }
+            })
+
+            await db.taskTags.createMany({
+                data: tagRecords.map((tag) => ({
+                    taskId: task.id,
+                    tagId: tag.id
+                })),
+                skipDuplicates: true
+            })
+
+            await logActivity({
+                workspaceId,
+                memberId: member.id,
+                actionType: "TASK_CREATED",
+                entityType: "TASK",
+                entityId: task.id,
+                entityTitle: task.name,
+                metadata: {},
+            })
+
+            return c.json({ data: task })
+        }
+    )
+    .patch("/:taskId",
+        zValidator("json", createTaskSchema.partial()),
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const { taskId } = c.req.param()
+
+            const {
+                name,
+                status,
+                description,
+                projectId,
+                dueDate,
+                assignedToId
+            } = c.req.valid("json")
+
+            const exisitingTask = await db.task.findUnique({
+                where: {
+                    id: taskId
+                }
+            })
+
+            if (!exisitingTask) {
+                return c.json({ error: "task not found" }, 400)
+            }
+
+
+            const member = await getMember({
+                workspaceId: exisitingTask.workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                c.json({ error: "Unauthorized" }, 401)
+            }
+
+
+
+            const task = await db.task.update({
+                where: {
+                    id: taskId
+                },
+                data: {
+                    name,
+                    status,
+                    description,
+                    projectId,
+                    dueDate,
+                    assignedToId,
+                }
+            })
+
+            return c.json({ data: task })
+
+        }
+    )
+    .get("/:taskId",
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const { taskId } = c.req.param()
+
+            const task = await db.task.findUnique({
+                where: {
+                    id: taskId
+                },
+                include: {
+                    assignedTo: {
+                        select: {
+                            id: true,
+                            user: {
+                                select: {
+                                    name: true,
+                                    email: true
+                                }
+                            }
+                        }
+                    },
+                    project: {
+                        select: {
+                            id: true,
+                            name: true,
+                            imageUrl: true
+                        }
+                    }
+                }
+            })
+            if (!task) {
+                return c.json({ error: 'Task not found' }, 400)
+            }
+
+            const currentMember = await getMember({
+                workspaceId: task.workspaceId,
+                userId: user.id
+            })
+
+            if (!currentMember) {
+                return c.json({ error: "unauthorized" }, 401)
+            }
+
+            // const project = await databases.getDocument<Project>(
+            //     DATABASE_ID,
+            //     PROJECTS_ID,
+            //     task.projectId
+            // )
+            // const member = await databases.getDocument(
+            //     DATABASE_ID,
+            //     MEMBERS_ID,
+            //     task.assigneeId
+
+            // )
+            // const user = await users.get(member.userId)
+            // const assignee = {
+            //     ...member,
+            //     name: user.name,
+            //     email: user.email,
+            // }
+
+            return c.json({
+                data: {
+                    task
+                }
+            })
+
+        }
+    )
+    .post("/:taskId/subtask",
+        zValidator("json", createSubTaskSchema),
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const { taskId } = c.req.param()
+
+            const { name, isDone } = c.req.valid("json")
+
+
+            const exisitingTask = await db.task.findUnique({
+                where: {
+                    id: taskId
+                }
+            })
+
+            if (!exisitingTask) {
+                return c.json({ error: "task not found" }, 400)
+            }
+
+
+            const member = await getMember({
+                workspaceId: exisitingTask.workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                c.json({ error: "Unauthorized" }, 401)
+            }
+
+            const subTask = await db.subTask.create({
+                data: {
+                    name,
+                    isDone
+                }
+            })
+
+
+
+            await logActivity({
+                workspaceId: exisitingTask.workspaceId,
+                memberId: member.id,
+                actionType: "SUBTASK_ADDED",
+                entityType: "TASK",
+                entityId: subTask.id,
+                entityTitle: subTask.name,
+                metadata: {
+                    "task_name": exisitingTask.name
+                },
+            })
+
+            return c.json({ data: subTask })
+        }
+    )
+    .patch("/:taskId/subtask/:subtaskId",
+        zValidator("json", createSubTaskSchema),
+        async (c) => {
+            const user = await requireAuth(c)
+
+            if (!user) {
+                throw new Error("Unauthourize")
+            }
+            const { taskId, subtaskId } = c.req.param()
+
+            const { name, isDone } = c.req.valid("json")
+
+
+            const exisitingTask = await db.task.findUnique({
+                where: {
+                    id: taskId
+                }
+            })
+
+            if (!exisitingTask) {
+                return c.json({ error: "task not found" }, 400)
+            }
+
+
+            const member = await getMember({
+                workspaceId: exisitingTask.workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                c.json({ error: "Unauthorized" }, 401)
+            }
+
+            // const subTask = await db.subTask.uodate({
+            //     where: {
+            //         id: subtaskId,
+            //         taskId
+            //     },
+            //     data: {
+            //         name,
+            //         isDone
+            //     }
+            // })
+
+
+
+            // await logActivity({
+            //     workspaceId: exisitingTask.workspaceId,
+            //     memberId: member.id,
+            //     actionType: "SUBTASK_ADDED",
+            //     entityType: "TASK",
+            //     entityId: subTask.id,
+            //     entityTitle: subTask.name,
+            //     metadata: {
+            //         "task_name": exisitingTask.name
+            //         ""
+            //     },
+            // })
+
+            return c.json({ data: "subTask" })
+        }
+    )
+    .post("/bulk-update",
+        zValidator(
+            "json",
+            z.object({
+                tasks: z.array(
+                    z.object({
+                        id: z.string(),
+                        status: z.nativeEnum(TaskStatus),
+                        position: z.number().int().positive().min(1000).max(1_000_000)
+                    })
+                )
+            })
+        ),
+        async (c) => {
+            try {
+
+
+                const user = await requireAuth(c)
+
+                if (!user) {
+                    throw new Error("Unauthourize")
+                }
+                const { tasks } = c.req.valid("json")
+
+
+                const tasksToUpdate = await db.task.findMany({
+                    where: {
+                        id: {
+                            in: tasks.map((task) => task.id)
+                        }
+                    }
+                })
+                const workspaceIds = new Set(tasksToUpdate.map(task => task.workspaceId))
+                if (workspaceIds.size !== 1) {
+                    return c.json({ error: "All tasks must belong to the sane workspace." })
+
+                }
+                console.log(workspaceIds)
+                const workspaceId = workspaceIds.values().next().value as string
+
+                const member = await getMember({
+                    workspaceId,
+                    userId: user.id
+                })
+
+                if (!member) {
+                    return c.json({ error: "Unauthorized" }, 401)
+                }
+
+                // const updatedTasks = await Promise.all(
+                //     tasks.map(async (task) => {
+                //         const { $id, status, position } = task
+                //         return databases.updateDocument<Task>(
+                //             DATABASE_ID,
+                //             TASKS_ID,
+                //             $id,
+                //             { status, position }
+                //         )
+                //     })
+                // )
+
+                const batchUpdate = tasks.map((task) => db.task.update({
+                    where: { id: task.id },
+                    data: {
+                        status: task.status,
+                        position: task.position
+                    }
+                }))
+
+                const updatedTasks = await db.$transaction(batchUpdate)
+                return c.json({ data: updatedTasks })
+            } catch (error) {
+                console.error("batch", error)
+            }
+        }
+    )
+
+export default app

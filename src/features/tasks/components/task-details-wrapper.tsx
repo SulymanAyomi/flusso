@@ -1,0 +1,38 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { useGetMembers } from "@/features/members/api/use-get-members";
+import { useGetProjects } from "@/features/projects/api/use-get-projects";
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { Loader } from "lucide-react";
+import { EditTaskForm } from "./edit-task-form";
+import { useGetTask } from "../api/use-get-task";
+import TaskDetails from "./task-details";
+
+interface TaskDetailWrapperProps {
+  onCancel: () => void;
+  id: string;
+}
+
+export const TaskDetailWrapper = ({ onCancel, id }: TaskDetailWrapperProps) => {
+  const workspaceId = useWorkspaceId();
+
+  const { data: initialValues, isLoading: isLoadingTask } = useGetTask({
+    taskId: id,
+  });
+
+  const isLoading = isLoadingTask;
+  if (isLoading) {
+    return (
+      <Card className="w-full h-[714px] border-none shadow-none">
+        <CardContent className="flex items-center justify-center h-full">
+          <Loader className="size-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!initialValues) {
+    return null;
+  }
+
+  return <TaskDetails task={initialValues.task} />;
+};

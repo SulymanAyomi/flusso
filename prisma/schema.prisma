@@ -1,0 +1,314 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // For credentials auth
+  accounts      Account[]
+  sessions      Session[]
+  members       Member[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  AINote        AINote[]
+
+  Workspace Workspace[]
+
+  PasswordResetToken PasswordResetToken[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model Workspace {
+  id         String    @id @default(uuid())
+  name       String
+  imageUrl   String
+  inviteCode String
+  ownerId    String
+  members    Member[]
+  projects   Project[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  owner      User      @relation(fields: [ownerId], references: [id])
+
+  Task Task[]
+
+  Tags Tags[]
+
+  Activity Activity[]
+}
+
+model Member {
+  id          String    @id @default(uuid())
+  userId      String
+  imageUrl    String?
+  workspaceId String
+  role        Role // "admin", "member", etc.
+  joinedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  Comment Comment[] @relation("CommentCreator")
+
+  Task Task[] @relation("TaskAssignee")
+
+  Activity Activity[]
+
+  Project Project[]
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  VIWER
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?
+  status      ProjectStatus @default(ACTIVE)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+  tasks       Task[]
+  createdById String
+  owner       Member        @relation(fields: [createdById], references: [id])
+  archived    Boolean
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  ProjectTags ProjectTags[]
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  ARCHIVED
+}
+
+model Task {
+  id           String       @id @default(uuid())
+  name         String
+  description  String?
+  status       TaskStatus   @default(TODO) // e.g. "todo", "in_progress", "done"
+  priority     TaskPriority @default(MEDIUM)
+  position     Int          @default(100)
+  startDate    DateTime?
+  dueDate      DateTime?
+  assignedTo   Member?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  assignedToId String?
+  project      Project      @relation(fields: [projectId], references: [id])
+  projectId    String
+  workspaceId  String
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id])
+  schedule     Schedule?
+  orderIndex   Int          @default(0)
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  Comment Comment[] @relation("TaskCommentedOn")
+
+  dependencies TaskDependency[] @relation("TaskDependencyFrom")
+
+  blockedBy TaskDependency[] @relation("TaskDependencyTo")
+
+  TaskTags TaskTags[]
+
+  Subtask Subtask[] @relation("TaskSubtasks")
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Subtask {
+  id     String  @id @default(cuid())
+  name   String
+  isDone Boolean @default(false)
+  taskId String
+  task   Task    @relation("TaskSubtasks", fields: [taskId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Schedule {
+  id        String   @id @default(uuid())
+  task      Task     @relation(fields: [taskId], references: [id])
+  taskId    String   @unique
+  startTime DateTime
+  endTime   DateTime
+  allDay    Boolean  @default(false)
+}
+
+model Comment {
+  id      String  @id @default(uuid())
+  content String
+  userId  String
+  taskId  String
+  user    Member? @relation("CommentCreator", fields: [userId], references: [id])
+  task    Task?   @relation("TaskCommentedOn", fields: [taskId], references: [id])
+}
+
+model AINote {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  content   String
+  metadata  Json
+  createdAt DateTime @default(now())
+}
+
+model Tags {
+  id          String    @id @default(uuid())
+  name        String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  TaskTags TaskTags[]
+
+  ProjectTags ProjectTags[]
+
+  @@unique([workspaceId, name], name: "workspaceId_name")
+}
+
+model TaskTags {
+  taskId String
+  tagId  String
+  task   Task   @relation(fields: [taskId], references: [id])
+  tag    Tags   @relation(fields: [tagId], references: [id])
+
+  @@id([taskId, tagId])
+}
+
+model ProjectTags {
+  projectId String
+  tagId     String
+  project   Project @relation(fields: [projectId], references: [id])
+  tag       Tags    @relation(fields: [tagId], references: [id])
+
+  @@id([projectId, tagId])
+}
+
+model TaskDependency {
+  id          String @id @default(uuid())
+  taskId      String
+  dependsOnId String
+
+  task      Task @relation("TaskDependencyTo", fields: [taskId], references: [id])
+  dependsOn Task @relation("TaskDependencyFrom", fields: [dependsOnId], references: [id])
+
+  @@unique([taskId, dependsOnId])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  workspaceId String
+  memberId    String // Member who performed the action
+  actionType  String
+  entityType  String?
+  entityId    String?
+  entityTitle String?
+  metadata    Json? // Extra context to render feed line
+  createdAt   DateTime @default(now())
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  member    Member    @relation(fields: [memberId], references: [id])
+}
+
+enum ActivityType {
+  TASK_CREATED
+  TASK_STATUS_UPDATED
+  TASK_ASSIGNED
+  TASK_TITLE_UPDATED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  COMMENT_ADDED
+  MEMBER_INVITED
+  MEMBER_JOINED
+  MEMBER_REMOVED
+}
+
+enum ActivityTarget {
+  task
+  project
+  comment
+  member
+  workspace
+}
