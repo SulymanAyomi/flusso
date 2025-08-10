@@ -74,8 +74,8 @@ Flusso is an AI-powered productivity and project management app that transforms 
 ### 1. Creating a Project with AI
 
 1. Log in to your account.
-2. Click **“Create Project”** → **“From Prompt”**.
-3. Enter your idea (e.g., _“Build a personal finance tracking app”_).
+2. Click **Create Project** → **From Prompt**.
+3. Enter your idea (e.g., _Build a personal finance tracking app_).
 4. Flusso will generate:
    - Project name & description
    - Structured tasks with due dates
@@ -85,7 +85,7 @@ Flusso is an AI-powered productivity and project management app that transforms 
 
 ### 2. Creating a Project Manually
 
-1. Click **“Create Project”** → **“Manual”**.
+1. Click **Create Project** → **Manual**.
 2. Enter project name, description, and tags.
 3. Add tasks manually or break them into subtasks.
 
@@ -101,13 +101,11 @@ Flusso is an AI-powered productivity and project management app that transforms 
 
 ### 4. Tracking Progress
 
-1. Use the **Dashboard Analytics** for workspace and project insights.
+1. Use **Dashboard Analytics** for workspace and project insights.
 2. Go to **My Tasks** to see all your assignments segmented by:
    - **Today**
    - **Upcoming**
    - **Overdue**
-
----
 
 ## 📖 Getting Started
 
@@ -149,6 +147,6 @@ See the [LICENSE](./LICENSE) file for full details.
 
 For questions, feedback, or support:
 
-- **Email:** [support@flussoapp.com](sulymanayomi@gmail.com)
+- **Email:** [support@flussoapp.com](mailto:support@flussoapp.com)
 - **Website:** [https://flussoapp.com](https://flussoapp.com)
 - **GitHub Issues:** [Report a bug or request a feature](https://github.com/sulymanayomi/flusso/issues)
