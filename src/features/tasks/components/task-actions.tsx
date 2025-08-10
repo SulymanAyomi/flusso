@@ -1,5 +1,10 @@
 import { useRouter } from "next/navigation";
-import { ExternalLinkIcon, PencilIcon, TrashIcon } from "lucide-react";
+import {
+  ExternalLinkIcon,
+  LinkIcon,
+  PencilIcon,
+  TrashIcon,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +16,7 @@ import { useDeleteTask } from "../api/use-delete-task";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useEditTaskModal } from "../hooks/use-edit-task-modal";
 import { useTaskDetailsModal } from "../hooks/use-task-details-modal";
+import { useTaskDependenciesModal } from "../hooks/use-task-dependencies";
 
 interface TaskActionsProps {
   id: string;
@@ -23,6 +29,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
 
   const { open } = useEditTaskModal();
   const { open: openTask } = useTaskDetailsModal();
+  const { open: openDep } = useTaskDependenciesModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete task",
@@ -73,6 +80,14 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
           >
             <PencilIcon className="size-4 mr-2 stroke-2" />
             Edit Task
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => openDep(id)}
+            disabled={false}
+            className="font-medium p-[10px]"
+          >
+            <LinkIcon className="size-4 mr-2 stroke-2" />
+            Edit dependencies
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}

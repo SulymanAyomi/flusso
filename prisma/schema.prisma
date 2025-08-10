@@ -217,12 +217,13 @@ model Schedule {
 }
 
 model Comment {
-  id      String  @id @default(uuid())
-  content String
-  userId  String
-  taskId  String
-  user    Member? @relation("CommentCreator", fields: [userId], references: [id])
-  task    Task?   @relation("TaskCommentedOn", fields: [taskId], references: [id])
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  taskId    String
+  user      Member?  @relation("CommentCreator", fields: [userId], references: [id])
+  task      Task?    @relation("TaskCommentedOn", fields: [taskId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model AINote {

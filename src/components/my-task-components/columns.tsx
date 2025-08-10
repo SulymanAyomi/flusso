@@ -1,15 +1,15 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { EditTask, Task } from "../types";
+import { EditTask } from "@/features/tasks/types";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, MoreVertical } from "lucide-react";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { TaskDate } from "./task-date";
+import { TaskDate } from "@/features/tasks/components/task-date";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { TaskActions } from "./task-actions";
+import { TaskActions } from "@/features/tasks/components/task-actions";
 
 export const columns: ColumnDef<EditTask>[] = [
   {
@@ -30,33 +30,30 @@ export const columns: ColumnDef<EditTask>[] = [
       return <p className="line-clamp-1">{name}</p>;
     },
   },
-  // {
-  //   accessorKey: "projects",
-  //   header: ({ column }) => {
-  //     return (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       >
-  //         Project
-  //         <ArrowUpDown className="ml-2 h-4 w-4" />
-  //       </Button>
-  //     );
-  //   },
-  //   cell: ({ row }) => {
-  //     const project = row.original.project;
-  //     return (
-  //       <div className="flex items-center gap-x-2 font-medium">
-  //         <ProjectAvatar
-  //           className="size-6"
-  //           name={project.name}
-  //           image={project.imageUrl}
-  //         />
-  //         <p className="line-clamp-1">{project.name}</p>
-  //       </div>
-  //     );
-  //   },
-  // },
+  {
+    accessorKey: "projects",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Project
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const project = row.original.project;
+      const img = project.imageUrl ?? undefined;
+      return (
+        <div className="flex items-center gap-x-2 font-medium">
+          <ProjectAvatar className="size-6" name={project.name} image={img} />
+          <p className="line-clamp-1">{project.name}</p>
+        </div>
+      );
+    },
+  },
   {
     accessorKey: "assignee",
     header: ({ column }) => {

@@ -10,8 +10,8 @@ import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { FolderIcon, ListChecksIcon, SearchIcon, UserIcon } from "lucide-react";
-import { TaskStatus } from "../types";
-import { useTaskFilters } from "../hooks/use-task-filters";
+import { TaskStatus } from "../../types";
+import { useTaskFilters } from "../../hooks/use-task-filters";
 import { DatePicker } from "@/components/date-picker";
 import { Input } from "@/components/ui/input";
 import { snakeCaseToTitleCase } from "@/lib/utils";
@@ -62,7 +62,7 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
   if (isLoading) return null;
 
   return (
-    <div className="flex flex-row lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
       <div className="flex flex-col lg:flex-row gap-2">
         <Select
           defaultValue={status ?? undefined}

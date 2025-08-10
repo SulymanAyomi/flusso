@@ -16,10 +16,32 @@ export const createTaskSchema = z.object({
     comment: z.string().optional(),
     subTask: z.array(z.string()),
     tags: z.array(z.string()),
+    dependencies: z.array(z.string()),
+})
+
+
+
+export const createTaskDependenciesSchema = z.object({
+    dependencies: z.array(z.string()),
+
 })
 
 export const createSubTaskSchema = z.object({
-    name: z.string().min(1, "Required"),
-    isDone: z.boolean({ required_error: "Required" })
+    name: z.string(),
+    isDone: z.boolean()
 
+})
+export const changeSubTaskSchema = z.object({
+    id: z.string(),
+    isDone: z.boolean()
+
+})
+export const createMultipleSubTaskSchema = z.object({
+    subTasks: z.array(z.object({
+        name: z.string(),
+        isDone: z.boolean()
+    })),
+})
+export const createCommentsSchema = z.object({
+    content: z.string().min(2, "2 or more characters is required"),
 })

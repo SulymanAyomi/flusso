@@ -3,9 +3,10 @@ import Sidebar from "@/components/siderbar";
 import { getCurrent } from "@/features/auth/query";
 import { CreateProjectModal } from "@/features/projects/components/create-project-modal";
 import { EditProjectModal } from "@/features/projects/components/edit-project-modal";
-import { CreateTaskModal } from "@/features/tasks/components/create-task-modal";
-import { EditTaskModal } from "@/features/tasks/components/edit-task-modal";
-import { TaskDetailsModal } from "@/features/tasks/components/task-details-modal";
+import { CreateTaskModal } from "@/features/tasks/components/create-task-form/create-task-modal";
+import { EditTaskModal } from "@/features/tasks/components/edit-task-form/edit-task-modal";
+import { TaskDependenciesModal } from "@/features/tasks/components/task-dependencies/edit-dependencies-modal";
+import { TaskDetailsModal } from "@/features/tasks/components/task-details/task-details-modal";
 import { CreateWorkspaceModal } from "@/features/workspaces/components/create-workspace-modal";
 import { redirect } from "next/navigation";
 
@@ -19,6 +20,7 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen">
       <CreateTaskModal />
+      <TaskDependenciesModal />
       <TaskDetailsModal />
       <EditTaskModal />
       <CreateProjectModal />

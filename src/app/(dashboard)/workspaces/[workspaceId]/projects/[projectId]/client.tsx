@@ -10,7 +10,7 @@ import { useGetProject } from "@/features/projects/api/use-get-project";
 import { useGetProjectAnalytics } from "@/features/projects/api/use-get-project-analytics";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
-import { TaskViewSwitcher } from "@/features/tasks/components/task-view-switcher";
+import { TaskViewSwitcher } from "@/features/tasks/components/tasks-view/task-view-switcher";
 import {
   ArrowUp,
   Calendar,
@@ -42,8 +42,6 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { CreateTaskForm } from "@/features/tasks/components/create-task-form";
-import { CreateWorkspaceForm } from "@/features/workspaces/components/create-workspace-form";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -632,7 +630,10 @@ export const ProjectIdClient = () => {
             <div className="border rounded-md h-32">
               <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
                 {tagslist.map((l, index) => (
-                  <div className="p-1 px-2 bg-blue-200 text-blue-800 rounded-[12px] text-[10px]">
+                  <div
+                    className="p-1 px-2 bg-blue-200 text-blue-800 rounded-[12px] text-[10px]"
+                    key={index}
+                  >
                     UI design
                   </div>
                 ))}
@@ -670,7 +671,10 @@ const TeamMembers = ({ teams }: TeamMembersProps) => (
   <div className="flex gap-1">
     {teams.map((team) =>
       team.id ? (
-        <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold">
+        <div
+          className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold"
+          key={team.id}
+        >
           <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
             {team.user.image ? (
               <Image src={team.user.image} alt={team.user.name![0]} />

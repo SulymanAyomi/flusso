@@ -1,4 +1,4 @@
-import { Task } from "../types";
+import { EditTask, Task } from "../../types";
 import {
   format,
   getDay,
@@ -35,7 +35,7 @@ const localizer = dateFnsLocalizer({
 });
 
 interface DataCalenderProps {
-  data: Task[];
+  data: EditTask[];
 }
 
 interface CustomToolbarProps {
@@ -70,17 +70,17 @@ const CustomToolbar = ({ date, onNavigate }: CustomToolbarProps) => (
 
 export const DataCalendar = ({ data }: DataCalenderProps) => {
   const [value, setValue] = useState(
-    data.length > 0 ? new Date(data[0].dueDate) : new Date()
+    data.length > 0 ? new Date(data[0].dueDate!) : new Date()
   );
 
   const events = data.map((task) => ({
-    start: new Date(task.dueDate),
-    end: new Date(task.dueDate),
+    start: new Date(task.dueDate!),
+    end: new Date(task.dueDate!),
     title: task.name,
     project: task.project,
-    assignee: task.assignee,
+    assignedTo: task.assignedTo,
     status: task.status,
-    id: task.$id,
+    id: task.id,
   }));
 
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
@@ -112,7 +112,7 @@ export const DataCalendar = ({ data }: DataCalenderProps) => {
           <EventCard
             id={event.id}
             title={event.title}
-            assignee={event.assignee}
+            assignedTo={event.assignedTo}
             project={event.project}
             status={event.status}
           />

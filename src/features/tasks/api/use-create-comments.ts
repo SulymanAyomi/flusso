@@ -4,32 +4,32 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-type ResponseType = InferResponseType<typeof client.api.tasks["bulk-update"]["$post"], 200>
-type RequestType = InferRequestType<typeof client.api.tasks["bulk-update"]["$post"]>
+type ResponseType = InferResponseType<typeof client.api.tasks[":taskId"]["comments"]["$post"], 200>
+type RequestType = InferRequestType<typeof client.api.tasks[":taskId"]["comments"]["$post"]>
 
 
-export const useBulkUpdateTask = () => {
+export const useCreateComments = () => {
     const queryClient = useQueryClient()
     const mutation = useMutation<
         ResponseType,
         Error,
         RequestType
     >({
-        mutationFn: async ({ json }) => {
-            const response = await client.api.tasks["bulk-update"]["$post"]({ json })
+        mutationFn: async ({ json, param }) => {
+            const response = await client.api.tasks[":taskId"]["comments"]["$post"]({ json, param })
             if (!response.ok) {
-                throw new Error("Failed to create task")
+                throw new Error("Failed to create comment")
             }
             return await response.json()
         },
-        onSuccess: () => {
-            toast.success("Task updated")
+        onSuccess: ({ data }) => {
+            toast.success("New comment added")
+            queryClient.invalidateQueries({ queryKey: ["comments", data.taskId] })
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["tasks"] })
         },
         onError: () => {
-            toast.error("Failed to update task")
+            toast.error("Failed to create comment")
         }
     })
     return mutation

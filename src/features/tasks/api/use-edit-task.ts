@@ -22,15 +22,17 @@ export const useEditTask = () => {
             }
             return await response.json()
         },
+        // @ts-ignore
         onSuccess: ({ data }) => {
             toast.success("Task updated successfully")
+            console.log("Task updated successfully", data)
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["tasks"] })
-            queryClient.invalidateQueries({ queryKey: ["task", data.$id] })
+            queryClient.invalidateQueries({ queryKey: ["task", data.id] })
         },
         onError: () => {
-            toast.error("Failed to create task")
+            toast.error("Failed to update task")
         }
     })
     return mutation

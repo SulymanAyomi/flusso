@@ -1,5 +1,4 @@
 import { TaskStatus as PrismaTaskStatus, TaskPriority as PrismaTaskPriority } from "@/generated/prisma"
-
 export enum TaskStatus {
     BACKLOG = "BACKLOG",
     TODO = "TODO",
@@ -54,4 +53,9 @@ export type EditTask = Task & {
         id: string;
         imageUrl: string | null;
     };
+    dependencies: {
+        dependsOnId: string;
+        id: string;
+        taskId: string;
+    }[];
 }

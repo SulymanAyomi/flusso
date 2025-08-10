@@ -678,7 +678,14 @@ const app = new Hono()
                     name: true,
                     priority: true,
                     dueDate: true,
-                    status: true
+                    status: true,
+                    project: {
+                        select: {
+                            name: true,
+                            imageUrl: true
+                        }
+                    },
+                    assignedTo: true
                 },
                 take: 5
 

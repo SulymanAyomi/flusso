@@ -10,12 +10,14 @@ import {
   Clock,
   File,
   Image,
+  LinkIcon,
   Loader,
   Plus,
   PlusIcon,
   SmileIcon,
   Star,
   TagIcon,
+  UserIcon,
   UsersIcon,
   XIcon,
 } from "lucide-react";
@@ -30,7 +32,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DatePicker } from "@/components/date-picker";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -44,16 +45,14 @@ import {
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 
-import { createTaskSchema } from "../schema";
-import { TaskStatus, TaskPriority } from "../types";
-import { useCreateTask } from "../api/use-create-task";
+import { createTaskSchema } from "../../schema";
+import { TaskStatus, TaskPriority } from "../../types";
+import { useCreateTask } from "../../api/use-create-task";
 import { Input } from "@/components/ui/input";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { useState } from "react";
-import { toast } from "sonner";
-import { CreateTagForm } from "@/features/tags/components/create-tags-form";
+
 import {
   Popover,
   PopoverContent,
@@ -63,14 +62,16 @@ import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 interface CreateTaskFormProps {
   onCancel: () => void;
-  projectOptions: { id: string; name: string; imageUrl: string }[];
+  projectOptions: { id: string; name: string; imageUrl: string | null }[];
   memberOptions: { id: string; name: string }[];
+  taskOptions?: { id: string; name: string }[];
 }
 
 export const CreateTaskForm = ({
   onCancel,
   projectOptions,
   memberOptions,
+  taskOptions,
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const projectId = useProjectId();
@@ -93,6 +94,17 @@ export const CreateTaskForm = ({
     });
   };
 
+  const [selectedTasks, setSelectedTasks] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const toggleTask = (newTask: { id: string; name: string }) => {
+    setSelectedTasks((prev) => {
+      return prev.find((task) => task.id == newTask.id)
+        ? prev.filter((task) => task.id !== newTask.id)
+        : [...prev, newTask];
+    });
+  };
+
   const { mutate, isPending } = useCreateTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
@@ -102,6 +114,7 @@ export const CreateTaskForm = ({
       projectId,
       tags: [],
       subTask: [],
+      dependencies: [],
     },
   });
 
@@ -110,7 +123,15 @@ export const CreateTaskForm = ({
     setComments(commentInput);
 
     mutate(
-      { json: { ...values, subTask, comment, tags: selectedTags } },
+      {
+        json: {
+          ...values,
+          subTask,
+          comment,
+          tags: selectedTags,
+          dependencies: selectedTasks.map((task) => task.id),
+        },
+      },
       {
         onSuccess: () => {
           form.reset();
@@ -332,7 +353,7 @@ export const CreateTaskForm = ({
               render={({ field }) => (
                 <FormItem className="flex items-center w-full">
                   <FormLabel className="flex text-black w-[25%] gap-1">
-                    <UsersIcon className="size-5 text-neutral-700" />
+                    <UserIcon className="size-5 text-neutral-700" />
                     <p>Assignees</p>
                   </FormLabel>
                   <Select
@@ -408,6 +429,45 @@ export const CreateTaskForm = ({
                 ))}
               </div>
             </div>
+
+            {taskOptions && taskOptions.length > 0 && (
+              <div className="flex items-center w-full">
+                <div className="flex w-[25%] gap-1">
+                  <LinkIcon className="size-5 text-neutral-400" />
+                  <p>Depends on</p>
+                </div>
+                <div className="flex-1 flex gap-1 items-center justify-items-start flex-wrap">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="p-1 h-full w-fit bg-neutral-200 text-black rounded-full text-[10px]">
+                        <PlusIcon className="size-4" />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px]">
+                      <TaskDependency
+                        taskOptions={taskOptions}
+                        selectedTask={selectedTasks}
+                        toggleTask={toggleTask}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {selectedTasks.map((task, index) => (
+                    <div
+                      key={index}
+                      className="p-1 px-2 bg-blue-200 text-blue-800 rounded-[12px] text-[12px] flex gap-1 items-center"
+                    >
+                      {task.name}
+                      <span
+                        onClick={() => toggleTask(task)}
+                        className="text-black bg-blue-500 rounded-full p-[2px]"
+                      >
+                        <XIcon className="size-3" />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <FormField
               control={form.control}
               name="description"
@@ -586,6 +646,48 @@ const AddTags = ({
         >
           <ArrowUpIcon />
         </Button>
+      </div>
+    </div>
+  );
+};
+
+interface TaskDependencyProps {
+  taskOptions?: { id: string; name: string }[];
+  selectedTask: { id: string; name: string }[];
+  toggleTask: (task: { id: string; name: string }) => void;
+}
+
+const TaskDependency = ({
+  taskOptions,
+  selectedTask,
+  toggleTask,
+}: TaskDependencyProps) => {
+  return (
+    <div className="bg-white p-1 mb-1.5 rounded-[12px] shadow-sm space-y-3  mx-auto">
+      <div className="flex items-start justify-between gap-x-2">
+        <p className="text-[10px]">
+          Select tasks that must be completed before this one can be marked as
+          complete.
+        </p>
+      </div>
+      {/* <DottedSeparator /> */}
+      <div className="border rounded-md min-h-4">
+        <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
+          {taskOptions?.map((task, index) => (
+            <div
+              key={index}
+              onClick={() => toggleTask(task)}
+              className={cn(
+                "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
+                selectedTask.includes(task)
+                  ? "bg-blue-200 text-blue-800"
+                  : "bg-neutral-200 border-gray-300"
+              )}
+            >
+              {task.name}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

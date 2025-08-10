@@ -12,18 +12,18 @@ import { DottedSeparator } from "@/components/dotted-separator";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useCreateTaskModal } from "../hooks/use-create-task-modal";
-import { useTaskFilters } from "../hooks/use-task-filters";
+import { useCreateTaskModal } from "../../hooks/use-create-task-modal";
+import { useTaskFilters } from "../../hooks/use-task-filters";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { useGetTasks } from "../api/use-get-tasks";
+import { useGetTasks } from "../../api/use-get-tasks";
 import { DataFilters } from "./data-filters";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { DataKanban } from "@/components/data-kanban";
 import { useCallback } from "react";
-import { useBulkUpdateTask } from "../api/use-bulk-update-task";
-import { TaskStatus } from "../types";
+import { useBulkUpdateTask } from "../../api/use-bulk-update-task";
+import { TaskStatus } from "../../types";
 import { DataCalendar } from "./data-calender";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
@@ -61,12 +61,9 @@ export const TaskViewSwitcher = ({
   );
 
   return (
-    <Tabs
-      defaultValue={view}
-      onValueChange={setView}
-      className="flex-1 w-full border-t"
-    >
+    <Tabs defaultValue={view} onValueChange={setView} className="flex-1 w-full">
       <div className="h-full flex flex-col overflow-auto border-b px-4">
+        <p className="text-lg font-semibold">All Tasks</p>
         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center ">
           <TabsList className="w-full lg:w-fit bg-white pb-0  gap-4 justify-start">
             <TabsTrigger
@@ -112,7 +109,11 @@ export const TaskViewSwitcher = ({
         ) : (
           <>
             <TabsContent value="table" className="mt-0">
-              <DataTable columns={columns} data={tasks?.documents ?? []} />
+              <DataTable
+                columns={columns}
+                data={tasks?.documents ?? []}
+                hideproject={hideProjectFilter}
+              />
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">
               <DataKanban

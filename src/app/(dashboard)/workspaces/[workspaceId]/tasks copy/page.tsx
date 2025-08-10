@@ -1,13 +1,16 @@
 import { getCurrent } from "@/features/auth/query";
 import { TaskViewSwitcher } from "@/features/tasks/components/tasks-view/task-view-switcher";
 import { redirect } from "next/navigation";
-import { MyTaskClient } from "./client";
 
 const TaskPage = async () => {
   const user = await getCurrent();
   if (!user) redirect("/sign-in");
 
-  return <MyTaskClient />;
+  return (
+    <div className="h-full flex flex-col">
+      <TaskViewSwitcher />
+    </div>
+  );
 };
 
 export default TaskPage;

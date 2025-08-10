@@ -29,17 +29,17 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/date-picker";
 
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 
-import { createTaskSchema } from "../schema";
-import { EditTask, Task, TaskStatus } from "../types";
-import { useEditTask } from "../api/use-edit-task";
+import { createTaskSchema } from "../../schema";
+import { EditTask, Task, TaskStatus } from "../../types";
+import { useEditTask } from "../../api/use-edit-task";
 import {
   ArrowUpIcon,
   Calendar,
   CheckCircle2Icon,
   FileIcon,
   ImageIcon,
+  LinkIcon,
   Loader,
   Plus,
   PlusIcon,
@@ -89,6 +89,7 @@ export const EditTaskForm = ({
         : [...prev, tag];
     });
   };
+
   const { mutate, isPending } = useEditTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
@@ -113,6 +114,7 @@ export const EditTaskForm = ({
         : undefined,
       status: initialValues.status,
       priority: initialValues.priority,
+      dependencies: [],
     },
   });
 
@@ -395,6 +397,7 @@ export const EditTaskForm = ({
                   ))}
                 </div>
               </div>
+
               <FormField
                 control={form.control}
                 name="description"
@@ -501,6 +504,48 @@ const AddTags = ({
         >
           <ArrowUpIcon />
         </Button>
+      </div>
+    </div>
+  );
+};
+
+interface TaskDependencyProps {
+  taskOptions?: { id: string; name: string }[];
+  selectedTask: { id: string; name: string }[];
+  toggleTask: (task: { id: string; name: string }) => void;
+}
+
+const TaskDependency = ({
+  taskOptions,
+  selectedTask,
+  toggleTask,
+}: TaskDependencyProps) => {
+  return (
+    <div className="bg-white p-1 mb-1.5 rounded-[12px] shadow-sm space-y-3  mx-auto">
+      <div className="flex items-start justify-between gap-x-2">
+        <p className="text-[10px]">
+          Select tasks that must be completed before this one can be marked as
+          complete.
+        </p>
+      </div>
+      {/* <DottedSeparator /> */}
+      <div className="border rounded-md min-h-4">
+        <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
+          {taskOptions?.map((task, index) => (
+            <div
+              key={index}
+              onClick={() => toggleTask(task)}
+              className={cn(
+                "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
+                selectedTask.includes(task)
+                  ? "bg-blue-200 text-blue-800"
+                  : "bg-neutral-200 border-gray-300"
+              )}
+            >
+              {task.name}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
