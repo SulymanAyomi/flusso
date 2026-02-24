@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
@@ -22,7 +22,6 @@ import {
   Form,
   FormLabel,
 } from "@/components/ui/form";
-import { DottedSeparator } from "@/components/dotted-separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -57,6 +56,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
       {
         onSuccess: (data) => {
           form.reset();
+          // router.push(`/workspaces/${data.data.id}`);
         },
       }
     );
@@ -183,11 +183,21 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                 onClick={onCancel}
                 className={cn(!onCancel && "invisible")}
               >
-                Cancle
+                Cancel
               </Button>
-
-              <Button size="lg" disabled={isPending}>
-                Create Workspace
+              <Button
+                size="lg"
+                disabled={isPending}
+                className="disabled:opacity-50"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2Icon className="mr-1 h-full animate-spin " />
+                    Creating workspace
+                  </>
+                ) : (
+                  "Create workspace"
+                )}
               </Button>
             </div>
           </form>

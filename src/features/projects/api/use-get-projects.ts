@@ -6,12 +6,12 @@ import { ProjectsStatus } from "../types";
 
 interface useGetProjectsProps {
     workspaceId: string;
-    search?: string | null;
-    status?: ProjectsStatus | null;
-    assigneeId?: string | null;
-    dueDate?: string | null;
-    ownerId?: string | null;
-    archived?: boolean | null;
+    search?: string;
+    status?: ProjectsStatus;
+    assigneeId?: string;
+    dueDate?: string;
+    ownerId?: string;
+    archived?: boolean;
 }
 
 export type AllProjectsResponseType = InferResponseType<typeof client.api.projects["$get"], 200>
@@ -22,14 +22,13 @@ export const useGetProjects = ({ workspaceId, status, ownerId, dueDate, archived
         queryKey: ["projects", JSON.stringify({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId })
         ],
         queryFn: async () => {
-            console.log("hello i ran", assigneeId, status, ownerId, dueDate, archived, search)
             const response = await client.api.projects["$get"]({
                 query: {
                     workspaceId,
-                    status: status ?? undefined,
-                    ownerId: ownerId ?? undefined,
-                    dueDate: dueDate ?? undefined,
-                    search: search ?? undefined
+                    status: status,
+                    ownerId: ownerId,
+                    dueDate: dueDate,
+                    search: search
                 }
             });
 

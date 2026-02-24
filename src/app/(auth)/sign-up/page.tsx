@@ -8,8 +8,6 @@ const SignUpPage = async () => {
   if (user) {
     redirect("/");
   }
-
-
   return <SignUpCard />;
 };
 

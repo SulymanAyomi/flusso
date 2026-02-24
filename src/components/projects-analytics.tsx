@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { formatTwoDigits } from "@/lib/utils";
 
 const ProjectsAnalytics = () => {
   const workspaceId = useWorkspaceId();
@@ -27,7 +26,7 @@ const ProjectsAnalytics = () => {
   if (isLoadingAnalytics || !data) {
     const load = [1, 2, 3, 4];
     return (
-      <div className="grid grid-cols-4 gap-4 py-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
         {load.map((l) => (
           <Card
             key={l}
@@ -64,7 +63,7 @@ const ProjectsAnalytics = () => {
     );
   }
   return (
-    <div className="grid grid-cols-4 gap-4 py-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
       <Card className=" bg-green-100 text-green-900 flex flex-col gap-6 py-6 shadow-sm">
         <CardHeader className="px-3 py-0">
           <div className="flex items-center justify-start">
@@ -76,34 +75,28 @@ const ProjectsAnalytics = () => {
         </CardHeader>
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
-            <div className="font-bold text-xl">
-              {formatTwoDigits(data?.totalCompletedTasksCount!)}
-            </div>
+            <div className="font-bold text-xl">{data?.completedTasks}</div>
             <div className="text-xs">Tasks completed</div>
           </div>
           <div>
             <div className="text-xs flex flex-col items-start">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-green-600 h-fit rounded-full"></span>
-                <p>Total: {data.totalTasksCount}</p>
+                <p>Total: {data.totalTasks}</p>
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-                <p>Delayed: {data.totalDelayTasksCount}</p>
+                <p>Over due: {data.overdueTasks}</p>
               </div>
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-yellow-600 h-fit rounded-full"></span>
-                <p>Not started: {data.totalNotStartedTasksCount}</p>
+                <p>unassigned: {data.unassignedTasks}</p>
               </div>
             </div>
           </div>
         </CardContent>
         <CardFooter className="px-3 py-0">
-          <div className="flex flex-1  items-center justify-between">
-            <div className="bg-green-700 text-green-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              <ArrowUp className="size-3" />
-              {data.taskDifference}% more than last week
-            </div>
+          <div className="flex flex-1  items-center justify-end">
             <div className="text-[10px] flex items-center hover:underline hover:cursor-pointer">
               view tasks
               <span>
@@ -125,7 +118,7 @@ const ProjectsAnalytics = () => {
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(data!.totalOverdueTasksCount)}
+              {data!.thisweekOverdueTasks}
             </div>
             <div className="text-xs">Task overdue this week</div>
           </div>
@@ -133,15 +126,15 @@ const ProjectsAnalytics = () => {
             <div className="text-xs flex flex-col items-start">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-                <p>High: {data.highPriorityTasksCount}</p>
+                <p>High: {data.thisweekHighPriorityTasks}</p>
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-red-400 h-fit rounded-full"></span>
-                <p>Medium: {data.medPriorityTasksCount}</p>
+                <p>Medium: {data.thisweekMediumPriorityTasks}</p>
               </div>
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-red-300 h-fit rounded-full"></span>
-                <p>Low: {data.lowPriorityTasksCount}</p>
+                <p>Low: {data.thisweekLowPriorityTasks}</p>
               </div>
             </div>
           </div>
@@ -149,8 +142,7 @@ const ProjectsAnalytics = () => {
         <CardFooter className="px-3 py-0">
           <div className="flex flex-1  items-center justify-between">
             <div className="bg-red-700 text-red-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              <ArrowUp className="size-3" />
-              15% more than last month
+              <PercentShow data={data.taskChange} />
             </div>
           </div>
         </CardFooter>
@@ -166,24 +158,18 @@ const ProjectsAnalytics = () => {
         </CardHeader>
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
-            <div className="font-bold text-xl">
-              {formatTwoDigits(data!.TotalAssignedTasks)}
-            </div>
+            <div className="font-bold text-xl">{data.myTotalOverdueTasks}</div>
             <div className="text-xs">Tasks assigned</div>
           </div>
           <div>
             <div className="text-xs flex flex-col items-start">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-green-600 h-fit rounded-full"></span>
-                <p>Complete: {data.completedAssignedTasks}</p>
-              </div>
-              <div className="flex gap-1 items-center ">
-                <span className="p-1 bg-blue-600 h-fit rounded-full"></span>
-                <p>Today: {data.todayAssignedTasks}</p>
+                <p>Completed: {data.completedAssignedTasks}</p>
               </div>
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-                <p>Overdue: {data.overdueAssignedTasks}</p>
+                <p>Overdue: {data.myTotalOverdueTasks}</p>
               </div>
             </div>
           </div>
@@ -191,7 +177,7 @@ const ProjectsAnalytics = () => {
         <CardFooter className="px-3 py-0">
           <div className="flex flex-1  items-center justify-between">
             <div className="bg-yellow-700 text-yellow-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              <TaskPercentShow {...data.TaskDiff} />
+              {data.completedAssignedTaskspercentage.change}% tasks completed
             </div>
           </div>
         </CardFooter>
@@ -208,7 +194,7 @@ const ProjectsAnalytics = () => {
         </CardHeader>
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
-            <div className="font-bold text-xl">02</div>
+            <div className="font-bold text-xl">{data.activeMembers}</div>
             <div className="text-xs">Active member</div>
           </div>
 
@@ -219,20 +205,17 @@ const ProjectsAnalytics = () => {
             <div className="pl-1">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-blue-600 h-fit rounded-full"></span>
-                <p>{data?.totalTasksUpdate} tasks updated</p>
+                <p>{data?.comments} tasks updated</p>
               </div>
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-purple-600 h-fit rounded-full"></span>
-                <p>{data?.totalComments} comments</p>
+                <p>{data?.taskUpdates} comments</p>
               </div>
             </div>
           </div>
         </CardContent>
         <CardFooter className="px-3 py-0">
-          <div className="flex flex-1  items-center justify-between">
-            <div className="bg-blue-700 text-blue-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              15 team activities
-            </div>
+          <div className="flex flex-1  items-center justify-end">
             <div className="text-[10px] underline">view members</div>
           </div>
         </CardFooter>
@@ -242,33 +225,28 @@ const ProjectsAnalytics = () => {
 };
 
 interface PercentShowProps {
-  change: number;
-  direction: string;
+  data: { change: number; direction: string } | undefined;
 }
-const PercentShow = ({ change, direction }: PercentShowProps) => {
-  if (direction == "more") {
-    return (
-      <>
-        <ArrowUpIcon className="size-3" />+{change}% more than last week
-      </>
-    );
-  } else if (direction == "less") {
-    return (
-      <>
-        <ArrowDownIcon className="size-3" />-{change}% less than last week
-      </>
-    );
-  } else if (direction == "less") {
-    <>{change}% less than last week</>;
+const PercentShow = ({ data }: PercentShowProps) => {
+  if (!data) {
+    return <>0 changes from last week</>;
   }
-};
-const TaskPercentShow = ({ change, direction }: PercentShowProps) => {
-  if (direction == "more") {
-    return <>+{change} more than last week</>;
-  } else if (direction == "less") {
-    return <>{change} less than last week</>;
-  } else if (direction == "less") {
-    <>{change} less than last week</>;
+  if (data.direction == "up") {
+    return (
+      <>
+        <ArrowUpIcon className="size-3" />+{data.change}% more than last week
+      </>
+    );
+  }
+  if (data.direction == "down") {
+    return (
+      <>
+        <ArrowDownIcon className="size-3" />-{data.change}% less than last week
+      </>
+    );
+  }
+  if (data.direction == "neutral") {
+    return <>{data.change} changes from last week</>;
   }
 };
 

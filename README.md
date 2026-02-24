@@ -147,6 +147,6 @@ See the [LICENSE](./LICENSE) file for full details.
 
 For questions, feedback, or support:
 
-- **Email:** [support@flussoapp.com](mailto:support@flussoapp.com)
+- **Email:** [sulymanayomi@gmail.com](mailto:sulymanayomi@gmail.com)
 - **Website:** [https://flussoapp.com](https://flussoapp.com)
 - **GitHub Issues:** [Report a bug or request a feature](https://github.com/sulymanayomi/flusso/issues)

@@ -1,4 +1,4 @@
-import { EditTask, Task } from "../../types";
+import { TasksType } from "../../types";
 import {
   format,
   getDay,
@@ -35,7 +35,7 @@ const localizer = dateFnsLocalizer({
 });
 
 interface DataCalenderProps {
-  data: EditTask[];
+  data: TasksType[];
 }
 
 interface CustomToolbarProps {
@@ -58,7 +58,7 @@ const CustomToolbar = ({ date, onNavigate }: CustomToolbarProps) => (
       <p className="text-sm">{format(date, "MMM yyy")}</p>
     </div>
     <Button
-      onClick={() => onNavigate("PREV")}
+      onClick={() => onNavigate("NEXT")}
       variant="secondary"
       size="icon"
       className="flex items-center"

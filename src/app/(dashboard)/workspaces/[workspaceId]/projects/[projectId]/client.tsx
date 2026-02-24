@@ -54,6 +54,7 @@ import { useEditProjectModal } from "@/features/projects/hooks/use-edit-project-
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { snakeCaseToTitleCase } from "@/lib/utils";
+import ProjectTags from "@/components/project-dashboard/project-tags";
 
 export const ProjectIdClient = () => {
   const [remainingDays, setRemainingDays] = useState("");
@@ -125,7 +126,7 @@ export const ProjectIdClient = () => {
         </div>
         <div className="flex flex-col gap-4 mt-6">
           <div className="flex flex-1 items-center justify-start">
-            <div className="flex text-sm w-[12%] items-center justify-start">
+            <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
               <Loader className="size-4 mr-2" />
               <p>Status</p>
             </div>
@@ -136,14 +137,14 @@ export const ProjectIdClient = () => {
             </div>
           </div>
           <div className="flex flex-1 items-center justify-start">
-            <div className="flex text-sm w-[12%] items-center justify-start">
+            <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
               <UserCheck2Icon className="size-4 mr-2" />
               <p>Assignees</p>
             </div>
             <TeamMembers teams={project.team} />
           </div>
           <div className="flex flex-1 items-center justify-start">
-            <div className="flex text-sm w-[12%] items-center justify-start">
+            <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
               <CalendarDaysIcon className="size-4 mr-2" />
               <p>Due Date</p>
             </div>
@@ -157,27 +158,28 @@ export const ProjectIdClient = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-1 items-center justify-start">
-            <div className="flex text-sm w-[12%] items-center justify-start">
+          <div className="flex  items-center justify-start">
+            <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
               <TagIcon className="size-4 mr-2" />
               <p>Tags</p>
             </div>
             <div className="flex  gap-1">
-              <Badge className="py-1 bg-yellow-100 text-yellow-700">
-                UI design
-              </Badge>
+              {/* <ProjectTags tags={project.tag} /> */}
               <div className="py-1 text-xs font-semibold ml-2 cursor-pointer">
                 Add more...
               </div>
             </div>
           </div>
-          <div className="flex flex-1 items-start justify-start">
-            <div className="flex text-sm mr-8 items-center justify-start">
+
+          <div className="flex flex-1 flex-col md:flex-row  justify-start">
+            <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
               <TagIcon className="size-4 mr-2" />
               <p>Description</p>
             </div>
-            <div className="flex">
-              <div className="text-sm">{project.description}</div>
+            <div className="bg-blue-100 md:bg-inherit p-2 md:p-0 rounded-md w-full min-h-14 md:min-h-0 mt-2 md:mt-0 md:ml-[45px]">
+              <div className="text-sm">
+                <p>{project.description}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -663,12 +665,12 @@ interface TeamMembersProps {
     id: string;
     user: {
       name: string | null;
-      image: string | null;
+      imageUrl: string | null;
     };
   }[];
 }
 const TeamMembers = ({ teams }: TeamMembersProps) => (
-  <div className="flex gap-1">
+  <div className="flex gap-1 flex-wrap">
     {teams.map((team) =>
       team.id ? (
         <div
@@ -676,10 +678,10 @@ const TeamMembers = ({ teams }: TeamMembersProps) => (
           key={team.id}
         >
           <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
-            {team.user.image ? (
-              <Image src={team.user.image} alt={team.user.name![0]} />
+            {team.user.imageUrl ? (
+              <Image src={team.user.imageUrl} alt={team.user.name![0]} />
             ) : (
-              team.user.name![0]
+              team.user.name![0].toUpperCase()
             )}
           </div>
           <p>{team.user.name}</p>
@@ -688,7 +690,7 @@ const TeamMembers = ({ teams }: TeamMembersProps) => (
         <></>
       )
     )}
-    <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold">
+    {/* <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold">
       <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
         A
       </div>
@@ -705,7 +707,7 @@ const TeamMembers = ({ teams }: TeamMembersProps) => (
         A
       </div>
       <p>Musa Ridwan</p>
-    </div>
+    </div> */}
     <div className="cursor-pointer bg-sky-100 px-1 pr-1.5 py-1 flex gap-1 items-center justify-center rounded-xl text-xs font-semibold">
       <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
         <PlusCircle />

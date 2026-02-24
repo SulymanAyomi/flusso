@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { FileIcon, ImageIcon, SmileIcon } from "lucide-react";
 import React, { useState } from "react";
@@ -47,10 +49,31 @@ const TaskComments = ({ taskId }: TaskCommentsProps) => {
   };
 
   if (isLoading) {
-    return <div>Loading....</div>;
+    return (
+      <div className="space-y-2 w-full p-4">
+        {[...Array(5)].map(() => (
+          <div className="flex justify-start items-center gap-2 w-full">
+            <div className="flex items-center justify-center">
+              <Skeleton className="size-8 rounded-full" />
+            </div>
+            <div className="flex justify-start items-center w-full">
+              <Skeleton className="w-full h-8 mr-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
+
   return (
     <div className="flex flex-1 gap-5 flex-col p-4 text-black">
+      <div className="flex flex-col gap-4">
+        {comments && comments?.length > 0
+          ? comments.map((comment) => (
+              <TaskCommentList key={comment.id} comment={comment} />
+            ))
+          : null}
+      </div>
       <div className="flex flex-col relative">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -91,13 +114,6 @@ const TaskComments = ({ taskId }: TaskCommentsProps) => {
             ></FormField>
           </form>
         </Form>
-      </div>
-      <div className="flex flex-col gap-4">
-        {comments && comments?.length > 0
-          ? comments.map((comment) => (
-              <TaskCommentList key={comment.id} comment={comment} />
-            ))
-          : null}
       </div>
     </div>
   );

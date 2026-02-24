@@ -11,7 +11,7 @@ export const createTaskSchema = z.object({
     projectId: z.string().trim().min(1, "Required"),
     startDate: z.coerce.date(),
     dueDate: z.coerce.date(),
-    assignedToId: z.string().trim().min(1, "Required"),
+    assignedToId: z.string().nullable(),
     description: z.string().optional(),
     comment: z.string().optional(),
     subTask: z.array(z.string()),

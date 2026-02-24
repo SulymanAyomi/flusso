@@ -1,8 +1,10 @@
 import { TaskActions } from "@/features/tasks/components/task-actions";
-import { EditTask, Task } from "@/features/tasks/types";
+import { TasksType } from "@/features/tasks/types";
 import {
   CalendarDaysIcon,
   Link2Icon,
+  ListCheckIcon,
+  MessagesSquareIcon,
   MoreHorizontal,
   MoreVerticalIcon,
   NotepadText,
@@ -16,23 +18,28 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { format } from "date-fns";
+import { useGetTasksResponseType } from "@/features/tasks/api/use-get-tasks";
 
 interface KanbanCardProps {
-  task: EditTask;
+  task: TasksType;
 }
 
 export const KanbanCard = ({ task }: KanbanCardProps) => {
   return (
     <div className="bg-white p-2.5 mb-1.5 rounded shadow-sm space-y-3">
       <div className="flex items-start justify-between gap-x-2">
-        <p className="text-sm line-clamp-2 font-semibold">{task.name}</p>
+        <p className="text-sm line-clamp-1 font-semibold truncate">
+          {task.name}
+        </p>
         <TaskActions id={task.id}>
           <MoreVerticalIcon className="size-[18-px] stroke-1 shrink-0 text-neutral-700 hover:opacity-75 transition" />
         </TaskActions>
       </div>
       <DottedSeparator />
       <div>
-        <p className="line-clamp-2 text-xs text-gray-700">{task.description}</p>
+        <p className="line-clamp-2 text-xs text-gray-700 truncate ">
+          {task.description}
+        </p>
       </div>
       <div className="flex items-center gap-x-1.5 justify-between text-xs text-gray-700">
         <p>Assignees:</p>
@@ -58,15 +65,16 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
       <div className="flex items-center justify-between gap-1 text-xs text-gray-700">
         <div className="flex items-center gap-1">
           <p>12</p>
-          <NotepadText className="size-4 " />
+          <MessagesSquareIcon className="size-4 " />
         </div>
-        <div className="flex items-center">
-          <p>2</p>
+        <div className="flex items-center gap-1">
           <Link2Icon className="size-4" />
+          <p>{task.blockedBy?.length}</p>
+          {/* depends on 2 tasks */}
         </div>
         <div className="flex items-center">
-          <p>4</p>
-          <NotepadTextDashedIcon className="size-4" />
+          <p>4/4</p>
+          <ListCheckIcon className="size-4" />
         </div>
       </div>
     </div>

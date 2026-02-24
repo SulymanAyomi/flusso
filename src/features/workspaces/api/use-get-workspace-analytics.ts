@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc"
-import { InferResponseType } from "hono";
 
 interface useGetWorkspaceAnalyticsProps {
     workspaceId: string;
@@ -18,7 +17,9 @@ export const useGetWorkspaceAnalytics = ({ workspaceId }: useGetWorkspaceAnalyti
             }
             const { data } = await response.json();
             return data;
-        }
+        },
+        staleTime: 3 * 60 * 1000, // 3 minutes (matches server cache)
+        refetchOnWindowFocus: false,
     })
 
     return query

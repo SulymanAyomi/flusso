@@ -11,7 +11,7 @@ import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { Badge } from "@/components/ui/badge";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { TaskActions } from "./components/task-actions";
-import { DataFilters } from "@/features/tasks/components/data-filters";
+import { DataFilters } from "@/features/tasks/components/tasks-view/data-filters";
 // import { TaskActions } from "./task-actions";
 
 export const columns: ColumnDef<Task>[] = [

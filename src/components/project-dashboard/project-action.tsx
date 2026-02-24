@@ -22,8 +22,8 @@ export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
   const { open } = useEditProjectModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete task",
-    "This action cannot be undone",
+    "Delete project",
+    "This action will delete project and all it tasks.",
     "destructive"
   );
   const { mutate, isPending } = useDeleteProject();
@@ -67,7 +67,7 @@ export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
             className="font-medium text-amber-700 focus:text-amber-700  p-[10px]"
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />
-            Delete Task
+            Delete Project
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

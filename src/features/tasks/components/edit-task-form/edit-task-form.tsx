@@ -37,10 +37,8 @@ import {
   ArrowUpIcon,
   Calendar,
   CheckCircle2Icon,
-  FileIcon,
-  ImageIcon,
-  LinkIcon,
   Loader,
+  Loader2Icon,
   Plus,
   PlusIcon,
   SmileIcon,
@@ -93,16 +91,16 @@ export const EditTaskForm = ({
   const { mutate, isPending } = useEditTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
-    resolver: zodResolver(
-      createTaskSchema.omit({ workspaceId: true, description: true })
-    ),
+    resolver: zodResolver(createTaskSchema.omit({ workspaceId: true })),
     defaultValues: {
       ...initialValues,
       name: initialValues.name,
       workspaceId: initialValues.workspaceId,
       projectId: initialValues.projectId,
       assignedToId: initialValues.assignedToId ?? undefined,
-      description: initialValues.description ?? "",
+      description: initialValues.description
+        ? initialValues.description
+        : undefined,
       // comment: initialValues.comment,
       subTask: [],
       tags: [],
@@ -200,6 +198,12 @@ export const EditTaskForm = ({
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
+                            value={TaskStatus.TODO}
+                          >
+                            Todo
+                          </SelectItem>
+                          <SelectItem
+                            className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
                             value={TaskStatus.IN_PROGRESS}
                           >
                             In Progress
@@ -209,12 +213,6 @@ export const EditTaskForm = ({
                             value={TaskStatus.IN_REVIEW}
                           >
                             In Review
-                          </SelectItem>
-                          <SelectItem
-                            className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={TaskStatus.TODO}
-                          >
-                            Todo
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
@@ -251,9 +249,9 @@ export const EditTaskForm = ({
                         <SelectContent className="">
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={TaskPriority.HIGH}
+                            value={TaskPriority.LOW}
                           >
-                            High
+                            Low
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
@@ -263,9 +261,9 @@ export const EditTaskForm = ({
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={TaskPriority.LOW}
+                            value={TaskPriority.HIGH}
                           >
-                            Low
+                            High
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
@@ -427,7 +425,16 @@ export const EditTaskForm = ({
                 Cancle
               </Button>
               <Button disabled={isPending} variant="primary">
-                Save Task
+                {isPending ? (
+                  <>
+                    <span>
+                      <Loader2Icon className="animate-spin h-full" />
+                    </span>
+                    Saving...
+                  </>
+                ) : (
+                  "Save Task"
+                )}
               </Button>
             </div>
           </form>

@@ -5,17 +5,19 @@ import { ChevronRightIcon } from "lucide-react";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
-import { useGetWorkspaceProjects } from "@/features/workspaces/api/use-get-workspace-projects";
 import { Badge } from "../ui/badge";
 import { cn, snakeCaseToTitleCase } from "@/lib/utils";
+import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
+import { useGetProjects } from "@/features/projects/api/use-get-projects";
+import { useGetWorkspaceProjects } from "@/features/workspaces/api/use-get-workspace-projects";
 
 const ProjectLists = () => {
   const workspaceId = useWorkspaceId();
+  const { open } = useCreateProjectModal();
+  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
+    workspaceId,
+  });
 
-  const { data: projects, isLoading: isLoadingProjects } =
-    useGetWorkspaceProjects({
-      workspaceId,
-    });
   if (isLoadingProjects) {
     return (
       <Card>
@@ -34,9 +36,9 @@ const ProjectLists = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Skeleton className="h-[90px] w-[477px] rounded-[12px]" />
-          <Skeleton className="h-[90px] w-[477px] rounded-[12px]" />
-          <Skeleton className="h-[90px] w-[477px] rounded-[12px]" />
+          <Skeleton className="h-[90px] w-[95%] rounded-[12px]" />
+          <Skeleton className="h-[90px] w-[95%] rounded-[12px]" />
+          <Skeleton className="h-[90px] w-[95%] rounded-[12px]" />
         </CardContent>
       </Card>
     );
@@ -64,36 +66,45 @@ const ProjectLists = () => {
             <div className="flex gap-2 flex-col border shadow-sm rounded-[12px] px-3 py-4 ">
               <div className="flex justify-between items-center gap-3">
                 <div className="text-sm font-semibold">{project.name}</div>
-                <div className="text-xs">{project.percentage.toFixed(0)}%</div>
+                <div className="text-xs">
+                  {project.stats.completionPercentage}%
+                </div>
               </div>
               <div>
                 <Progress
-                  value={project.percentage}
+                  value={project.stats.completionPercentage}
                   color="#0EB97F"
-                  className={cn(project.percentage == 100 && "text-green-700")}
+                  className={cn(
+                    project.stats.completionPercentage == 100 &&
+                      "text-green-700"
+                  )}
                 ></Progress>
               </div>
               <div className="flex justify-between items-center">
                 <Badge variant={project.status}>
                   {snakeCaseToTitleCase(project.status)}
                 </Badge>
-                {project.counts.total > 0 ? (
+                {project.stats.tasks.total > 0 ? (
                   <p className="text-[10px]">
-                    {project.counts.completed}/{project.counts.total} tasks
-                    completed
+                    {project.stats.tasks.completed}/{project.stats.tasks.total}{" "}
+                    tasks completed
                   </p>
                 ) : (
-                  <p className="text-[10px]">{project.counts.total} tasks </p>
+                  <p className="text-[10px]">
+                    {project.stats.tasks.total} tasks{" "}
+                  </p>
                 )}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center my-auto">
+          <div className="text-center my-auto flex flex-col items-center justify-center h-full w-full text-sm">
             <p>No project</p>
             <p>
               You can start by creating a project{" "}
-              <span className="underline">here</span>
+              <span className="underline cursor-pointer" onClick={() => open()}>
+                here
+              </span>
             </p>
           </div>
         )}

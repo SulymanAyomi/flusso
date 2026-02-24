@@ -22,10 +22,9 @@ export const useCreateWorkspace = () => {
             return await response.json()
         },
         onSuccess: (data) => {
-            console.log("yelow", data)
-            if (data.workspace) {
+            if (data.success) {
                 toast.success("Workspace created")
-                router.push(`/workspaces/${data.workspace.id}`);
+                router.push(`/workspaces/${data.data.id}`);
                 queryClient.invalidateQueries({ queryKey: ["workspaces"] })
             } else {
                 toast.error("Failed to create workspace")

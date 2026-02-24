@@ -35,7 +35,7 @@ export const EditProjectFormWrapper = ({
     return (
       <Card className="w-full h-[714px] border-none shadow-none">
         <CardContent className="flex items-center justify-center h-full">
-          <Loader className="size-5 animate-spin text-muted-foreground" />
+          <Loader className="size-8 animate-spin text-muted-foreground" />
         </CardContent>
       </Card>
     );

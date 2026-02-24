@@ -7,13 +7,14 @@ export const useGetWorkspaces = () => {
         queryKey: ["workspaces"],
         queryFn: async () => {
             const response = await client.api.workspaces["$get"]();
-
             if (!response.ok) {
                 throw new Error("Failed to fetch workspace")
             }
             const { data } = await response.json();
             return data;
-        }
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnWindowFocus: false,
     })
 
     return query

@@ -1,29 +1,26 @@
 import { Hono } from "hono";
 import { string, z } from "zod"
-import { ID, Query } from "node-appwrite";
+// import { ID, Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
 
 import { getMember } from "@/features/members/utils";
 import { changeSubTaskSchema, createCommentsSchema, createSubTaskSchema, createTaskDependenciesSchema, createTaskSchema } from "../schema";
 import { Task, TaskStatus } from "../types";
 import { ProjectType } from "@/features/projects/types";
-import { requireAuth } from "@/lib/require-auth";
 import { db } from "@/lib/db";
 import { endOfMonth, startOfMonth } from "date-fns";
 import { logActivity } from "@/lib/log-activity";
 import { hasCircularDependency } from "@/lib/dep-check";
+import { sessionMiddleware } from "@/lib/require-auth";
+import { successResponse } from "@/lib/api-response";
 
 
 const app = new Hono()
-    .delete("/:taskId",
+    .delete("/:taskId", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
             const { taskId } = c.req.param()
-
 
             const task = await db.task.findUnique({
                 where: {
@@ -63,13 +60,9 @@ const app = new Hono()
                 dueDate: z.string().nullish(),
             })
         ),
+        sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
-
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-
+            const user = c.get("user");
             const { workspaceId,
                 projectId,
                 assignedToId,
@@ -77,6 +70,7 @@ const app = new Hono()
                 search,
                 dueDate
             } = c.req.valid("query")
+
             console.log(workspaceId,
                 projectId,
                 assignedToId,
@@ -143,7 +137,12 @@ const app = new Hono()
                             name: true,
                             imageUrl: true
                         }
-                    }
+                    },
+                    blockedBy: {
+                        select: {
+                            id: true
+                        }
+                    },
                 }
 
             })
@@ -167,9 +166,9 @@ const app = new Hono()
         }
     )
     .post("/",
-        zValidator("json", createTaskSchema),
+        zValidator("json", createTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -313,9 +312,9 @@ const app = new Hono()
         }
     )
     .patch("/:taskId",
-        zValidator("json", createTaskSchema.partial()),
+        zValidator("json", createTaskSchema.partial()), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -331,6 +330,13 @@ const app = new Hono()
                 assignedToId,
                 dependencies
             } = c.req.valid("json")
+            console.log(name,
+                status,
+                description,
+                projectId,
+                dueDate,
+                assignedToId,
+                dependencies)
 
             const exisitingTask = await db.task.findUnique({
                 where: {
@@ -389,14 +395,12 @@ const app = new Hono()
         }
     )
     .patch("/:taskId/dependencies",
-        zValidator("json", createTaskDependenciesSchema),
+        zValidator("json", createTaskDependenciesSchema), sessionMiddleware,
         async (c) => {
 
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
+
             const { taskId } = c.req.param()
 
             const {
@@ -413,7 +417,8 @@ const app = new Hono()
                 },
                 select: {
                     id: true,
-                    workspaceId: true
+                    workspaceId: true,
+                    projectId: true
                 }
             })
 
@@ -454,9 +459,58 @@ const app = new Hono()
 
         }
     )
-    .get("/:taskId",
+    .get("/:taskId/dependencies", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+
+            const user = c.get("user");
+            const { taskId } = c.req.param()
+
+            const exisitingTask = await db.task.findUnique({
+                where: {
+                    id: taskId
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    workspaceId: true,
+                    projectId: true,
+                    blockedBy: true
+                }
+            })
+
+            if (!exisitingTask) {
+                return c.json({ error: "task not found" }, 400)
+            }
+
+            const member = await getMember({
+                workspaceId: exisitingTask.workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                c.json({ error: "Unauthorized" }, 401)
+            }
+
+            const otherTasks = await db.task.findMany({
+                where: {
+                    projectId: exisitingTask.projectId
+                },
+                select: {
+                    id: true,
+                    name: true
+                }
+            })
+            const data = {
+                task: exisitingTask,
+                otherTasks: otherTasks
+            }
+
+            return c.json(successResponse(data), { status: 200 })
+
+        }
+    )
+    .get("/:taskId", sessionMiddleware,
+        async (c) => {
+            const user = c.get("user");
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -475,7 +529,8 @@ const app = new Hono()
                             user: {
                                 select: {
                                     name: true,
-                                    email: true
+                                    email: true,
+                                    imageUrl: true
                                 }
                             }
                         }
@@ -505,24 +560,6 @@ const app = new Hono()
                 return c.json({ error: "unauthorized" }, 401)
             }
 
-            // const project = await databases.getDocument<Project>(
-            //     DATABASE_ID,
-            //     PROJECTS_ID,
-            //     task.projectId
-            // )
-            // const member = await databases.getDocument(
-            //     DATABASE_ID,
-            //     MEMBERS_ID,
-            //     task.assigneeId
-
-            // )
-            // const user = await users.get(member.userId)
-            // const assignee = {
-            //     ...member,
-            //     name: user.name,
-            //     email: user.email,
-            // }
-
             return c.json({
                 data: {
                     task
@@ -531,13 +568,9 @@ const app = new Hono()
 
         }
     )
-    .get("/:taskId/activities",
+    .get("/:taskId/activities", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
-
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
+            const user = c.get("user");
 
             const { taskId } = c.req.param()
 
@@ -572,7 +605,7 @@ const app = new Hono()
                             user: {
                                 select: {
                                     name: true,
-                                    image: true
+                                    imageUrl: true
                                 }
                             }
                         }
@@ -588,9 +621,10 @@ const app = new Hono()
 
         }
     )
-    .get("/:taskId/subtasks",
+    .get("/:taskId/subtasks", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
+
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -630,9 +664,10 @@ const app = new Hono()
         }
     )
     .post("/:taskId/subtasks",
-        zValidator("json", createSubTaskSchema),
+        zValidator("json", createSubTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
+
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -701,9 +736,10 @@ const app = new Hono()
         }
     )
     .patch("/:taskId/subtasks",
-        zValidator("json", changeSubTaskSchema),
+        zValidator("json", changeSubTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
+
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -768,9 +804,10 @@ const app = new Hono()
         }
     )
     .delete("/:taskId/subtasks",
-        zValidator("json", changeSubTaskSchema),
+        zValidator("json", changeSubTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
+
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -831,9 +868,10 @@ const app = new Hono()
             return c.json({ data: subTask })
         }
     ).post("/:taskId/comments",
-        zValidator("json", createCommentsSchema),
+        zValidator("json", createCommentsSchema), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
+
 
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
@@ -889,13 +927,9 @@ const app = new Hono()
             return c.json({ data: comment })
         }
     )
-    .get("/:taskId/comments",
+    .get("/:taskId/comments", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
-
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
+            const user = c.get("user");
 
             const { taskId } = c.req.param()
 
@@ -961,18 +995,14 @@ const app = new Hono()
                     })
                 )
             })
-        ),
+        ), sessionMiddleware,
         async (c) => {
             try {
-
-
-                const user = await requireAuth(c)
-
+                const user = c.get("user");
                 if (!user) {
                     return c.json({ error: "Unauthourize" }, 401)
                 }
                 const { tasks } = c.req.valid("json")
-
 
                 const tasksToUpdate = await db.task.findMany({
                     where: {

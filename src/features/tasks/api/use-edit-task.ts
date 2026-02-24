@@ -15,7 +15,7 @@ export const useEditTask = () => {
         Error,
         RequestType
     >({
-        mutationFn: async ({ json, param }) => {            // 
+        mutationFn: async ({ json, param }) => {
             const response = await client.api.tasks[":taskId"]["$patch"]({ json, param })
             if (!response.ok) {
                 throw new Error("Failed to update task")
@@ -25,7 +25,6 @@ export const useEditTask = () => {
         // @ts-ignore
         onSuccess: ({ data }) => {
             toast.success("Task updated successfully")
-            console.log("Task updated successfully", data)
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["tasks"] })

@@ -11,7 +11,11 @@ export const useGetWorkspaceActivities = ({ workspaceId }: useGetWorkspaceActivi
     const query = useQuery({
         queryKey: ["workspace-activities", workspaceId],
         queryFn: async () => {
-            const response = await client.api.workspaces[":workspaceId"]["activities"]["$get"]({ param: { workspaceId } });
+            const response = await client.api.workspaces[":workspaceId"]["activities"]["$get"]({
+                param: { workspaceId }, query: {
+                    limit: "5",
+                }
+            });
 
             if (!response.ok) {
                 throw new Error("Failed to fetch workspace analytics")

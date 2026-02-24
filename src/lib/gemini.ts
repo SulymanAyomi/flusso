@@ -1,7 +1,9 @@
 import { GEMINI_AI } from "@/config";
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai"
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from "@google/genai"
+import { GenerateProjectSystemPrompt, ValidatePromptSystemPrompt } from "./prompt";
+import { geminiGenerationSchema, geminiValidationSchema } from "@/features/projects/types";
 
-const safetySetting = [
+export const safetySetting = [
     {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
         threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
@@ -11,7 +13,86 @@ const safetySetting = [
         threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE
     }
 ]
-const genAI = new GoogleGenerativeAI(GEMINI_AI);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings: safetySetting });
 
-export default model;
+export const ai = new GoogleGenAI({
+    apiKey: GEMINI_AI,
+})
+
+// console.log(sanitized)
+// const result = await ai.models.generateContent({
+//     model: "gemini-flash-lite-latest",
+//     contents: validationPrompt(prompt),
+//     config: {
+//         safetySettings: safetySetting,
+//         responseMimeType: "application/json",
+//         responseSchema: geminiValidationSchema,
+//         temperature: 0.3,
+//         maxOutputTokens: 500
+//     }
+// }) 
+export async function validatePromptWithAI(prompt: string,
+    signal?: AbortSignal) {
+    const result = await ai.models.generateContent({
+        model: "gemini-flash-lite-latest",
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    { text: ValidatePromptSystemPrompt },
+                    { text: `\n\n"${prompt}"` }
+                ]
+            }
+        ],
+        config: {
+            safetySettings: safetySetting,
+            responseMimeType: "application/json",
+            responseSchema: geminiValidationSchema,
+            temperature: 0.3,
+            maxOutputTokens: 500
+        }
+    })
+
+    const AIResponse = result.text
+    console.log(AIResponse)
+    return JSON.parse(AIResponse!);
+}
+export async function generateProjectWithAI(prompt: string,
+    signal?: AbortSignal): Promise<{
+        project: {
+            name: string;
+            description: string;
+            estimatedDurationDays: number;
+        };
+        tasks: Array<{
+            title: string;
+            description: string;
+            priority: 'low' | 'medium' | 'high';
+            tags: string[];
+            dependsOn: string[]; // Task titles
+            estimatedDays: number;
+        }>;
+    }> {
+    const result = await ai.models.generateContent({
+        model: "gemini-flash-lite-latest",
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    { text: GenerateProjectSystemPrompt },
+                    { text: `\n\n"${prompt}"` }
+                ]
+            }
+        ],
+        config: {
+            safetySettings: safetySetting,
+            responseMimeType: "application/json",
+            responseSchema: geminiGenerationSchema,
+            temperature: 0.3,
+            maxOutputTokens: 500
+        }
+    })
+
+    const AIResponse = result.text
+    console.log(AIResponse)
+    return JSON.parse(AIResponse!);
+}

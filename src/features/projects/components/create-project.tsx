@@ -3,7 +3,14 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, File, ImageIcon, Loader, Star } from "lucide-react";
+import {
+  Calendar,
+  File,
+  ImageIcon,
+  Loader,
+  Loader2Icon,
+  Star,
+} from "lucide-react";
 import {
   FormControl,
   FormField,
@@ -79,10 +86,10 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
   };
 
   return (
-    <div className="bg-white w-[500px] p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
+    <div className="bg-white w-full h-full  p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-start text-sm">
-          <Star className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition" />
+          <Star className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-2" />
           <p className="text-xl font-bold">Create Project</p>
         </div>
       </div>
@@ -369,8 +376,17 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
             <Button variant="outline" onClick={onCancel}>
               Cancle
             </Button>
-            <Button variant="primary" disabled={isPending}>
-              Create Project
+            <Button variant="primary" disabled={isPending} size={"lg"}>
+              {isPending ? (
+                <>
+                  <span>
+                    <Loader2Icon className="animate-spin h-full" />
+                  </span>
+                  Creating project
+                </>
+              ) : (
+                "Create Project"
+              )}
             </Button>
           </div>
         </form>

@@ -1,4 +1,5 @@
 import { TaskStatus as PrismaTaskStatus, TaskPriority as PrismaTaskPriority } from "@/generated/prisma"
+import { useGetTasksResponseType } from "./api/use-get-tasks"
 export enum TaskStatus {
     BACKLOG = "BACKLOG",
     TODO = "TODO",
@@ -59,3 +60,5 @@ export type EditTask = Task & {
         taskId: string;
     }[];
 }
+
+export type TasksType = useGetTasksResponseType["data"]["documents"][0];

@@ -15,7 +15,6 @@ interface DashboardLayoutProps {
 }
 const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
   const user = await getCurrent();
-  console.log("frontend", user);
   if (!user) redirect("/sign-in");
   return (
     <div className="min-h-screen">

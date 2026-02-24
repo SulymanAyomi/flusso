@@ -19,3 +19,8 @@ export const resetSchema = z.object({
     newPassword: z.string().min(8, "Minimum of 8 characters"),
 
 });
+
+export const verifyOTPSchema = z.object({
+    vid: z.string(),
+    otp: z.string().max(6).min(6),
+})

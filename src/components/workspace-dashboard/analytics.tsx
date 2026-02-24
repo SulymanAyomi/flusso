@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardFooter } from "../ui/card";
 import {
-  ArrowDown,
   ArrowDownIcon,
-  ArrowUp,
   ArrowUpIcon,
   CheckIcon,
   ChevronRightIcon,
@@ -16,7 +14,7 @@ import { formatTwoDigits } from "@/lib/utils";
 import Link from "next/link";
 import { Skeleton } from "../ui/skeleton";
 
-export const Analytics = () => {
+const Analytics = () => {
   const workspaceId = useWorkspaceId();
 
   const { data: analytics, isLoading: isLoadingAnalytics } =
@@ -25,7 +23,7 @@ export const Analytics = () => {
   if (isLoadingAnalytics) {
     const load = [1, 2, 3, 4];
     return (
-      <div className="grid grid-cols-4 gap-4 py-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
         {load.map((l) => (
           <Card
             key={l}
@@ -62,7 +60,7 @@ export const Analytics = () => {
     );
   }
   return (
-    <div className="grid grid-cols-4 gap-4 py-2">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
       {/* Project overview */}
       <Card className=" bg-green-100 text-green-900 flex flex-col gap-6 py-6 shadow-sm">
         <CardHeader className="px-3 py-0">
@@ -76,32 +74,31 @@ export const Analytics = () => {
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.activeProject!)}
+              {formatTwoDigits(analytics?.activeProjects!)}
             </div>
             <div className="text-xs">Projects in progress</div>
           </div>
           <div>
-            <div className="text-xs flex flex-col items-start">
+            <div className="text-xs  flex-col items-start hidden md:flex">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-green-600 h-fit rounded-full"></span>
-                <p>Total: {analytics?.totalProject}</p>
+                <p>Total: {analytics?.totalProjects}</p>
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-                <p>Over due: {analytics?.delayedProject}</p>
+                <p>Over due: {analytics?.overdueProjects}</p>
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-yellow-600 h-fit rounded-full"></span>
-                <p>On hold: {analytics?.notStartedProject}</p>
+                <p>On hold: {analytics?.onHoldProjects}</p>
               </div>
             </div>
           </div>
         </CardContent>
         <CardFooter className="px-3 py-0">
-          <div className="flex flex-1  items-center justify-between">
+          <div className="flex flex-1 flex-col md:flex-row items-start justify-start gap-1 md:items-center  md:justify-between">
             <div className="bg-green-700 text-green-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              <ArrowUp className="size-3" />
-              {analytics?.percentageChange}% more than last month
+              {PercentShow({ data: analytics?.projectChange })}
             </div>
             <Link
               href={`workspaces/${workspaceId}/projects`}
@@ -128,29 +125,29 @@ export const Analytics = () => {
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.taskCompleted!)}
+              {formatTwoDigits(analytics?.completedTasks!)}
             </div>
             <div className="text-xs">Task completed</div>
           </div>
-          <div className="text-xs flex flex-col items-start">
+          <div className="text-xs  flex-col items-start hidden md:flex">
             <div className="flex gap-1 items-center ">
               <span className="p-1 bg-green-600 h-fit rounded-full"></span>
-              <p>Total: {analytics?.totalTask}</p>
+              <p>Total: {analytics?.totalTasks}</p>
             </div>
             <div className="flex gap-1 items-center ">
               <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-              <p>Overdue: {analytics?.overDueTask}</p>
+              <p>Overdue: {analytics?.overdueTasks}</p>
             </div>
             <div className="flex gap-1 items-center ">
               <span className="p-1 bg-yellow-600 h-fit rounded-full"></span>
-              <p>Unassigned: {analytics?.UnassignedTask}</p>
+              <p>Unassigned: {analytics?.unassignedTasks}</p>
             </div>
           </div>
         </CardContent>
         <CardFooter className="px-3 py-0">
-          <div className="flex flex-1  items-center justify-between">
+          <div className="flex flex-1 flex-col md:flex-row items-start justify-start gap-1 md:items-center  md:justify-between">
             <div className="bg-yellow-700 text-yellow-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-              {PercentShow({ ...analytics?.TaskDiff! })}
+              {PercentShow({ data: analytics?.taskChange })}
             </div>
             <Link
               href={`workspaces/${workspaceId}/tasks`}
@@ -171,41 +168,41 @@ export const Analytics = () => {
             <div className="bg-blue-700 text-white rounded-full p-1 mr-2">
               <Users2Icon className="size-3.5" />
             </div>
-            <div className="text-sm font-semibold">Team member</div>
+            <div className="text-sm font-semibold">Team members</div>
           </div>
         </CardHeader>
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.totalMember!)}
+              {formatTwoDigits(analytics?.activeMembers!)}
             </div>
             <div className="text-xs">Active member</div>
           </div>
-          <div className="text-xs flex flex-col items-start">
+          <div className="text-xs flex-col items-start hidden md:flex">
             <div className="flex">
               <p className="font-semibold">This week</p>
             </div>
             <div className="pl-1">
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-blue-600 h-fit rounded-full"></span>
-                <p>{analytics?.totalTasksUpdate} tasks updated</p>
+                <p>{analytics?.taskUpdates} tasks updated</p>
               </div>
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-purple-600 h-fit rounded-full"></span>
-                <p>{analytics?.totalComments} comments</p>
+                <p>{analytics?.comments} comments</p>
               </div>
             </div>
 
-            {analytics?.totalViwer! > 0 && (
+            {analytics?.viewers! > 0 && (
               <div className="flex gap-1 items-center ">
                 <span className="p-1 bg-purple-600 h-fit rounded-full"></span>
-                <p>{analytics?.totalViwer!} viwers</p>
+                <p>{analytics?.viewers!} viwers</p>
               </div>
             )}
           </div>
         </CardContent>
         <CardFooter className="px-3 py-0">
-          <div className="flex flex-1  items-center justify-between">
+          <div className="flex flex-1 flex-col md:flex-row items-start justify-start gap-1 md:items-center  md:justify-between">
             <div className="bg-blue-700 text-blue-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
               {analytics?.totalActivities} team activities this week
             </div>
@@ -237,7 +234,7 @@ export const Analytics = () => {
             <div className="font-bold text-xl">02</div>
             <div className="text-xs">Recommendations</div>
           </div>
-          <div className="text-xs flex flex-col items-start">
+          <div className="text-xs  flex-col items-start hidden md:flex">
             <div className="flex gap-1 items-center ">
               <span className="p-1 bg-blue-600 h-fit rounded-full"></span>
               <p>5 task blocked</p>
@@ -262,24 +259,29 @@ export const Analytics = () => {
   );
 };
 
+export default Analytics;
 interface PercentShowProps {
-  change: number;
-  direction: string;
+  data: { change: number; direction: string } | undefined;
 }
-const PercentShow = ({ change, direction }: PercentShowProps) => {
-  if (direction == "more") {
+const PercentShow = ({ data }: PercentShowProps) => {
+  if (!data) {
+    return <>0 changes from last week</>;
+  }
+  if (data.direction == "up") {
     return (
       <>
-        <ArrowUpIcon className="size-3" />+{change}% more than last week
+        <ArrowUpIcon className="size-3" />+{data.change}% more than last week
       </>
     );
-  } else if (direction == "less") {
+  }
+  if (data.direction == "down") {
     return (
       <>
-        <ArrowDownIcon className="size-3" />-{change}% less than last week
+        <ArrowDownIcon className="size-3" />-{data.change}% less than last week
       </>
     );
-  } else if (direction == "less") {
-    <>{change}% less than last week</>;
+  }
+  if (data.direction == "neutral") {
+    return <>{data.change} changes from last week</>;
   }
 };

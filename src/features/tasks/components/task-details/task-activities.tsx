@@ -1,8 +1,7 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MemberAvatar } from "@/features/members/components/member-avatar";
 import React from "react";
 import { useGetTaskactivities } from "../../api/use-get-task-activities";
 import ActivitiesRow from "@/components/activities";
+import ActivitySkeleton from "@/components/activity-skeleton";
 
 interface TaskActivitiesProps {
   taskId: string;
@@ -11,11 +10,11 @@ const TaskActivities = ({ taskId }: TaskActivitiesProps) => {
   const { data: activities, isLoading: isLoadingActivities } =
     useGetTaskactivities({ taskId });
   if (isLoadingActivities) {
-    return "Loading...";
+    return <ActivitySkeleton />;
   }
   if (!activities || activities.length == 0) {
     return (
-      <div className="flex flex-1 flex-col p-4 text-black">
+      <div className="flex flex-1 flex-col p-4 text-black h-full w-full">
         <p className="text-center">No activity</p>
       </div>
     );

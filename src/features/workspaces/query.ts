@@ -1,47 +1,27 @@
-import { Query } from "node-appwrite";
+// import { Query } from "node-appwrite";
 
-import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
 import { getMember } from "../members/utils";
 import { getCurrent } from "../auth/query";
 import { db } from "@/lib/db";
 
-export const getWorkspaces = async () => {
-
-    const user = await getCurrent()
-    if (!user) {
-        throw new Error("Unauthourize")
-    }
-
-
-    const members = await db.member.findMany({
+export const getWorkspaces = async (userId: string) => {
+    const workspaces = await db.workspace.findFirst({
         where: {
-            userId: user.id
-        }
-    })
-    if (members.length === 0) {
-        return { data: { documents: [], total: 0 } }
-    }
-    const workspaceIds = members.map((members) => members.workspaceId);
-
-
-
-
-    const workspaces = await db.workspace.findMany({
-        where: {
-            id: {
-                in: workspaceIds
+            members: {
+                some: {
+                    userId: userId
+                }
             }
         },
         orderBy: {
             createdAt: "desc"
         }
-    })
-
-    return { documents: workspaces ?? [], total: workspaces.length }
-
-
-}
-
+    });
+    return {
+        workspaces,
+        total: workspaces ? 1 : 0
+    };
+};
 interface GetWorkspaceProps {
     workspaceId: string
 }

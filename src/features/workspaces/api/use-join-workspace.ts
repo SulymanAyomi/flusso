@@ -28,7 +28,7 @@ export const useJoinWorkspace = () => {
             toast.success("Workspace joined successfully")
             router.refresh()
             queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-            queryClient.invalidateQueries({ queryKey: ["workspace", data.$id] })
+            queryClient.invalidateQueries({ queryKey: ["workspace", data.id] })
         },
         onError: () => {
             toast.error("Failed to join workspace")

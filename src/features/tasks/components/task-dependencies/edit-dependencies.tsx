@@ -7,19 +7,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useEditTaskDependencies } from "../../api/use-edit-task-dependencies";
+import { Loader2Icon } from "lucide-react";
 
 interface TaskDependencyProps {
   onCancel?: () => void;
   id: string;
-  taskOptions?: { id: string; name: string }[];
+  otherTasks?: { id: string; name: string }[];
   initDep: string[];
+  name: string;
 }
 
 export const TaskDependency = ({
   onCancel,
   id,
-  taskOptions,
+  otherTasks,
   initDep,
+  name,
 }: TaskDependencyProps) => {
   const [selectedTasks, setSelectedTasks] = useState<string[]>(initDep);
   const toggleTask = (task: string) => {
@@ -37,7 +40,7 @@ export const TaskDependency = ({
         onSuccess: () => {
           onCancel?.();
         },
-        onError(error, variables, context) {
+        onError(error) {
           console.log("i am error", error);
         },
       }
@@ -51,27 +54,28 @@ export const TaskDependency = ({
           <p className="text-xl font-bold">Edit Dependencies</p>
         </div>
       </div>
-      <div className="mt-3 mb-6">
+      <div className="mt-3 mb-2">
         <DottedSeparator />
       </div>
       <CardContent className="p-0">
         <div className="bg-white p-1 mb-1.5 rounded-[12px] shadow-sm space-y-3  mx-auto">
           <div className="flex  gap-1 flex-col items-start justify-between gap-x-2">
+            <p className="mb-1 font-semibold">{name}</p>
             <p className="text-xs">
-              Select tasks that must be completed before this one can be marked
-              as complete.
+              Select tasks that must be completed before <strong>{name}</strong>{" "}
+              can be marked as complete.
             </p>
             {error && (
               <p className="text-[10px] text-red-500">
-                One of the selected tasks already dependds on this task,
-                creating a circular dependency.
+                One of the selected tasks already depends on this task, creating
+                a circular dependency.
               </p>
             )}
           </div>
           {/* <DottedSeparator /> */}
           <div className="border rounded-md min-h-4">
             <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
-              {taskOptions?.map((task, index) => (
+              {otherTasks?.map((task, index) => (
                 <div
                   key={index}
                   className="flex gap-2  p-3 items-center justify-start py-2 rounded-md hover:bg-primary-foreground w-full"
@@ -102,7 +106,16 @@ export const TaskDependency = ({
               variant="primary"
               onClick={() => onSubmit()}
             >
-              Save changes
+              {isPending ? (
+                <>
+                  <span>
+                    <Loader2Icon className="animate-spin h-full" />
+                  </span>
+                  Saving...
+                </>
+              ) : (
+                "Save changes"
+              )}
             </Button>
           </div>
         </div>

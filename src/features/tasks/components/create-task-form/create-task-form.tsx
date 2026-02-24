@@ -12,11 +12,13 @@ import {
   Image,
   LinkIcon,
   Loader,
+  Loader2Icon,
   Plus,
   PlusIcon,
   SmileIcon,
   Star,
   TagIcon,
+  Trash2Icon,
   UserIcon,
   UsersIcon,
   XIcon,
@@ -126,6 +128,8 @@ export const CreateTaskForm = ({
       {
         json: {
           ...values,
+          assignedToId:
+            values.assignedToId == "999" ? values.assignedToId : null,
           subTask,
           comment,
           tags: selectedTags,
@@ -147,6 +151,10 @@ export const CreateTaskForm = ({
     }
     setSubTask((prev) => [...prev, input.trim()]);
     setInput("");
+  };
+  const removeSubItem = (index: number) => {
+    const newList = subTask.filter((s, i) => i != index);
+    setSubTask(newList);
   };
   const addComment = () => {
     // if (commentInput.trim() === "") {
@@ -226,6 +234,12 @@ export const CreateTaskForm = ({
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
+                          value={TaskStatus.TODO}
+                        >
+                          Todo
+                        </SelectItem>
+                        <SelectItem
+                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
                           value={TaskStatus.IN_PROGRESS}
                         >
                           In Progress
@@ -236,12 +250,7 @@ export const CreateTaskForm = ({
                         >
                           In Review
                         </SelectItem>
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={TaskStatus.TODO}
-                        >
-                          Todo
-                        </SelectItem>
+
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
                           value={TaskStatus.DONE}
@@ -283,9 +292,9 @@ export const CreateTaskForm = ({
                       <SelectContent className="">
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={TaskPriority.HIGH}
+                          value={TaskPriority.LOW}
                         >
-                          High
+                          Low
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
@@ -295,9 +304,9 @@ export const CreateTaskForm = ({
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={TaskPriority.LOW}
+                          value={TaskPriority.HIGH}
                         >
-                          Low
+                          High
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
@@ -374,6 +383,11 @@ export const CreateTaskForm = ({
                       </FormControl>
                       <FormMessage />
                       <SelectContent>
+                        <SelectItem value={"999"}>
+                          <div className="flex items-center gap-x-2">
+                            <p>Select assignee</p>
+                          </div>
+                        </SelectItem>
                         {memberOptions.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-x-2">
@@ -501,10 +515,15 @@ export const CreateTaskForm = ({
                   {subTask.map((task, index) => (
                     <div
                       key={index}
-                      className="flex gap-2  p-3 items-center justify-start py-2 rounded-md hover:bg-primary-foreground w-full"
+                      className="flex gap-2  p-3 items-center justify-between py-2 rounded-md hover:bg-primary-foreground w-full"
                     >
-                      <Checkbox />
                       <p>{task}</p>
+                      <span
+                        className="cursor-pointer hover:bg-neutral-300"
+                        onClick={() => removeSubItem(index)}
+                      >
+                        <Trash2Icon className="text-red-500 size-4" />
+                      </span>
                     </div>
                   ))}
                   <div
@@ -524,7 +543,6 @@ export const CreateTaskForm = ({
                       <Button
                         onClick={(e) => {
                           e.preventDefault();
-
                           addSubItem();
                         }}
                         className="bg-blue-900 text-white py-1 px-4 text-xs h-fit rounded-md font-normal hover:bg-blue-900/80 "
@@ -570,7 +588,16 @@ export const CreateTaskForm = ({
               Cancle
             </Button>
             <Button disabled={isPending} variant="primary" type="submit">
-              Save Task
+              {isPending ? (
+                <>
+                  <span>
+                    <Loader2Icon className="animate-spin h-full" />
+                  </span>
+                  Saving...
+                </>
+              ) : (
+                "Save Task"
+              )}
             </Button>
           </div>
         </form>
@@ -625,9 +652,6 @@ const AddTags = ({
               {tag}
             </div>
           ))}
-          <div className="p-1 px-2 bg-blue-200 text-blue-800 rounded-[12px] text-[10px]">
-            UI design
-          </div>
         </div>
       </div>
       <div className="flex items-center gap-x-1.5 justify-between text-xs text-gray-700 relative">

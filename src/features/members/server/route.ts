@@ -2,27 +2,23 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { getMember } from "../utils";
-import { DATABASE_ID, MEMBERS_ID } from "@/config";
 import { Member, MemberRole } from "../types";
-import { requireAuth } from "@/lib/require-auth";
 import { db } from "@/lib/db";
+import { sessionMiddleware } from "@/lib/require-auth";
 
 const app = new Hono()
     .get("/",
-        zValidator("query", z.object({ workspaceId: z.string() })),
+        zValidator("query", z.object({ workspaceId: z.string() })), sessionMiddleware,
         async (c) => {
             try {
-                const user = await requireAuth(c)
-
-                if (!user) {
-                    return c.json({ error: "Unauthorized" }, 401)
-                }
-
+                const user = c.get("user");
                 const { workspaceId } = c.req.valid("query")
 
-                const member = await getMember({
-                    workspaceId,
-                    userId: user.id,
+                const member = await db.member.findFirst({
+                    where: {
+                        workspaceId: workspaceId,
+                        userId: user.id
+                    }
                 })
 
                 if (!member) {
@@ -42,7 +38,6 @@ const app = new Hono()
                         }
                     }
                 })
-                console.log(populateMembers.length, "members")
 
                 return c.json({
                     data: {
@@ -52,19 +47,13 @@ const app = new Hono()
             } catch (error) {
                 console.error("member", error)
                 return c.json({ error: "Something went wrong" }, 500)
-
             }
         }
-    ).delete("/:memberId",
+    ).delete("/:memberId", sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
-            if (!user) {
-                throw new Error("Unauthourize")
-            }
             const { memberId } = c.req.param()
-
-
 
             const memberToDelete = await db.member.findUnique({
                 where: {
@@ -108,7 +97,6 @@ const app = new Hono()
 
             }
 
-
             await db.member.delete({
                 where: {
                     id: memberId
@@ -119,13 +107,10 @@ const app = new Hono()
 
         }
     ).patch("/:memberId",
-        zValidator("json", z.object({ role: z.nativeEnum(MemberRole) })),
+        zValidator("json", z.object({ role: z.nativeEnum(MemberRole) })), sessionMiddleware,
         async (c) => {
-            const user = await requireAuth(c)
+            const user = c.get("user");
 
-            if (!user) {
-                throw new Error("Unauthourize")
-            }
             const { memberId } = c.req.param()
             const role = c.req.valid("json")
 

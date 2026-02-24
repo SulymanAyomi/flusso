@@ -6,6 +6,7 @@ import { useGetTask } from "../../api/use-get-task";
 import { useGetTasks } from "../../api/use-get-tasks";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
 import { TaskDependency } from "./edit-dependencies";
+import { useGetTaskDependencies } from "../../api/use-get-tasks-dependencies";
 
 interface TaskDependenciesWrapperProps {
   onCancel: () => void;
@@ -19,26 +20,18 @@ export const TaskDependenciesWrapper = ({
   const workspaceId = useWorkspaceId();
   const projectId = useProjectId();
 
-  const { data: tasks, isLoading: isLoadindTasks } = useGetTasks({
-    workspaceId,
-    projectId,
-  });
-  const { data: initialValues, isLoading: isLoadingTask } = useGetTask({
+  const { data, isLoading } = useGetTaskDependencies({
     taskId: id,
   });
 
-  const taskOptions = tasks?.documents
-    .filter((task) => task.id !== id)
-    .map((task) => ({
-      id: task.id,
-      name: task.name,
-    }));
+  const otherTasks = data?.otherTasks.filter((t) => t.id != id);
 
-  const initDep = initialValues?.task.blockedBy.map((task) => task.dependsOnId);
-  const isLoading = isLoadingTask || isLoadindTasks;
+  const initDep = data?.task.blockedBy.map((task) => task.dependsOnId);
+  const name = data?.task.name!;
+  // const isLoading = isLoadingTask || isLoadindTasks;
   if (isLoading) {
     return (
-      <Card className="w-full h-[714px] border-none shadow-none">
+      <Card className="w-full h-[400px] border-none shadow-none">
         <CardContent className="flex items-center justify-center h-full">
           <Loader className="size-5 animate-spin text-muted-foreground" />
         </CardContent>
@@ -46,19 +39,20 @@ export const TaskDependenciesWrapper = ({
     );
   }
 
-  if (!initialValues) {
+  if (!data) {
     return null;
   }
   if (initDep) {
-    console.log("iniitt", initDep, initialValues);
+    console.log("iniitt", initDep, data);
   }
 
   return (
     <TaskDependency
       onCancel={onCancel}
-      taskOptions={taskOptions ?? []}
+      otherTasks={otherTasks ?? []}
       initDep={initDep ?? []}
       id={id}
+      name={name}
     />
   );
 };

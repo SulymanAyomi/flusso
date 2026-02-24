@@ -1,9 +1,9 @@
-import { CreateProjectAI } from "@/features/projects/components/create-project-AI";
+import CreateProjectAIPageClient from "./client";
 
 const CreateProjectAIPage = () => {
   return (
     <div className="w-full h-[calc(100vh-88px)]">
-      <CreateProjectAI />
+      <CreateProjectAIPageClient />
     </div>
   );
 };

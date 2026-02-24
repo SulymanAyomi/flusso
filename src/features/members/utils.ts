@@ -1,6 +1,4 @@
-import { Query, type Databases } from "node-appwrite";
 
-import { DATABASE_ID, MEMBERS_ID } from "@/config";
 import { db } from "@/lib/db";
 
 interface GetMemberProps {
@@ -13,12 +11,12 @@ export const getMember = async ({
     userId
 }: GetMemberProps) => {
 
-    const members = await db.member.findMany({
+    const member = await db.member.findFirst({
         where: {
             workspaceId: workspaceId,
             userId: userId
         }
     })
 
-    return members[0]
+    return member
 }

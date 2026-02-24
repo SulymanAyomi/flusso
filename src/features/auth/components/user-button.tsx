@@ -8,11 +8,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { DottedSeparator } from "@/components/dotted-separator";
-import { Loader, LogOut } from "lucide-react";
-import { useLogout } from "../api/use-logout";
+import { LogOut } from "lucide-react";
 import { AuthUser } from "../type";
 import { signOut } from "next-auth/react";
+import { Separator } from "@/components/ui/separator";
 
 interface UserButtonProps {
   user: AuthUser;
@@ -25,20 +24,27 @@ export const UserButton = ({ user }: UserButtonProps) => {
   //     </div>
   //   );
   // }
-
+  const image = user.image;
   const name = user.name;
   const email = user.email;
   const avatarFallback = name
     ? name.charAt(0).toUpperCase()
-    : email.charAt(0).toUpperCase() ?? "U";
+    : email.charAt(0).toUpperCase();
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="outline-none relative">
-        <Avatar className="size-10 hover:opacity-75 transition border border-neutral-300">
-          <AvatarFallback className="bg-neutral-200 font-medium text-neutral-500 flex items-center justify-center">
-            {avatarFallback}
-          </AvatarFallback>
-        </Avatar>
+        {image ? (
+          <img
+            src={image}
+            className="border border-neutral-300 size-10 object-contain"
+          />
+        ) : (
+          <Avatar className="size-10 hover:opacity-75 transition border border-neutral-300">
+            <AvatarFallback className="bg-neutral-200 font-medium text-neutral-500 flex items-center justify-center">
+              {avatarFallback}
+            </AvatarFallback>
+          </Avatar>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -47,21 +53,26 @@ export const UserButton = ({ user }: UserButtonProps) => {
         sideOffset={10}
       >
         <div className="flex flex-col items-center justify-center gap-2 px-2.5 py-4">
-          <Avatar className="size-[52px] transition border border-neutral-300">
-            <AvatarFallback className="bg-neutral-200 text-xl font-medium text-neutral-500 flex items-center justify-center">
-              U
-            </AvatarFallback>
-          </Avatar>
+          {image ? (
+            <img
+              src={image}
+              className="border border-neutral-300 size-10 object-contain"
+            />
+          ) : (
+            <Avatar className="size-[52px] transition border border-neutral-300">
+              <AvatarFallback className="bg-neutral-200 text-xl font-medium text-neutral-500 flex items-center justify-center">
+                {avatarFallback}
+              </AvatarFallback>
+            </Avatar>
+          )}
           <div className="flex flex-col items-center justify-center ">
-            <p className="text-sm font-medium text-neutral-900">
-              {name || "User"}
-            </p>
+            <p className="text-sm font-medium text-neutral-900">{name}</p>
             <p className="text-xs text-neutral-500 ">{email}</p>
           </div>
         </div>
-        <DottedSeparator className="mb-1" />
+        <Separator className="mb-1" />
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => signOut({ callbackUrl: "/sign-in" })}
           className="h-10 flex items-center justify-center text-amber-700 font-medium cursor-pointer"
         >
           <LogOut className="size-4" />

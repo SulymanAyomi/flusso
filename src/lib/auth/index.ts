@@ -1,5 +1,4 @@
 import NextAuth, { getServerSession, NextAuthOptions, User } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "../db";
@@ -13,6 +12,10 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
     interface JWT {
         id: String;
+        email: String;
+        name: String;
+        image: String;
+
     }
 }
 
@@ -49,7 +52,7 @@ export const authOptions: NextAuthOptions =
                         id: user.id,
                         name: user.name,
                         email: user.email,
-                        image: user.image,
+                        image: user.imageUrl ?? "",
                     }
                 } catch (error: any) {
                     return null
@@ -67,22 +70,60 @@ export const authOptions: NextAuthOptions =
         signIn: "/sign-in"
     },
     callbacks: {
+        async signIn({ user, account }) {
+            if (account?.provider === "google") {
+                const existingUser = await db.user.findUnique({
+                    where: { email: user.email! },
+                })
+
+                if (existingUser) {
+                    // Link Google account
+                    await db.user.update({
+                        where: { id: existingUser.id },
+                        data: {
+                            emailVerified: true,
+                            imageUrl: user.image
+                        },
+                    })
+                }
+            }
+
+            return true
+        },
+
         async jwt({ token, user }) {
             if (user) {
-                token.id = user.id
-                token.email = user.email
-                token.name = user.name
-                token.image = user.image
+                token.sub = user.id
+                token.email = user.email!
+                token.name = user.name!
+                token.image = user.image!
             }
-            return token;
+            return token
         },
-        async session({ token, session }) {
+
+        async session({ session, token }) {
             if (token) {
-                session.user.id = token.id as string
+                session.user.id = token.sub as string
+                session.user.name = token.name as string
+                session.user.email = token.email as string
+                session.user.image = token.image as string
             }
-            return session;
+            return session
+        },
+    },
+    cookies: {
+        sessionToken: {
+            name: "__Secure-authjs.session-token",
+            options: {
+                httpOnly: true,
+                secure: true,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 60 * 60 * 24 * 30
+            },
         },
     },
 }
 
 export const getAuthSession = () => getServerSession(authOptions);
+

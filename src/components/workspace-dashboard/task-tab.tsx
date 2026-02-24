@@ -9,6 +9,9 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetWorkspaceTasks } from "@/features/workspaces/api/use-get-workspace-tasks";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { snakeCaseToTitleCase } from "@/lib/utils";
+import { TaskActions } from "@/features/tasks/components/task-actions";
+import { Button } from "../ui/button";
+import { MoreVertical } from "lucide-react";
 
 const TaskTabs = () => {
   const workspaceId = useWorkspaceId();
@@ -47,9 +50,9 @@ const TaskTabs = () => {
                   <Skeleton className="bg-neutral-100 w-full h-7" />
                   <Skeleton className="bg-neutral-100 w-full h-7" />
                 </>
-              ) : data?.todayTasks.length! > 0 ? (
-                data?.todayTasks.map((task) => (
-                  <div className="flex justify-between items-center p-2 rounded-md bg-neutral-100">
+              ) : data?.dueTodayTasks.count && data?.dueTodayTasks.count > 0 ? (
+                data?.dueTodayTasks.tasks.map((task) => (
+                  <div className="flex justify-between items-center p-2 rounded-md bg-neutral-100 overflow-auto">
                     <p className="text-xs">{task.name}</p>
                     <div className="flex items-center justify-center">
                       <Avatar className="size-5 hover:opacity-75 transition border border-neutral-300">
@@ -62,9 +65,11 @@ const TaskTabs = () => {
                     <Badge variant={task.status} className="text-xs">
                       {snakeCaseToTitleCase(task.status)}
                     </Badge>
-                    <p className="text-xs">
-                      {format(task.dueDate!, "MMM d, yyyy")}
-                    </p>
+                    <div>
+                      <p className="text-xs line-clamp-1">
+                        {format(task.dueDate!, "MMM d, yyyy")}
+                      </p>
+                    </div>
                     <Badge variant={task.priority} className="text-[10px]">
                       {snakeCaseToTitleCase(task.priority)}
                     </Badge>
@@ -72,7 +77,7 @@ const TaskTabs = () => {
                 ))
               ) : (
                 <div>
-                  <p className="text-center">No deadline today</p>
+                  <p className="text-center text-xs">No deadline today</p>
                 </div>
               )}
             </div>
@@ -87,31 +92,46 @@ const TaskTabs = () => {
                   <Skeleton className="bg-neutral-100 w-full h-7" />
                   <Skeleton className="bg-neutral-100 w-full h-7" />
                 </>
-              ) : data?.tasks.length! > 0 ? (
-                data?.tasks.map((task) => (
-                  <div className="flex justify-start items-center p-2 bg-white rounded-md border border-neutral-100 shadow-sm  text-sm text-gray-700">
-                    <p className="text-xs w-1/5">{task.name}</p>
-                    <div className="w-1/5 flex items-center justify-center">
-                      <MemberAvatar name={task.name} />
+              ) : data?.myAssignedTasks.count &&
+                data?.myAssignedTasks.count > 0 ? (
+                data?.myAssignedTasks.tasks.map((task) => (
+                  <div className="flex justify-between items-center px-1 py-2 md:p-2 bg-white rounded-md border border-neutral-100 shadow-sm  text-sm text-gray-700">
+                    <div className="w-1/4">
+                      <p className="text-xs line-clamp-1">{task.name}</p>
                     </div>
-                    <div className="w-1/5">
-                      <Badge variant={task.status} className="text-[10px] px-1">
+                    <div className="w-1/4 flex items-start justify-start ">
+                      <Badge
+                        variant={task.status}
+                        className="text-[10px] px-1 line-clamp-1 w-fit"
+                      >
                         {snakeCaseToTitleCase(task.status)}
                       </Badge>
                     </div>
-                    <p className="text-xs w-1/5">
-                      {format(task.dueDate!, "MMM d, yyyy")}
-                    </p>
-                    <div className="w-1/5">
-                      <Badge variant={task.priority} className="text-xs">
+                    <div className="w-1/4">
+                      <p className="text-xs line-clamp-1 ">
+                        {format(task.dueDate!, "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <div className="w-1/4 flex items-start">
+                      <Badge
+                        variant={task.priority}
+                        className="text-xs line-clamp-1 w-fit"
+                      >
                         {snakeCaseToTitleCase(task.priority)}
                       </Badge>
+                    </div>
+                    <div className="flex items-end">
+                      <TaskActions id={task.id} projectId={task.project.id}>
+                        <Button variant="ghost" size="xs">
+                          <MoreVertical className="size-3" />
+                        </Button>
+                      </TaskActions>
                     </div>
                   </div>
                 ))
               ) : (
                 <div>
-                  <p className="text-center">
+                  <p className="text-center text-xs">
                     You have not been assigned to a Task
                   </p>
                 </div>

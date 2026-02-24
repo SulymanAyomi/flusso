@@ -7,8 +7,6 @@ import { useGetWorkspaceAnalytics } from "@/features/workspaces/api/use-get-work
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
-import { Analytics } from "@/components/workspace-dashboard/analytics";
-
 import { Button } from "@/components/ui/button";
 
 import ProjectLists from "@/components/workspace-dashboard/projects-list";
@@ -33,7 +31,7 @@ export const MyTaskClient = () => {
         <h2 className="text-xl">My Tasks</h2>
       </div>
       {/* Body */}
-      <div className="px-3 w-full bg-neutral-100">
+      <div className="px-3 space-y-3 w-full bg-neutral-100">
         {/* workspce overview cards */}
         <MyTaskAnalytics />
         <div className="grid grid-cols-1 py-2 gap-2">

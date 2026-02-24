@@ -6,7 +6,7 @@ const workspaceId = async () => {
   const user = await getCurrent();
   if (!user) redirect("/sign-in");
 
-  return <WorkspaceIdClient />;
+  return <WorkspaceIdClient user={user} />;
 };
 
 export default workspaceId;

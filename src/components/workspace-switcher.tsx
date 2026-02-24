@@ -14,14 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  GalleryVerticalEnd,
+  PlusIcon,
+} from "lucide-react";
 import { Button } from "./ui/button";
+import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
 
 export const WorkspaceSwitcher = () => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const { isLoading, data: workspaces } = useGetWorkspaces();
   const [selected, setSelected] = useState<WorkspaceType>();
+  const { open } = useCreateWorkspaceModal();
 
   const onSelect = (workspace: WorkspaceType) => {
     setSelected(workspace);
@@ -62,7 +69,7 @@ export const WorkspaceSwitcher = () => {
         <DropdownMenuTrigger asChild>
           <Button
             size="lg"
-            className="bg-[#EBF2FF] focus-visible:border-[#EBF2FF] focus-visible:ring-0 transition text-black data-[state=open]:bg-brand1 border-[#EBF2FF] data-[state=open]:text-[#1546e7]  hover:bg-[#EBF2FF/90] px-3 py-6"
+            className="bg-[#EBF2FF] focus-visible:border-[#EBF2FF] focus-visible:ring-0 transition text-black data-[state=open]:bg-brand1/30 data-[state=open]:text-black  border-[#EBF2FF]   hover:bg-[#EBF2FF/90] px-3 py-6"
           >
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
               <GalleryVerticalEnd className="size-4" />
@@ -82,10 +89,19 @@ export const WorkspaceSwitcher = () => {
             <DropdownMenuItem
               key={workspace.id}
               onSelect={() => onSelect(workspace)}
+              className="truncate line-clamp-1"
             >
               {workspace.name}
             </DropdownMenuItem>
           ))}
+          {workspaces?.length && workspaces?.length < 2 && (
+            <DropdownMenuItem
+              onSelect={() => open()}
+              className="font-semibold py-3"
+            >
+              <PlusIcon /> Create new workspace
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

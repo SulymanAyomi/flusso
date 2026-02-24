@@ -34,7 +34,7 @@ import TaskComments from "./task-comments";
 
 const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
   return (
-    <div className="bg-white w-[500px] p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
+    <div className="bg-white w-full h-full p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
       <div className="flex items-center justify-start">
         <div className="flex items-center gap-2">
           {/* <Star className="size-[18-px] stroke-1 shrink-0 text-neutral-700 hover:opacity-75 transition" /> */}
@@ -49,7 +49,7 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
         <div className="flex items-center w-full">
           <div className="flex items-center w-[25%] gap-1">
             <Clock className="size-5 text-neutral-400" />
-            <p>Created time</p>
+            <p>Created date</p>
           </div>
           <div className="flex-1">
             <p className="text-black">
@@ -66,9 +66,6 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
             <p>Status</p>
           </div>
           <div className="flex-1 flex items-center justify-start">
-            {/* <div className="p-1 px-2 bg-yellow-200 text-yellows-800 rounded-[12px] text-[10px]">
-              In Progress
-            </div> */}
             <Badge
               className="text-[10px] py-1 px-2 rounded-[12px]"
               variant={task.status}
@@ -83,9 +80,6 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
             <p>Priority</p>
           </div>
           <div className="flex-1 flex items-center justify-start">
-            {/* <div className="p-1 px-2 bg-blue-200 text-blue-800 rounded-[12px] text-[10px]">
-              Low
-            </div> */}
             <Badge
               className="text-[10px] py-1 px-2 rounded-[12px]"
               variant={task.priority}
@@ -129,7 +123,15 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
             <p>Assignees</p>
           </div>
           <div className="flex-1">
-            <MemberAvatar name={task.assignedTo?.user.name!} />
+            {task.assignedTo ? (
+              <MemberAvatar
+                name={task.assignedTo?.user.name!}
+                imageUrl={task.assignedTo?.user.imageUrl}
+                fallbackClassName="bg-blue-500 text-white"
+              />
+            ) : (
+              "unassigned"
+            )}
           </div>
         </div>
         <div className="flex items-center w-full ">

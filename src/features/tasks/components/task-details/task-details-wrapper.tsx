@@ -30,7 +30,13 @@ export const TaskDetailWrapper = ({ onCancel, id }: TaskDetailWrapperProps) => {
   }
 
   if (!initialValues) {
-    return null;
+    return (
+      <Card className="w-full h-[714px] border-none shadow-none">
+        <CardContent className="flex items-center justify-center h-full">
+          <p>Task not found</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return <TaskDetails task={initialValues.task} />;

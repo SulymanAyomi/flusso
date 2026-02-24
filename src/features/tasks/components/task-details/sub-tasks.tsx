@@ -1,9 +1,11 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckIcon, PlusIcon, XIcon } from "lucide-react";
+import { CheckIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import React, { useState } from "react";
 import { useGetSubTasks } from "../../api/use-get-subtasks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { useCreateSubTask } from "../../api/use-create-subtask";
 import { cn } from "@/lib/utils";
 import { useEditSubTask } from "../../api/use-edit-subtask";
@@ -76,7 +78,7 @@ const SubTasks = ({ taskId }: subTasksProps) => {
     deleteSubTask(
       { json: sub, param: { taskId } },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
           setSavedIds((prev) => prev.filter((id) => id !== data.id));
         },
       }
@@ -84,7 +86,14 @@ const SubTasks = ({ taskId }: subTasksProps) => {
   };
 
   if (isLoading) {
-    return "Loading...";
+    return (
+      <div className="h-full space-y-2 p-4">
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-4" />
+      </div>
+    );
   }
   return (
     <div className="flex flex-1 flex-col p-4">
@@ -125,7 +134,7 @@ const SubTasks = ({ taskId }: subTasksProps) => {
                   className="p-1 hover:bg-primary-foreground cursor-pointer"
                   onClick={() => onDelete({ id: task.id, isDone: task.isDone })}
                 >
-                  <XIcon className="text-red-400 size-4" />
+                  <Trash2Icon className="text-red-400 size-4" />
                 </div>
               </div>
             </div>

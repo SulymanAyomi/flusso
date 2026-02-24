@@ -1,24 +1,22 @@
-import { getToken } from "next-auth/jwt"
-import type { Context } from "hono"
+import "server-only"
+import { createMiddleware } from "hono/factory";
 import { AuthUser } from "@/features/auth/type"
+import { getAuthSession } from "./auth";
+import { errorResponse } from "./api-response";
 
-export async function requireAuth(c: Context): Promise<AuthUser | null> {
-  const token = await getToken({
-    // @ts-ignore
-    req: c.req.raw,
-    secret: process.env.NEXTAUTH_SECRET,
-  })
-  if (!token || !token.email || !token.id) {
-    return null
+type AdditionalContext = {
+  Variables: {
+    user: AuthUser
   }
-
-  const user: AuthUser = {
-    id: token.id as string,
-    email: token.email,
-    name: token.name as string,
-    image: token.image as string
-
-  }
-
-  return user
 }
+
+export const sessionMiddleware = createMiddleware<AdditionalContext>(
+  async (c, next) => {
+    const session = await getAuthSession()
+    if (!session || !session.user) {
+      return c.json(errorResponse("Unauthourized"), 401)
+    }
+    c.set("user", session.user)
+    await next()
+  }
+)

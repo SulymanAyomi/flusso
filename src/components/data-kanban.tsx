@@ -5,12 +5,12 @@ import {
   Draggable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { Task, TaskStatus } from "@/features/tasks/types";
+import { Task, TaskStatus, TasksType } from "@/features/tasks/types";
 import { KanbanColumnHeader } from "./kanban-column-header";
 import { KanbanCard } from "./kanban-card";
 
 interface DataKanbanProps {
-  data: Task[];
+  data: TasksType[];
   onChange: (
     tasks: { id: string; status: TaskStatus; position: number }[]
   ) => void;
@@ -25,7 +25,7 @@ const boards: TaskStatus[] = [
 ];
 
 type TasksState = {
-  [key in TaskStatus]: Task[];
+  [key in TaskStatus]: TasksType[];
 };
 
 export const DataKanban = ({ data, onChange }: DataKanbanProps) => {
@@ -164,7 +164,10 @@ export const DataKanban = ({ data, onChange }: DataKanbanProps) => {
               key={board}
               className="flex-1 mx-2 bg-muted p-1.5 rounded-md min-w-[200px]"
             >
-              <KanbanColumnHeader board={board} taskCount={board.length} />
+              <KanbanColumnHeader
+                board={board}
+                taskCount={tasks[board].length}
+              />
               <Droppable droppableId={board}>
                 {(provided) => (
                   <div
@@ -184,6 +187,7 @@ export const DataKanban = ({ data, onChange }: DataKanbanProps) => {
                             {...provided.dragHandleProps}
                             {...provided.draggableProps}
                           >
+                            {/* @ts-ignore */}
                             <KanbanCard task={task} />
                           </div>
                         )}

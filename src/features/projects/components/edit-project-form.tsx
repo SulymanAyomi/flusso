@@ -4,7 +4,14 @@ import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
-import { ArrowLeftIcon, Calendar, ImageIcon, Loader, Star } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  Calendar,
+  ImageIcon,
+  Loader,
+  Loader2Icon,
+  Star,
+} from "lucide-react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +76,9 @@ export const EditProjectForm = ({
     defaultValues: {
       ...initialValues,
       image: initialValues.imageUrl ?? "",
+      // @ts-ignore
+      status: initialValues.status,
+      tags: [],
     },
   });
 
@@ -115,8 +125,8 @@ export const EditProjectForm = ({
       <DeleteDialog />
       <div className="bg-white w-[500px] p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center justify-start text-sm">
-            <Star className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-1" />
+          <div className="flex items-center justify-start text-sm pl-2">
+            {/* <Star className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-1" /> */}
             <p className="text-xl font-bold">Edit Project</p>
           </div>
         </div>
@@ -409,8 +419,18 @@ export const EditProjectForm = ({
               <Button variant="outline" onClick={onCancel}>
                 Cancle
               </Button>
-              <Button variant="primary" disabled={isPending}>
-                Save
+              <Button
+                variant="primary"
+                disabled={isPending}
+                className="min-w-[105px]"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2Icon className="animate-spin h-full" /> saving
+                  </>
+                ) : (
+                  <>Save</>
+                )}
               </Button>
             </div>
           </form>

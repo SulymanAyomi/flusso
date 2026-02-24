@@ -6,6 +6,6 @@ export const getCurrent = async () => {
         const session = await getServerSession(authOptions);
         return session?.user
     } catch (e) {
-        console.log(e)
+        return null
     }
 }

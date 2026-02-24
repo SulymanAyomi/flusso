@@ -18,8 +18,8 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime?
-  image         String?
+  emailVerified Boolean?
+  imageUrl      String?
   password      String? // For credentials auth
   accounts      Account[]
   sessions      Session[]
@@ -62,11 +62,15 @@ model Session {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+  id        String   @id @default(cuid())
+  email     String   @unique
+  otp       String
+  limit     Int      @default(0)
+  attempts  Int      @default(0)
+  expires   DateTime
+  createdAt DateTime @default(now())
 
-  @@unique([identifier, token])
+  @@index([email])
 }
 
 model PasswordResetToken {
@@ -134,6 +138,7 @@ model Project {
   createdById String
   owner       Member        @relation(fields: [createdById], references: [id])
   archived    Boolean
+  aiGenerated Boolean       @default(false)
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime      @default(now())
@@ -179,6 +184,13 @@ model Task {
   TaskTags TaskTags[]
 
   Subtask Subtask[] @relation("TaskSubtasks")
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, projectId])
+  @@index([workspaceId, assignedToId])
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
 }
 
 enum TaskStatus {
@@ -205,6 +217,8 @@ model Subtask {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([taskId])
 }
 
 model Schedule {
@@ -224,6 +238,8 @@ model Comment {
   user      Member?  @relation("CommentCreator", fields: [userId], references: [id])
   task      Task?    @relation("TaskCommentedOn", fields: [taskId], references: [id])
   createdAt DateTime @default(now())
+
+  @@index([taskId])
 }
 
 model AINote {
@@ -291,6 +307,12 @@ model Activity {
   // Relations
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   member    Member    @relation(fields: [memberId], references: [id])
+
+  @@index([workspaceId])
+  @@index([memberId])
+  @@index([entityId])
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([workspaceId, actionType, createdAt(sort: Desc)])
 }
 
 enum ActivityType {

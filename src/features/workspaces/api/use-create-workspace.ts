@@ -5,7 +5,7 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 
-type ResponseType = InferResponseType<typeof client.api.workspaces["$post"]>
+type ResponseType = InferResponseType<typeof client.api.workspaces["$post"], 201 | 200>
 type RequestType = InferRequestType<typeof client.api.workspaces["$post"]>
 
 
@@ -19,22 +19,27 @@ export const useCreateWorkspace = () => {
     >({
         mutationFn: async ({ form }) => {
             const response = await client.api.workspaces["$post"]({ form })
-            return await response.json()
-        },
-        onSuccess: (data) => {
-            console.log("yelow", data)
-            if (data.workspace) {
-                toast.success("Workspace created")
-                router.push(`/workspaces/${data.workspace.id}`);
-                queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-            } else {
-                toast.error("Failed to create workspace")
+            const data = await response.json()
+            if (!response.ok) {
+                // if (response.status == 500) {
+                //     throw new Error("")
+                // }
+                // @ts-ignore
+                throw new Error(data.error)
             }
-
+            return data
+        },
+        onSuccess: (response) => {
+            if (response.success) {
+                toast.success("Workspace created")
+                router.push(`/workspaces/${response.data.id}`);
+                queryClient.invalidateQueries({ queryKey: ["workspaces"] })
+            }
         },
         onError: (error) => {
-            if (error.message == "Unauthourize") {
+            if (error.message == "Unauthorized") {
                 router.push(`/sign-in`);
+                return;
             }
             toast.error("Failed to create workspace")
         }

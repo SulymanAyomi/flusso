@@ -23,3 +23,19 @@ export function snakeCaseToTitleCase(str: string) {
 export const formatTwoDigits = (num: number): string => {
   return num.toString().padStart(2, "0").slice(-2)
 }
+
+export function calculatePercentageChange(previousCount: number, currentCount: number) {
+  if (previousCount === 0) {
+    return {
+      change: currentCount > 0 ? 100 : 0,
+      direction: currentCount > 0 ? "up" : "neutral"
+    };
+  }
+
+  const diff = currentCount - previousCount;
+  const change = Math.abs((diff / previousCount) * 100);
+  const direction = diff > 0 ? "up" : diff < 0 ? "down" : "neutral";
+
+  return { change: Math.round(change), direction };
+}
+

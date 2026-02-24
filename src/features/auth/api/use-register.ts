@@ -19,23 +19,27 @@ export const useRegister = () => {
         RequestType
     >({
         mutationFn: async ({ json }) => {
-            console.log("hello front")
             const response = await client.api.register["$post"]({ json })
-            return response.json()
+            const data = await response.json()
+            if (!response.ok) {
+                // if (response.status == 500) {
+                //     throw new Error("")
+                // }
+                // @ts-ignore
+                throw new Error(data.error)
+            }
+            return data
         },
         onSuccess: async (data) => {
             if (data.success) {
-                toast.success("User registered successfully")
+                toast.success("User registration successful")
                 queryClient.invalidateQueries({ queryKey: ["current"] })
                 queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-                router.push("/")
-            } else {
-                toast.error("User registration failed")
+                router.push(`/verification?vid=${data.data.vid}`)
             }
         },
         onError: async (error) => {
-            console.log(error)
-            toast.success("User registration failed")
+            toast.error("User registration failed")
         }
     })
     return mutation

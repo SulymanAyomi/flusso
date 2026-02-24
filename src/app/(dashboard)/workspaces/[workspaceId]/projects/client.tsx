@@ -41,8 +41,12 @@ import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import { AuthUser } from "@/features/auth/type";
 
-function ProjectsClientPage() {
+interface ProjectsClientPageProps {
+  user: AuthUser;
+}
+function ProjectsClientPage({ user }: ProjectsClientPageProps) {
   const workspaceId = useWorkspaceId();
   const [view, setView] = useState("table");
   const [showFilter, setShowFilter] = useState(false);
@@ -51,7 +55,7 @@ function ProjectsClientPage() {
   return (
     <div>
       <PageHeader
-        header={"Welcome, Ayomi"}
+        header={`Welcome, ${user.name}`}
         subText={"Start to manage your projects and assigned tasks here"}
         button={true}
         buttonType={"project"}
@@ -78,12 +82,15 @@ function ProjectsClientPage() {
         className="flex-1 w-full"
       >
         <div className="flex items-center justify-between gap-2 px-3 py-2">
+          {/* page title & tab controls */}
           <div className="flex items-center">
             <div className="flex font-semibold items-start mr-1">
-              <h2 className="text-xl font-semibold">Your Projects</h2>
+              <h2 className="text-lg md:text-xl font-semibold">
+                Your Projects
+              </h2>
               {/* <div className="text-[8px] text-blue-700">{projects?.length}</div> */}
             </div>
-            <div className="flex bg-white border rounded-3xl p-0.5">
+            <div className=" bg-white border rounded-3xl p-0.5">
               <TabsList className="p-0 h-fit gap-1">
                 <TabsTrigger
                   value="table"
@@ -104,7 +111,7 @@ function ProjectsClientPage() {
               </TabsList>
             </div>
           </div>
-          <div className="flex gap-6">
+          <div className=" hidden lg:flex gap-6">
             <div className="border rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2">
               <Archive className="size-4" />
               <span>Archived</span>
@@ -138,6 +145,55 @@ function ProjectsClientPage() {
           {/* small top cards */}
 
           <ProjectsAnalytics />
+          <div className="lg:hidden flex gap-3 justify-between items-center bg-white">
+            <div className=" bg-inherit border rounded-3xl p-0.5">
+              <TabsList className="p-0 h-fit gap-1">
+                <TabsTrigger
+                  value="table"
+                  className="p-2 rounded-xl cursor-pointer bg-inherit text-black data-[state=active]:bg-blue-700 data-[state=active]:text-white"
+                >
+                  <div>
+                    <LayoutIcon className="size-4" />
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="grid"
+                  className="p-2 rounded-xl cursor-pointer bg-inherit text-black data-[state=active]:bg-blue-700 data-[state=active]:text-white"
+                >
+                  <div>
+                    <LayoutGridIcon className="size-4" />
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="border  h-fit rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2">
+                <Archive className="size-4" />
+              </div>
+              <div
+                className={cn(
+                  "cursor-pointer h-fit border p-2 rounded-xl flex items-center  text-gray-600 text-xs",
+                  showFilter && "text-white bg-blue-700"
+                )}
+                onClick={() => setShowFilter(!showFilter)}
+              >
+                <FilterIcon className="size-4" />
+              </div>
+              <div className="flex-1">
+                <div className="relative">
+                  <div className="absolute pl-1 text-neutral-500 top-1/2 transform -translate-y-1/2 ">
+                    <SearchIcon className="size-4" />
+                  </div>
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search"
+                    className="pl-7 focus-visible:ring-blue-500 focus-visible:border-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* dashboards cards */}
 

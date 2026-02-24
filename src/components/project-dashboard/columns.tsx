@@ -79,15 +79,15 @@ export const columns: ColumnDef<ProjectType>[] = [
       );
     },
     cell: ({ row }) => {
-      const percentage = row.original.percentage;
+      const percentage = row.original.stats;
       return (
         <div className="flex gap-2 items-center">
           <Progress
-            value={percentage}
+            value={percentage.completionPercentage}
             color="blue"
             className="bg-neutral-400 text-blue-500"
           ></Progress>
-          <p>{percentage.toFixed(0)}%</p>
+          <p>{percentage.completionPercentage}%</p>
         </div>
       );
     },
@@ -106,11 +106,10 @@ export const columns: ColumnDef<ProjectType>[] = [
       );
     },
     cell: ({ row }) => {
-      const total = row.original.counts.total;
-      const completed = row.original.counts.completed;
+      const stats = row.original.stats;
       return (
-        <p className="text-center">
-          {completed}/{total}
+        <p className="text-center px-4">
+          {stats.tasks.completed}/{stats.tasks.total}
         </p>
       );
     },

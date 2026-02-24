@@ -40,13 +40,14 @@ const HighPiority = () => {
       </Card>
     );
   }
+
   return (
     <Card>
       <CardHeader>
-        <h3>Highest priority</h3>
+        <h3 className="text-[18px] font-semibold">Highest priority</h3>
       </CardHeader>
       <CardContent className="flex gap-2 flex-col">
-        {data?.todayTasks.length! > 1 ? (
+        {data?.dueTodayTasks.count && data?.dueTodayTasks.count > 0 ? (
           <div className="flex justify-between items-center">
             <div className="text-xs">Today's task</div>
             <div className="text-[8px] bg-blue-700 rounded-[12px] py-1 px-2 text-blue-200">
@@ -56,8 +57,9 @@ const HighPiority = () => {
           </div>
         ) : null}
 
-        {data?.highpiorityTasks.length! > 0 ? (
-          data?.highpiorityTasks.map((task) => (
+        {data?.highPriorityTasks?.count &&
+        data?.highPriorityTasks?.count > 0 ? (
+          data?.highPriorityTasks.tasks?.map((task) => (
             <div className="flex justify-start items-center p-2 bg-white rounded-md border border-neutral-100 shadow-sm  text-sm text-gray-700">
               <p className="text-xs w-1/5">{task.name}</p>
               <div className="w-1/5 flex items-center justify-center">
@@ -79,14 +81,8 @@ const HighPiority = () => {
             </div>
           ))
         ) : (
-          <div className="text-xs">No high piority task</div>
+          <div className="text-sm text-center">No high piority task</div>
         )}
-        {/* <div className="flex justify-between items-center">
-          <div className="text-xs">Write test today</div>
-          <div className="text-[8px] bg-red-700 rounded-[12px] py-1 px-2 text-blue-200">
-            Critical
-          </div>
-        </div> */}
       </CardContent>
     </Card>
   );

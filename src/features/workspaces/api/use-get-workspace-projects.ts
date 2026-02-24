@@ -12,13 +12,14 @@ export const useGetWorkspaceProjects = ({ workspaceId }: useGetWorkspaceProjects
         queryKey: ["workspace-projects", workspaceId],
         queryFn: async () => {
             const response = await client.api.workspaces[":workspaceId"]["recentProjects"]["$get"]({ param: { workspaceId } });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch workspace analytics")
             }
             const { data } = await response.json();
             return data;
-        }
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes (matches server cache)
+        refetchOnWindowFocus: false,
     })
 
     return query

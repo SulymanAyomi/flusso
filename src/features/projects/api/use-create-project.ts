@@ -5,7 +5,7 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 
-type ResponseType = InferResponseType<typeof client.api.projects["$post"], 200>
+type ResponseType = InferResponseType<typeof client.api.projects["$post"]>
 type RequestType = InferRequestType<typeof client.api.projects["$post"]>
 
 
@@ -18,23 +18,24 @@ export const useCreateProject = () => {
         RequestType
     >({
         mutationFn: async ({ json }) => {
-
             const response = await client.api.projects["$post"]({ json })
-            if (!response.ok) {
-                throw new Error("something went wrong")
-            }
             const data = await response.json()
+            if (!response.ok) {
+                // @ts-ignore
+                throw new Error(data.error)
+            }
             console.log(data)
             return data
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             toast.success("Project created")
-            // router.refresh()
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["projects"] })
+            queryClient.invalidateQueries({ queryKey: ["projects", data.data.workspaceId] })
+            queryClient.invalidateQueries({ queryKey: ["workspace-activities", data.data.workspaceId] })
         },
-        onError: () => {
+        onError: (error) => {
+            console.log(error)
             toast.error("Failed to create project")
         }
     })

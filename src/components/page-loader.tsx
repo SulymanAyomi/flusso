@@ -1,9 +1,9 @@
-import { Loader } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 export const PageLoader = () => {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader className="size-6 animate-spin text-muted-foreground" />
+      <Loader2Icon className="size-9 animate-spin text-blue-400" />
     </div>
   );
 };
