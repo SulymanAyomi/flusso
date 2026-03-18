@@ -204,7 +204,7 @@ const app = new Hono()
             ownerId: z.string().optional(),
             search: z.string().optional(),
             dueDate: z.string().optional(),
-            limit: z.number().optional(),
+            limit: z.string().optional(),
         })),
         sessionMiddleware,
         async (c) => {
@@ -249,7 +249,7 @@ const app = new Hono()
                         equals: dueDate
                     }
                 }
-                const queryLimit = Math.min(Number(limit) || 5, 20); // Max 20
+                const queryLimit = Math.min(Number(limit) || 10, 20); // Max 20
 
                 const projects = await db.project.findMany({
                     where: query,
@@ -370,6 +370,178 @@ const app = new Hono()
 
             } catch (error) {
                 console.error("fetch all workpace projects error:", error);
+                return c.json(errorResponse("Failed to fetch workspace projects"), 500);
+            }
+        }
+    )
+    .get(
+        "/p",
+        zValidator(
+            "query",
+            z.object({
+                workspaceId: z.string(),
+                status: z.nativeEnum(ProjectsStatus).optional(),
+                ownerId: z.string().optional(),
+                search: z.string().optional(),
+                dueDate: z.string().optional(),
+                limit: z.number().optional(),
+                cursor: z.string().optional(), // For future cursor pagination
+            })
+        ),
+        sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId, status, ownerId, search, dueDate, limit, cursor } =
+                    c.req.valid("query");
+
+                // 1️⃣ Validate workspace
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        members: { some: { userId: user.id } },
+                    },
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                // 2️⃣ Build project filter
+                const projectFilter: Record<string, any> = { workspaceId };
+
+                if (ownerId) projectFilter.createdById = ownerId;
+                if (status) projectFilter.status = { equals: status };
+                if (search)
+                    projectFilter.name = { contains: search, mode: "insensitive" };
+                if (dueDate) projectFilter.endDate = { equals: dueDate };
+
+                // 3️⃣ Pagination settings
+                const queryLimit = Math.min(Number(limit) || 10, 20);
+
+                // 4️⃣ Fetch projects (only metadata)
+                const projects = await db.project.findMany({
+                    where: projectFilter,
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        imageUrl: true,
+                        status: true,
+                        archived: true,
+                        startDate: true,
+                        endDate: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        workspaceId: true,
+                        owner: {
+                            select: {
+                                id: true,
+                                role: true,
+                                user: { select: { id: true, name: true, imageUrl: true } },
+                            },
+                        },
+                        ProjectTags: { select: { tag: { select: { id: true, name: true } } } },
+                    },
+                    orderBy: [{ createdAt: "desc" }], // stable for MVP
+                    take: queryLimit,
+                });
+
+                const projectIds = projects.map((p) => p.id);
+
+                // 5️⃣ Aggregate task stats in DB
+                const taskStats = await db.task.groupBy({
+                    by: ["projectId", "status", "priority"],
+                    where: { projectId: { in: projectIds } },
+                    _count: { id: true },
+                });
+
+                // 6️⃣ Transform task stats per project
+                const statsByProject: Record<string, any> = {};
+
+                projects.forEach((p) => {
+                    statsByProject[p.id] = {
+                        tasks: { total: 0, completed: 0, inProgress: 0, todo: 0, backlog: 0, inReview: 0 },
+                        priorities: { critical: 0, high: 0, medium: 0, low: 0 },
+                    };
+                });
+
+                taskStats.forEach((row) => {
+                    const s = statsByProject[row.projectId];
+                    s.tasks.total += row._count;
+                    // Status counts
+                    switch (row.status) {
+                        case TaskStatus.DONE:
+                            s.tasks.completed += row._count;
+                            break;
+                        case TaskStatus.IN_PROGRESS:
+                            s.tasks.inProgress += row._count;
+                            break;
+                        case TaskStatus.TODO:
+                            s.tasks.todo += row._count;
+                            break;
+                        case TaskStatus.BACKLOG:
+                            s.tasks.backlog += row._count;
+                            break;
+                        case TaskStatus.IN_REVIEW:
+                            s.tasks.inReview += row._count;
+                            break;
+                    }
+                    // Priority counts
+                    switch (row.priority) {
+                        case TaskPriority.CRITICAL:
+                            s.priorities.critical += row._count;
+                            break;
+                        case TaskPriority.HIGH:
+                            s.priorities.high += row._count;
+                            break;
+                        case TaskPriority.MEDIUM:
+                            s.priorities.medium += row._count;
+                            break;
+                        case TaskPriority.LOW:
+                            s.priorities.low += row._count;
+                            break;
+                    }
+                });
+
+                // 7️⃣ Compute business logic in Node
+                const now = new Date();
+                const projectsWithStats = projects.map((project) => {
+                    const stats = statsByProject[project.id];
+                    const completionPercentage =
+                        stats.tasks.total > 0
+                            ? Math.round((stats.tasks.completed / stats.tasks.total) * 100)
+                            : 0;
+
+                    const isOverdue =
+                        project.endDate && new Date(project.endDate) < now && project.status !== ProjectStatus.COMPLETED;
+
+                    const daysUntilDue = project.endDate
+                        ? Math.ceil((new Date(project.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                        : null;
+
+                    let healthStatus: "on-track" | "at-risk" | "overdue" = "on-track";
+                    if (isOverdue) healthStatus = "overdue";
+                    else if (daysUntilDue !== null && daysUntilDue <= 7 && completionPercentage < 70)
+                        healthStatus = "at-risk";
+
+                    const tags = project.ProjectTags.map((pt) => pt.tag);
+
+                    const { ProjectTags: _, ...projectData } = project;
+
+                    return {
+                        ...projectData,
+                        tags,
+                        stats: { ...stats, completionPercentage, healthStatus, daysUntilDue, isOverdue: isOverdue || false },
+                    };
+                });
+
+                // 8️⃣ Return response
+                return c.json(successResponse(projectsWithStats), 200, {
+                    "Cache-Control": "private, max-age=180", // 3 minutes
+                });
+            } catch (error) {
+                console.error("fetch all workspace projects error:", error);
                 return c.json(errorResponse("Failed to fetch workspace projects"), 500);
             }
         }
@@ -515,8 +687,6 @@ const app = new Hono()
 
             let query: Record<string, any> = {}
             query.workspaceId = workspaceId
-
-
 
             const projects = await db.project.findMany({
                 where: {
@@ -1191,132 +1361,92 @@ const app = new Hono()
                     'high': TaskPriority.HIGH,
                     'critical': TaskPriority.CRITICAL
                 }
-                // const result = await db.$transaction(async (tx) => {
-                //     const newProject = await db.project.create({
-                //         data: {
-                //             workspaceId,
-                //             name: project.name,
-                //             description: project.description,
-                //             status: "ACTIVE",
-                //             createdById: member.id,
-                //             imageUrl: "",
-                //             archived: false,
-                //             startDate: new Date(project.startDate) ?? thisMonthStart,
-                //             endDate: new Date(project.endDate) ?? thisMonthEnd,
-                //             // aiGenerated: true
-                //         }
-                //     })
+                const result = await db.$transaction(async (tx) => {
+                    const newProject = await tx.project.create({
+                        data: {
+                            workspaceId,
+                            name: project.name,
+                            description: project.description,
+                            status: "ACTIVE",
+                            createdById: member.id,
+                            imageUrl: "",
+                            archived: false,
+                            startDate: new Date(project.startDate) ?? thisMonthStart,
+                            endDate: new Date(project.endDate) ?? thisMonthEnd,
+                            // aiGenerated: true
+                        }
+                    })
 
-                //     const taskMap = new Map<string, string>(); // tempId -> real task id
+                    const taskMap = new Map<string, string>(); // tempId -> real task id
 
-                //     for (const task of tasks) {
-                //         let index = 0
-                //         const t = await tx.task.create({
-                //             data: {
-                //                 workspaceId,
-                //                 projectId: newProject.id,
-                //                 name: task.title,
-                //                 description: task.description,
-                //                 status: "TODO",
-                //                 dueDate: new Date(task.dueDate),
-                //                 priority: priorty[task.priority],
-                //                 position: Math.min((index + 1) * 1000, 1_000_000),
-                //             }
-                //         });
+                    let index = 0
+                    for (const task of tasks) {
+                        const t = await tx.task.create({
+                            data: {
+                                workspaceId,
+                                projectId: newProject.id,
+                                name: task.title,
+                                description: task.description,
+                                status: "TODO",
+                                startDate: newProject.startDate,
+                                dueDate: new Date(task.dueDate),
+                                priority: priorty[task.priority],
+                                position: Math.min((index + 1) * 1000, 1_000_000),
+                            }
+                        });
 
-                //         // map the temp id to real task
-                //         const tempId = task.id
-                //         taskMap.set(tempId, t.id)
-                //         index = index + 1
+                        // map the temp id to real task
+                        const tempId = task.id
+                        taskMap.set(tempId, t.id)
+                        index = index + 1
 
-                //     }
+                    }
 
-                //     // 3. connect the dependencies
-                //     for (const task of tasks) {
-                //         const tempId = task.id
-                //         const currentTaskId = taskMap.get(tempId)
+                    // 3. connect the dependencies
+                    for (const task of tasks) {
+                        const tempId = task.id
+                        const currentTaskId = taskMap.get(tempId)
 
-                //         if (currentTaskId && task.dependsOn.length > 0) {
-                //             const dependencyIds = task.dependsOn.map((tempId) => taskMap.get(tempId)).filter((id) => id !== undefined)
+                        if (currentTaskId && task.dependsOn.length > 0) {
+                            const dependencyIds = task.dependsOn.map((tempId) => taskMap.get(tempId)).filter((id) => id !== undefined)
 
-                //             if (dependencyIds.length > 0) {
-                //                 await tx.taskDependency.createMany({
-                //                     data: dependencyIds.map((dependsOnId) => ({
-                //                         taskId: currentTaskId,
-                //                         dependsOnId,
-                //                     }))
-                //                 })
-                //             }
-                //         }
-                //     }
+                            if (dependencyIds.length > 0) {
+                                await tx.taskDependency.createMany({
+                                    data: dependencyIds.map((dependsOnId) => ({
+                                        taskId: currentTaskId,
+                                        dependsOnId,
+                                    }))
+                                })
+                            }
+                        }
+                    }
 
-                //     return await tx.project.findUniqueOrThrow({
-                //         where: {
-                //             id: newProject.id
-                //         }
-                //     })
-                // })
-                const result = {
-                    id: 'ff891449-95f3-41d9-aa05-1f02edb607b0',
-                    name: 'Portfolio Website Development',
-                    description: 'Create a professional portfolio website showcasing case studies, blog, and contact form with modern design and responsive layout',
-                    imageUrl: '',
-                    status: 'ACTIVE',
-                    workspaceId: '465bf03d-8cc7-40ec-a793-0c4a5d50bca7',
-                    createdById: '2faa61c3-cb85-4834-a189-6b6da133ba30',
-                    archived: false,
-                    startDate: "2026-02 - 24T00:00:00.000Z",
-                    endDate: "2026-03 - 26T00:00:00.000Z",
-                    createdAt: "2026-02 - 23T11: 44: 59.777Z",
-                    updatedAt: "2026-02 - 23T11: 44: 59.777Z"
-                }
-
+                    return await tx.project.findUniqueOrThrow({
+                        where: {
+                            id: newProject.id
+                        }
+                    })
+                })
+                // const results = {
+                //     id: 'ff891449-95f3-41d9-aa05-1f02edb607b0',
+                //     name: 'Portfolio Website Development',
+                //     description: 'Create a professional portfolio website showcasing case studies, blog, and contact form with modern design and responsive layout',
+                //     imageUrl: '',
+                //     status: 'ACTIVE',
+                //     workspaceId: '465bf03d-8cc7-40ec-a793-0c4a5d50bca7',
+                //     createdById: '2faa61c3-cb85-4834-a189-6b6da133ba30',
+                //     archived: false,
+                //     startDate: "2026-02 - 24T00:00:00.000Z",
+                //     endDate: "2026-03 - 26T00:00:00.000Z",
+                //     createdAt: "2026-02 - 23T11: 44: 59.777Z",
+                //     updatedAt: "2026-02 - 23T11: 44: 59.777Z"
+                // }
                 console.log(result)
-
                 return c.json(successResponse(result))
 
             } catch (error) {
                 console.error(error)
                 return c.json(errorResponse("Something went wrong"), 500);
-            }
-        }
-    )
-    .get("/generate/flights",
-        async (c) => {
-            try {
-                const result = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: flightPrompt(),
-                    config: {
-                        safetySettings: safetySetting,
-                        responseMimeType: "application/json",
-                        // responseSchema: {
-                        //     type: Type.OBJECT,
-                        //     response: {
-                        //         status: ["valid", "needs_rewrite", "invalid"],
-                        //         reason: Type.STRING,
-                        //         rewritten: Type.STRING,
-                        //         suggestedRewrite: Type.STRING,
-                        //         suggestion: Type.STRING
-                        //     }
-
-                        // }
-
-                    }
-                })
-
-                const AIResponse = result.text
-                console.log(AIResponse)
-
-                const objResponse = JSON.parse(AIResponse!)
-                console.log("rrrr", objResponse, typeof (objResponse))
-                return c.json({ data: { success: true, tasks: objResponse }, feedback: "ok" })
-
-
-            } catch (error) {
-                console.error(error)
-                return c.json({ data: { success: false, tasks: [], feedback: "Our AI service hit a snag. Try again in a moment." } }, 500);
-
             }
         }
     )
@@ -1408,7 +1538,7 @@ const app = new Hono()
             const existingProject = await db.project.findUnique({
                 where: {
                     id: projectId
-                }
+                },
             })
             if (!existingProject) {
                 return c.json(errorResponse("Project not found"), 404)
@@ -1428,14 +1558,28 @@ const app = new Hono()
                 return c.json(errorResponse("You do not have permission to carry out action."), 403)
             }
 
-            await db.project.delete({
-                where: {
-                    id: projectId
-                }
+            await db.$transaction(async (tx) => {
+                const deletedAt = new Date()
+                await tx.taskDependency.deleteMany({
+                    where: {
+                        task: {
+                            projectId
+                        }
+                    }
+                })
+                await tx.task.deleteMany({
+                    where: {
+                        projectId
+                    }
+                })
+                await tx.project.delete({
+                    where: {
+                        id: projectId
+                    },
+                })
             })
             const data = { id: projectId }
             return c.json(successResponse(data, "Project deleted successfully"), 200)
-
         }
 
     )

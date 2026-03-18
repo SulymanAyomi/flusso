@@ -74,7 +74,6 @@ export function useProjectFlow() {
 
 
             const validation = res as unknown as ValidatePromptResponse
-            console.log("validation", validation)
 
             if (!validation.valid) {
                 addMessage({
@@ -235,11 +234,11 @@ export function useProjectFlow() {
     }, [generateMutation, addMessage, handleError, chatMessage]);
 
     const openPanel = useCallback(() => {
+        console.log(isPanelOpen, chatMessage, prompt)
         setIsPanelOpen(true)
     }, [])
 
     const saveProject = useCallback(async (project: ProjectData) => {
-        console.log("saving project", chatMessage)
 
         setFlowState({
             stage: "saving"
@@ -247,27 +246,16 @@ export function useProjectFlow() {
         const save = await saveMutation.mutateAsync({
             json: {
                 workspaceId: workspaceId,
-                data: project!
+                data: project
             }
         })
         if (save.data) {
-            router.push(`/workspace/${workspaceId}/projects/${save.data.id}`)
+            toast.success("project saved successfully!")
+            router.push(`/workspaces/${workspaceId}/projects/${save.data.id}`)
             reset()
         }
-        console.log(save)
 
     }, [flowState])
-
-    const handleSave = () => {
-        const project = chatMessage.find((c) => c.type == "AI")
-        if (project?.projectTask) {
-            saveProject(project?.projectTask)
-        } else {
-            toast.error("No generated project found")
-        }
-    }
-
-
 
     const reset = useCallback(() => {
         setFlowState({ stage: 'idle' });
@@ -292,15 +280,25 @@ export function useProjectFlow() {
         }
     };
     const handleRegenerate = () => {
-        console.log(chatMessage, flowState)
-        const lastUserMessage = [...chatMessage].reverse().find(m => m.type === 'USER');
-        if (lastUserMessage) {
-            const originalPrompt = lastUserMessage.prompt;
-            console.log(lastUserMessage, chatMessage)
-            setChatMessages(prev => prev.slice(0, -1));
-
+        if (flowState.stage === 'generating') {
+            let originalPrompt = flowState.validatedPrompt;
+            const index = [...chatMessage].findLastIndex(m => m.type === 'AI');
+            if (index === -1) {
+                toast.error("No user prompt found to regenerate")
+                return
+            }
+            console.log(flowState, chatMessage)
+            // setChatMessages(prev => prev.slice(0, -1));
+            setChatMessages(prev => {
+                const newMessages = [...prev];
+                newMessages.slice(0, index + 1)
+                return newMessages;
+            });
             retryGeneration(originalPrompt);
-        } else {
+
+        }
+
+        else {
             toast.error("No user prompt found to regenerate")
         }
     }
@@ -320,7 +318,7 @@ export function useProjectFlow() {
         isPanelOpen,
         setIsPanelOpen,
         openPanel,
-        handleSave,
+        saveProject,
         handleRegenerate
     };
 }

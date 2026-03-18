@@ -10,6 +10,7 @@ import { TaskDate } from "@/features/tasks/components/task-date";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { TaskActions } from "@/features/tasks/components/task-actions";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export const columns: ColumnDef<EditTask>[] = [
   {
@@ -27,7 +28,16 @@ export const columns: ColumnDef<EditTask>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.name;
-      return <p className="line-clamp-1">{name}</p>;
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <p className="line-clamp-1">{name}</p>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p> {name}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
     },
   },
   {
@@ -49,7 +59,14 @@ export const columns: ColumnDef<EditTask>[] = [
       return (
         <div className="flex items-center gap-x-2 font-medium">
           <ProjectAvatar className="size-6" name={project.name} image={img} />
-          <p className="line-clamp-1">{project.name}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="line-clamp-1">{project.name}</p>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p> {project.name}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       );
     },

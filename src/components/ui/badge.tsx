@@ -42,17 +42,18 @@ const badgeVariants = cva(
         [TaskPriority.MEDIUM]:
           "border-transparent bg-green-200 text-green-800 hover:bg-green-100/80",
         [TaskPriority.CRITICAL]:
-          "border-transparent bg-pink-200 text-primary hover:bg-pink-200/80",
+          "border-transparent bg-pink-200 text-pink-800 hover:bg-pink-200/80",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {

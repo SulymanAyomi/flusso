@@ -4,9 +4,11 @@ import { PageLoader } from "@/components/page-loader";
 import { useGetProject } from "@/features/projects/api/use-get-project";
 import { EditProjectForm } from "@/features/projects/components/edit-project-form";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 export const ProjectIdSettingsClient = () => {
   const projectId = useProjectId();
+  const workspaceId = useWorkspaceId();
   const { data: initialValues, isLoading } = useGetProject({ projectId });
 
   if (isLoading) {
@@ -14,7 +16,20 @@ export const ProjectIdSettingsClient = () => {
   }
 
   if (!initialValues) {
-    return <PageError message="Project not found" />;
+    return (
+      <PageError
+        message="Project not found."
+        title="This project may have been deleted or you might not have access to it."
+        primaryAction={{
+          label: "View projects",
+          href: `/workspaces/${workspaceId}/projects`,
+        }}
+        secondaryAction={{
+          label: "Back to workspaces",
+          href: `/workspaces/${workspaceId}`,
+        }}
+      />
+    );
   }
 
   return (

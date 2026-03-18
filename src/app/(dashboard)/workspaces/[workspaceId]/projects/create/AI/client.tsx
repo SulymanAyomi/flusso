@@ -4,8 +4,6 @@ import { CreatePrompt } from "@/features/projects/components/AI/create-prompt";
 import { ChatPage } from "@/features/projects/components/AI/chat";
 import { useProjectFlow } from "@/features/projects/components/AI/useprojectflow";
 import { ProjectReview } from "@/features/projects/components/AI/project-preview";
-import { useState } from "react";
-import { ProjectData } from "@/features/projects/types";
 
 const CreateProjectAIPageClient = () => {
   const {
@@ -20,13 +18,8 @@ const CreateProjectAIPageClient = () => {
     isPanelOpen,
     setIsPanelOpen,
     handleRegenerate,
+    saveProject,
   } = useProjectFlow();
-
-  const handleSave = () => {
-    // TODO: Implement save to database
-    // reset();
-    handleRegenerate();
-  };
 
   // Handle discard action
   const handleDiscard = () => {
@@ -34,6 +27,13 @@ const CreateProjectAIPageClient = () => {
     //   // reset();
     // }
     setIsPanelOpen(false);
+    reset();
+  };
+  const closePanel = () => {
+    setIsPanelOpen(false);
+  };
+  const handleOpen = () => {
+    setIsPanelOpen(true);
   };
 
   return (
@@ -50,6 +50,7 @@ const CreateProjectAIPageClient = () => {
           stage={flowState.stage}
           chats={chatMessage}
           isLoading={isLoading}
+          onRegenerate={handleRegenerate}
         />
       )}
 
@@ -57,9 +58,11 @@ const CreateProjectAIPageClient = () => {
       {isPanelOpen && project && (
         <ProjectReview
           data={project}
-          onSave={handleSave}
+          onSave={saveProject}
           onRegenerate={regenerate}
           onDiscard={handleDiscard}
+          closePanel={closePanel}
+          isLoading={isLoading}
         />
       )}
 

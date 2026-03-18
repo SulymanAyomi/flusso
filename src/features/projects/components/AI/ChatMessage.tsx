@@ -25,6 +25,7 @@ interface AIChatMessageProps {
   /** Optional override for words-per-minute. */
   speed?: number;
   actions: ErrorAction[];
+  onRegenerate: () => void;
 }
 
 /**
@@ -36,6 +37,7 @@ export function AIChatMessage({
   onStreamComplete,
   speed,
   actions,
+  onRegenerate,
 }: AIChatMessageProps) {
   const { streamedText, isStreaming, start, reset } = useSimulatedStream({
     speed,
@@ -105,14 +107,17 @@ export function AIChatMessage({
               <Button
                 variant={action.variant || "primary"}
                 size="sm"
-                onClick={action.onClick}
+                onClick={() => {
+                  action.label == "Regenerate"
+                    ? onRegenerate()
+                    : action.onClick();
+                }}
                 className="rounded-xl text-xs font-medium min-w-[100px]"
               >
                 {ButtonIcon(action.label)}
                 {action.label}
               </Button>
             ))}
-          <ActionButtons />
         </div>
 
         {/* Blinking cursor while streaming */}

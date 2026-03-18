@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTaskDetailsModal } from "../../hooks/use-task-details-modal";
 import { TaskStatus as PrismaTaskStatus } from "@/generated/prisma";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MemberDisplay from "@/features/members/components/member-display";
 
 interface EventCardProps {
   title: string;
@@ -74,12 +75,12 @@ export const EventCard = ({
         onClick={onClick}
         className={cn(
           "p-1.5 text-xs bg-white text-primary border rounded-md border-l-4 flex flex-col gap-y-1.5 cursor-pointer hover:opacity-75 transition",
-          statusColorMap[status]
+          statusColorMap[status],
         )}
       >
         <p>{title}</p>
         <div className=" flex items-center gap-x-1">
-          {assignedTo && <MemberAvatar name={assignedTo?.user.name!} />}
+          {<MemberDisplay assignedTo={assignedTo} />}
           <div className="size-1 rounded-full bg-neutral-300" />
           <ProjectAvatar name={project?.name} image={project?.imageUrl ?? ""} />
         </div>

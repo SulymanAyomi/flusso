@@ -1,7 +1,6 @@
 "use client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar,
@@ -9,7 +8,7 @@ import {
   ImageIcon,
   Loader,
   Loader2Icon,
-  Star,
+  SparklesIcon,
 } from "lucide-react";
 import {
   FormControl,
@@ -20,7 +19,6 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DatePicker } from "@/components/date-picker";
@@ -29,7 +27,6 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -81,15 +78,22 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
           form.reset();
           onCancel?.();
         },
-      }
+      },
     );
+  };
+
+  const openChatPage = () => {
+    router.push(`/workspaces/${workspaceId}/projects/create/AI`);
   };
 
   return (
     <div className="bg-white w-full h-full  p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-start text-sm">
-          <Star className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-2" />
+          <SparklesIcon
+            className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-2"
+            onClick={openChatPage}
+          />
           <p className="text-xl font-bold">Create Project</p>
         </div>
       </div>

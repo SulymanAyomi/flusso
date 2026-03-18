@@ -22,6 +22,8 @@ import { formatTwoDigits } from "@/lib/utils";
 import Link from "next/link";
 import { Skeleton } from "../ui/skeleton";
 import { useGetWorkspaceTasksAnalytics } from "@/features/workspaces/api/use-get-my-task-analytics";
+import { Tooltip, TooltipContent } from "../ui/tooltip";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
 
 export const MyTaskAnalytics = () => {
   const sampleData = {
@@ -341,9 +343,17 @@ export const MyTaskAnalytics = () => {
               <p className={`text-xs font-semibold ${config.color}`}>
                 {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
               </p>
-              <p className="text-[10px] text-gray-600 mt-1 line-clamp-1">
-                {config.label}
-              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/* <Button variant="outline">Hover</Button> */}
+                  <p className="text-[10px] text-gray-600 mt-1 line-clamp-1">
+                    {config.label}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p> {config.label}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </CardContent>

@@ -22,6 +22,7 @@ import { AIChatMessage } from "./ChatMessage";
 
 interface AIChatsResponseProps {
   chat: ChatMessage;
+  onRegenerate: () => void;
 }
 
 const ERROR_SEVERITY = {
@@ -76,7 +77,7 @@ const ERROR_ICONS = {
   SERVER_ERROR: AlertCircle,
   BROWSER_OFFLINE: Wifi,
 };
-const AIChatsResponse = ({ chat }: AIChatsResponseProps) => {
+const AIChatsResponse = ({ chat, onRegenerate }: AIChatsResponseProps) => {
   return (
     <div className="flex items-start justify-start w-full animate-message-appear">
       {chat.type == "AI"
@@ -84,8 +85,9 @@ const AIChatsResponse = ({ chat }: AIChatsResponseProps) => {
             <AIChatMessage
               project={chat.projectTask}
               onStreamComplete={chat.handleStreamComplete}
-              speed={700}
+              speed={10000}
               actions={chat.actions!}
+              onRegenerate={onRegenerate}
             />
           )
         : chat.type == "ERROR" && <ChatsError chat={chat} />}

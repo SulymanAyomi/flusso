@@ -28,8 +28,6 @@ model User {
   updatedAt     DateTime  @updatedAt
   AINote        AINote[]
 
-  Workspace Workspace[]
-
   PasswordResetToken PasswordResetToken[]
 }
 
@@ -87,18 +85,21 @@ model Workspace {
   name       String
   imageUrl   String
   inviteCode String
-  ownerId    String
   members    Member[]
   projects   Project[]
+  deletedAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  owner      User      @relation(fields: [ownerId], references: [id])
+  ownerId    String?
+  owner      Member?   @relation("workspaceOwner", fields: [ownerId], references: [id])
 
   Task Task[]
 
   Tags Tags[]
 
   Activity Activity[]
+
+  @@index([id, deletedAt])
 }
 
 model Member {
@@ -108,16 +109,17 @@ model Member {
   workspaceId String
   role        Role // "admin", "member", etc.
   joinedAt    DateTime  @default(now())
+  deletedAt   DateTime?
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  Comment Comment[] @relation("CommentCreator")
+  Comment        Comment[]   @relation("CommentCreator")
+  Task           Task[]      @relation("TaskAssignee")
+  Activity       Activity[]
+  projects       Project[]
+  workspaceOwned Workspace[] @relation("workspaceOwner")
 
-  Task Task[] @relation("TaskAssignee")
-
-  Activity Activity[]
-
-  Project Project[]
+  @@unique([workspaceId, userId])
 }
 
 enum Role {
@@ -141,10 +143,13 @@ model Project {
   aiGenerated Boolean       @default(false)
   startDate   DateTime?
   endDate     DateTime?
+  deletedAt   DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   ProjectTags ProjectTags[]
+
+  @@index([id, deletedAt])
 }
 
 enum ProjectStatus {
@@ -172,6 +177,7 @@ model Task {
   schedule     Schedule?
   orderIndex   Int          @default(0)
   completedAt  DateTime?
+  deletedAt    DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -185,10 +191,11 @@ model Task {
 
   Subtask Subtask[] @relation("TaskSubtasks")
 
+  @@index([workspaceId, deletedAt])
+  @@index([projectId, deletedAt])
   @@index([workspaceId, status])
   @@index([workspaceId, projectId])
   @@index([workspaceId, assignedToId])
-  @@index([projectId])
   @@index([status])
   @@index([dueDate])
 }
@@ -213,7 +220,7 @@ model Subtask {
   name   String
   isDone Boolean @default(false)
   taskId String
-  task   Task    @relation("TaskSubtasks", fields: [taskId], references: [id])
+  task   Task    @relation("TaskSubtasks", fields: [taskId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -236,7 +243,7 @@ model Comment {
   userId    String
   taskId    String
   user      Member?  @relation("CommentCreator", fields: [userId], references: [id])
-  task      Task?    @relation("TaskCommentedOn", fields: [taskId], references: [id])
+  task      Task?    @relation("TaskCommentedOn", fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@index([taskId])
@@ -287,22 +294,22 @@ model TaskDependency {
   taskId      String
   dependsOnId String
 
-  task      Task @relation("TaskDependencyTo", fields: [taskId], references: [id])
-  dependsOn Task @relation("TaskDependencyFrom", fields: [dependsOnId], references: [id])
+  task      Task @relation("TaskDependencyTo", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn Task @relation("TaskDependencyFrom", fields: [dependsOnId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, dependsOnId])
 }
 
 model Activity {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   workspaceId String
   memberId    String // Member who performed the action
-  actionType  String
+  actionType  ActivityType
   entityType  String?
   entityId    String?
   entityTitle String?
   metadata    Json? // Extra context to render feed line
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
 
   // Relations
   workspace Workspace @relation(fields: [workspaceId], references: [id])

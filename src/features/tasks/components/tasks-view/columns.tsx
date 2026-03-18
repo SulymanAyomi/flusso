@@ -10,6 +10,7 @@ import { TaskDate } from "../task-date";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { TaskActions } from "../task-actions";
+import MemberDisplay from "@/features/members/components/member-display";
 
 export const columns: ColumnDef<TasksType>[] = [
   {
@@ -78,6 +79,12 @@ export const columns: ColumnDef<TasksType>[] = [
               name={assignee.name!}
             />
             <p className="line-clamp-1">{assignee.name}</p>
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex items-center justify-center gap-x-2 font-medium">
+            <MemberDisplay className="size-6" assignedTo={null} />
           </div>
         );
       }

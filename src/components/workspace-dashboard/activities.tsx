@@ -12,17 +12,21 @@ const Activities = () => {
   const { data, isLoading } = useGetWorkspaceActivities({ workspaceId });
 
   return (
-    <Card>
+    <Card className="flex min-h-60 flex-col">
       <CardHeader>
         <h3 className="text-[18px] font-semibold">Activity</h3>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 w-full">
+      <CardContent className="flex flex-col gap-4 w-full h-full">
         {isLoading ? (
           <ActivityLoader />
         ) : data?.summary.total && data?.summary.total > 0 ? (
           <ActivityFeed activities={data?.activities} />
         ) : (
-          <p className="text-sm text-center">No activitiy</p>
+          <div className="text-center my-auto flex flex-col items-center justify-center h-full w-full text-sm">
+            <p className="text-sm text-center">
+              No activity recorded this week.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -8,6 +8,11 @@ import Activities from "@/components/workspace-dashboard/activities";
 import TaskTabs from "@/components/workspace-dashboard/task-tab";
 import PageHeader from "@/components/page-header";
 import { AuthUser } from "@/features/auth/type";
+import { PageLoader } from "@/components/page-loader";
+import { PageError } from "@/components/page-error";
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
+import PerformanceDashboard from "@/components/workspace-dashboard/demo";
 
 interface WorkspaceIdClientProps {
   user: AuthUser;
@@ -15,6 +20,26 @@ interface WorkspaceIdClientProps {
 
 export const WorkspaceIdClient = ({ user }: WorkspaceIdClientProps) => {
   const name = user.name;
+  const workspaceId = useWorkspaceId();
+  const { isLoading, data: workspaces } = useGetWorkspace({
+    workspaceId,
+  });
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!workspaces) {
+    return (
+      <PageError
+        title="Workspace not found."
+        message="This workspace may have been deleted, moved or you might not have access to it."
+        primaryAction={{
+          label: "View workspaces",
+          href: `/workspaces/${workspaceId}`,
+        }}
+      />
+    );
+  }
   return (
     <div className="flex flex-col">
       <PageHeader
@@ -30,18 +55,19 @@ export const WorkspaceIdClient = ({ user }: WorkspaceIdClientProps) => {
       <div className="px-3 w-full bg-neutral-100">
         {/* workspce overview cards */}
         <Analytics />
+        {/* workspace dashboards cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 py-2 gap-2">
-          {/* workspace dashboards cards */}
           {/* projects card  */}
           <ProjectLists />
-          <div className="flex gap-2 flex-col">
-            {/* highest piority card */}
-            <HighPiority />
-            {/* Activity card */}
-            <Activities />
-          </div>
-          {/* Tasks card */}
+
+          {/* highest tasks piority card */}
+          <HighPiority />
+
+          {/* my Tasks card */}
           <TaskTabs />
+
+          {/* Activity card */}
+          <Activities />
           {/* Ai card */}
         </div>
       </div>

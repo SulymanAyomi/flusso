@@ -1,8 +1,9 @@
 
 export enum MemberRole {
+    OWNER = "OWNER",
     ADMIN = "ADMIN",
     MEMBER = "MEMBER",
-    VIWER = "VIWER",
+    VIEWER = "VIEWER",
 }
 
 export type Member = {

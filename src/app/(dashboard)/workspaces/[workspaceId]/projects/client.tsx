@@ -18,6 +18,7 @@ import {
   FilterIcon,
   FlagIcon,
   Folder,
+  HomeIcon,
   Layout,
   LayoutGridIcon,
   LayoutIcon,
@@ -64,7 +65,7 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
         <Link href={`/workspaces/${workspaceId}`}>
           <div className="flex items-center text-neutral-500 text-xs">
             <span className="mr-1">
-              <Folder className="size-3" />
+              <HomeIcon className="size-3" />
             </span>
             Dashboard
           </div>
@@ -73,7 +74,12 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
           <ChevronRightIcon className="size-4" />
         </div>
         <Link href={`/workspaces/${workspaceId}/projects`}>
-          <span className="text-xs text-blue-700">Project</span>
+          <div className="flex items-center text-blue-700 text-xs">
+            <span className="mr-1">
+              <Folder className="size-3" />
+            </span>
+            Projects
+          </div>
         </Link>
       </div>
       <Tabs
@@ -119,7 +125,7 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
             <div
               className={cn(
                 "cursor-pointer border rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2",
-                showFilter && "text-white bg-blue-700"
+                showFilter && "text-white bg-blue-700",
               )}
               onClick={() => setShowFilter(!showFilter)}
             >
@@ -173,7 +179,7 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
               <div
                 className={cn(
                   "cursor-pointer h-fit border p-2 rounded-xl flex items-center  text-gray-600 text-xs",
-                  showFilter && "text-white bg-blue-700"
+                  showFilter && "text-white bg-blue-700",
                 )}
                 onClick={() => setShowFilter(!showFilter)}
               >

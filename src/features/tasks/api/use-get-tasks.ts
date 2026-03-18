@@ -10,6 +10,8 @@ interface useGetTasksProps {
     status?: TaskStatus | null;
     assignedToId?: string | null;
     dueDate?: string | null;
+    toDate?: string | null;
+    fromDate?: string | null;
 }
 
 export type useGetTasksResponseType = InferResponseType<typeof client.api.tasks["$get"], 200>
@@ -21,7 +23,9 @@ export const useGetTasks = ({
     status,
     assignedToId,
     dueDate,
-    search
+    search,
+    toDate,
+    fromDate
 }: useGetTasksProps) => {
 
     const query = useQuery({
@@ -31,7 +35,9 @@ export const useGetTasks = ({
             status,
             assignedToId,
             dueDate,
-            search
+            search,
+            toDate,
+            fromDate
         })
         ],
         queryFn: async () => {
@@ -42,7 +48,9 @@ export const useGetTasks = ({
                     status: status ?? undefined,
                     assignedToId: assignedToId ?? undefined,
                     dueDate: dueDate ?? undefined,
-                    search: search ?? undefined
+                    search: search ?? undefined,
+                    toDate: toDate ?? undefined,
+                    fromDate: fromDate ?? undefined
                 }
             });
 

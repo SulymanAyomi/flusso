@@ -88,22 +88,32 @@ const app = new Hono()
                 // }
                 const userId = user.id
                 const inviteCode = generateInviteCode(6)
-                const workspace = await db.workspace.create({
-                    data: {
-                        name,
-                        imageUrl,
-                        inviteCode,
-                        ownerId: userId,
-                        members: {
-                            create: {
-                                // imageUrl: user1?.imageUrl,
-                                imageUrl: "",
-                                role: MemberRole.ADMIN,
-                                userId: userId,
-                            }
+
+                const workspace = await db.$transaction(async (tx) => {
+                    const newWorkspace = await tx.workspace.create({
+                        data: {
+                            name,
+                            imageUrl,
+                            inviteCode,
+                            ownerId: null
                         }
-                    }
+                    })
+                    const member = await tx.member.create({
+                        data: {
+                            userId,
+                            workspaceId: newWorkspace.id,
+                            role: "ADMIN"
+                        }
+                    })
+                    const updatedWorkspace = await tx.workspace.update({
+                        where: { id: newWorkspace.id },
+                        data: { ownerId: member.id }
+                    })
+
+                    return updatedWorkspace
+
                 })
+
                 return c.json(successResponse(workspace, "Workspace created"), 201);
             } catch (error) {
                 console.log(error)
@@ -183,17 +193,41 @@ const app = new Hono()
             })
 
             if (!member || member.role !== MemberRole.ADMIN) {
-                return c.json({ error: "Unauthorized" }, 401)
+                return c.json(errorResponse("Permission denied."), 401)
+            }
+            const existingWorkspace = await db.workspace.findUnique({
+                where: { id: workspaceId }
+            })
+            if (!existingWorkspace) {
+                return c.json(errorResponse("Workspace not found"), 404)
+            }
+            if (member.id !== existingWorkspace.ownerId) {
+                return c.json(errorResponse("Permission denied."), 404)
             }
 
-            await db.workspace.delete({
-                where: {
-                    id: workspaceId
-                }
+            await db.$transaction(async (tx) => {
+                const deletedAt = new Date()
+                await tx.workspace.update({
+                    where: {
+                        id: workspaceId
+                    },
+                    data: {
+                        deletedAt
+                    }
+                })
+
+                await tx.project.updateMany({
+                    where: {
+                        workspaceId: workspaceId
+                    },
+                    data: {
+                        deletedAt: deletedAt
+                    }
+                })
+
             })
 
             return c.json({ data: { id: workspaceId } })
-
         }
 
     ).post(
@@ -1035,9 +1069,9 @@ const app = new Hono()
                 // Build where clause dynamically
                 const whereClause: any = {
                     workspaceId,
-                    createdAt: {
-                        gte: subDays(new Date(), days)
-                    }
+                    // createdAt: {
+                    //     gte: subDays(new Date(), days)
+                    // }
                 };
                 // Add optional filters
                 if (actionType) {

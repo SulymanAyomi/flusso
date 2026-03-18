@@ -8,5 +8,7 @@ export const useTaskFilters = () => {
         assignedToId: parseAsString,
         search: parseAsString,
         dueDate: parseAsString,
+        fromDate: parseAsString,
+        toDate: parseAsString,
     })
 }

@@ -8,25 +8,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { LogOut } from "lucide-react";
-import { AuthUser } from "../type";
-import { signOut } from "next-auth/react";
+import { Loader2Icon, LogOut } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { Separator } from "@/components/ui/separator";
 
-interface UserButtonProps {
-  user: AuthUser;
-}
-export const UserButton = ({ user }: UserButtonProps) => {
-  // if (!user) {
-  //   return (
-  //     <div className="size-10 rounded-full flex items-center justify-center bg-neutral-200 border border-neutral-300">
-  //       <Loader className="size-4 animate-spin text-muted-foreground" />
-  //     </div>
-  //   );
-  // }
-  const image = user.image;
-  const name = user.name;
-  const email = user.email;
+export const UserButton = () => {
+  const { data: session } = useSession();
+
+  if (!session) {
+    return (
+      <div className="size-10 rounded-full flex items-center justify-center bg-neutral-200 border border-neutral-300">
+        <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  const image = session?.user.image;
+  const name = session?.user.name;
+  const email = session?.user.email!;
   const avatarFallback = name
     ? name.charAt(0).toUpperCase()
     : email.charAt(0).toUpperCase();

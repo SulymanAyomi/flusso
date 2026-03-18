@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardFooter } from "../ui/card";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  BarChart2Icon,
   CheckIcon,
   ChevronRightIcon,
   Folder,
@@ -61,6 +62,39 @@ const Analytics = () => {
   }
   return (
     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 py-2">
+      <Card className="bg-violet-100 text-violet-900   flex flex-col  gap-6 py-6 shadow-sm">
+        <CardHeader className="px-3 py-0">
+          <div className="flex items-center justify-start">
+            <div className="bg-violet-700 text-violet-100 rounded-full p-1 mr-2">
+              <BarChart2Icon className="size-3.5" />
+            </div>
+            <div className="text-sm font-semibold">Project Completed</div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-3 py-0 flex justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="font-bold text-xl">{analytics?.totalProjects}</div>
+            <div className="text-xs">Project completed</div>
+          </div>
+        </CardContent>
+        <CardFooter className="px-3 py-0">
+          <div className="flex flex-1  items-center justify-between">
+            <div className=" text-[10px] rounded-[6px] py-1.5 px-1 flex items-center bg-violet-700 text-violet-100">
+              <ArrowUpIcon className="size-3" />
+              15% since last month
+            </div>
+            <Link
+              href={`workspaces/${workspaceId}/projects`}
+              className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
+            >
+              view projects
+              <span>
+                <ChevronRightIcon className="size-3" />
+              </span>
+            </Link>{" "}
+          </div>
+        </CardFooter>
+      </Card>
       {/* Project overview */}
       <Card className=" bg-green-100 text-green-900 flex flex-col gap-6 py-6 shadow-sm">
         <CardHeader className="px-3 py-0">
@@ -74,7 +108,7 @@ const Analytics = () => {
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.activeProjects!)}
+              {analytics?.activeProjects!}
             </div>
             <div className="text-xs">Projects in progress</div>
           </div>
@@ -86,11 +120,11 @@ const Analytics = () => {
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-red-600 h-fit rounded-full"></span>
-                <p>Over due: {analytics?.overdueProjects}</p>
+                <p>Overdue: {analytics?.overdueProjects}</p>
               </div>
               <div className="flex gap-1 items-center">
                 <span className="p-1 bg-yellow-600 h-fit rounded-full"></span>
-                <p>On hold: {analytics?.onHoldProjects}</p>
+                <p>Onhold: {analytics?.onHoldProjects}</p>
               </div>
             </div>
           </div>
@@ -125,7 +159,7 @@ const Analytics = () => {
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
             <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.completedTasks!)}
+              {analytics?.completedTasks!}
             </div>
             <div className="text-xs">Task completed</div>
           </div>
@@ -173,9 +207,7 @@ const Analytics = () => {
         </CardHeader>
         <CardContent className="px-3 py-0 flex justify-between">
           <div className="flex flex-col gap-1">
-            <div className="font-bold text-xl">
-              {formatTwoDigits(analytics?.activeMembers!)}
-            </div>
+            <div className="font-bold text-xl">{analytics?.activeMembers!}</div>
             <div className="text-xs">Active member</div>
           </div>
           <div className="text-xs flex-col items-start hidden md:flex">
@@ -207,7 +239,7 @@ const Analytics = () => {
               {analytics?.totalActivities} team activities this week
             </div>
             <div>
-              <Link
+              {/* <Link
                 href={`workspaces/${workspaceId}/tasks`}
                 className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
               >
@@ -215,45 +247,10 @@ const Analytics = () => {
                 <span>
                   <ChevronRightIcon className="size-3" />
                 </span>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </CardFooter>
-      </Card>
-      <Card className="bg-red-100 text-red-900   flex flex-col  gap-6 py-6 shadow-sm">
-        <CardHeader className="px-3 py-0">
-          <div className="flex items-center justify-start">
-            <div className="bg-red-700 text-red-100 rounded-full p-1 mr-2">
-              <Stars className="size-3.5" />
-            </div>
-            <div className="text-sm font-semibold">AI Recommendations</div>
-          </div>
-        </CardHeader>
-        <CardContent className="px-3 py-0 flex justify-between">
-          <div className="flex flex-col gap-1">
-            <div className="font-bold text-xl">02</div>
-            <div className="text-xs">Recommendations</div>
-          </div>
-          <div className="text-xs  flex-col items-start hidden md:flex">
-            <div className="flex gap-1 items-center ">
-              <span className="p-1 bg-blue-600 h-fit rounded-full"></span>
-              <p>5 task blocked</p>
-            </div>
-            <div className="flex gap-1 items-center ">
-              <span className="p-1 bg-purple-600 h-fit rounded-full"></span>
-              <p>3 critical alart</p>
-            </div>
-          </div>
-        </CardContent>
-        {/* <CardFooter className="px-3 py-0">
-            <div className="flex flex-1  items-center justify-between">
-              <div className=" text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
-                <ArrowUp className="size-3" />
-                15% more than last month
-              </div>
-              <div className="text-[10px] underline">view projects</div>
-            </div>
-          </CardFooter> */}
       </Card>
     </div>
   );

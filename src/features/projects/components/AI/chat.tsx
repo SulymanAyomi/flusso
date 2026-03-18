@@ -6,6 +6,7 @@ import PromptInput from "./prompt-input";
 import { ChatMessage } from "../../types";
 import AIChatsResponse from "./AI-chats";
 import ActionButtons from "./action-buttons";
+import { SparklesIcon } from "lucide-react";
 
 interface Message {
   text: string;
@@ -16,6 +17,7 @@ interface ChatPageProps {
   stage: "validating" | "generating" | "saving";
   chats: ChatMessage[];
   isLoading: boolean;
+  onRegenerate: () => void;
 }
 
 const STAGE_MESSAGES: Record<
@@ -31,7 +33,12 @@ const STAGE_MESSAGES: Record<
   ],
 };
 
-export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
+export function ChatPage({
+  stage,
+  chats,
+  isLoading,
+  onRegenerate,
+}: ChatPageProps) {
   const messageEndRef = useRef<HTMLDivElement>(null);
   const [visibleMessages, setVisibleMessages] = useState<Message[]>([]);
   const [dots, setDots] = useState("");
@@ -62,7 +69,6 @@ export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
   }, [stage]);
 
   const lastChat = chats[chats.length - 1];
-  const hasError = lastChat.type === "ERROR";
 
   // Animated dots
   useEffect(() => {
@@ -99,7 +105,11 @@ export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
                 </div>
               </div>
             ) : (
-              <AIChatsResponse chat={chat} key={index} />
+              <AIChatsResponse
+                chat={chat}
+                key={index}
+                onRegenerate={onRegenerate}
+              />
             ),
           )}
 
@@ -152,19 +162,7 @@ export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
                 >
                   {/* AI Avatar */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
+                    <SparklesIcon className="size-5 bg-inherit text-white" />
                   </div>
 
                   {/* Message bubble */}
@@ -214,9 +212,7 @@ export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
           <div ref={messageEndRef}></div>
         </div>
 
-        {lastChat.type === "AI" ? (
-          <ActionButtons />
-        ) : lastChat.type === "ERROR" ? (
+        {lastChat.type === "ERROR" && (
           <div className="w-full border-slate-200 bg-white px-6 py-4">
             <PromptInput
               initialPrompt={""}
@@ -224,7 +220,7 @@ export function ChatPage({ stage, chats, isLoading }: ChatPageProps) {
               isLoading={isLoading}
             />
           </div>
-        ) : null}
+        )}
       </div>
 
       <style jsx>{`

@@ -19,7 +19,7 @@ export const Navigation = () => {
   const routes = [
     {
       label: "Dashboard",
-      href: "/dashboard",
+      href: "",
       icon: GoHome,
       activeIcon: GoHomeFill,
       isActive: pathname == `/workspaces/${workspaceId}`,
@@ -69,7 +69,7 @@ export const Navigation = () => {
               className={cn(
                 "flex items-center gap-2.5 p-3 rounded-lg font-medium hover:bg-[#EBF2FF] transition cursor-pointer text-[14px]",
                 item.isActive &&
-                  "bg-[#EBF2FF] hover:bg-[#EBF2FF]/90 shadow-sm border data-[active=true]:border border-[#1546e733]  text-[#1546e7] "
+                  "bg-[#EBF2FF] hover:bg-[#EBF2FF]/90 shadow-sm border data-[active=true]:border border-[#1546e733]  text-[#1546e7] ",
               )}
             >
               <Icon className="size-5" />

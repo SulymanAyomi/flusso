@@ -20,7 +20,20 @@ const WorkspaceIdJoinPage = async ({ params }: WorkspaceIdJoinPageProps) => {
   });
 
   if (!initialValues) {
-    return <PageError message="Workspace not found" />;
+    return (
+      <PageError
+        title="Workspace not found."
+        message="This workspace may have been deleted or you might not have access to it."
+        primaryAction={{
+          label: "View workspace",
+          href: `/workspaces/${params.workspaceId}`,
+        }}
+        secondaryAction={{
+          label: "Back to dashboard",
+          href: `/workspaces/${params.workspaceId}`,
+        }}
+      />
+    );
   }
 
   return (

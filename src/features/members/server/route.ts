@@ -5,6 +5,7 @@ import { getMember } from "../utils";
 import { Member, MemberRole } from "../types";
 import { db } from "@/lib/db";
 import { sessionMiddleware } from "@/lib/require-auth";
+import { errorResponse, successResponse } from "@/lib/api-response";
 
 const app = new Hono()
     .get("/",
@@ -13,16 +14,19 @@ const app = new Hono()
             try {
                 const user = c.get("user");
                 const { workspaceId } = c.req.valid("query")
-
-                const member = await db.member.findFirst({
+                const workspace = await db.workspace.findUnique({
                     where: {
-                        workspaceId: workspaceId,
-                        userId: user.id
+                        id: workspaceId,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
                     }
-                })
+                });
 
-                if (!member) {
-                    return c.json({ error: "Unauthorized" }, 401)
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
                 }
 
                 const populateMembers = await db.member.findMany({
@@ -38,12 +42,13 @@ const app = new Hono()
                         }
                     }
                 })
+                const myUser = populateMembers.find((m) => m.userId == user.id)
 
-                return c.json({
-                    data: {
-                        populateMembers
-                    }
-                })
+                return c.json(successResponse({
+                    populateMembers,
+                    workspace,
+                    user: myUser
+                }))
             } catch (error) {
                 console.error("member", error)
                 return c.json({ error: "Something went wrong" }, 500)
@@ -142,12 +147,6 @@ const app = new Hono()
                 return c.json({ error: "unauthorized" }, 401)
 
             }
-
-
-
-
-
-
             await db.member.update({
                 where: {
                     id: memberId
@@ -158,6 +157,52 @@ const app = new Hono()
             })
 
             return c.json({ data: { id: memberToUpdate.id } })
+        }
+    ).get("/owner",
+        zValidator("query", z.object({ workspaceId: z.string(), userId: z.string() })), sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId, userId } = c.req.valid("query")
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const owner = await db.member.findFirst({
+                    where: {
+                        userId: userId,
+                        workspaceId
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    }
+                })
+                if (!owner) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+                return c.json(successResponse({
+                    owner
+                }))
+            } catch (error) {
+                console.error("member", error)
+                return c.json({ error: "Something went wrong" }, 500)
+            }
         }
     )
 

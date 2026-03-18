@@ -18,7 +18,7 @@ const TaskTabs = () => {
 
   const { data, isLoading } = useGetWorkspaceTasks({ workspaceId });
   return (
-    <Card className="min-h-[21px]">
+    <Card className="flex min-h-60 flex-col">
       <Tabs defaultValue="all" className="w-full">
         <CardHeader>
           <div className="flex  justify-between items-center">
@@ -39,9 +39,9 @@ const TaskTabs = () => {
             </TabsList>
           </div>
         </CardHeader>
-        <CardContent>
-          <TabsContent value="today">
-            <div className="flex gap-2 flex-col">
+        <CardContent className="h-full">
+          <TabsContent value="today" className="h-full">
+            <div className="flex gap-2 flex-col h-full">
               {isLoading ? (
                 <>
                   <Skeleton className="bg-neutral-100 w-full h-7" />
@@ -76,14 +76,14 @@ const TaskTabs = () => {
                   </div>
                 ))
               ) : (
-                <div>
-                  <p className="text-center text-xs">No deadline today</p>
+                <div className="text-center my-auto flex flex-col items-center justify-center h-full w-full text-sm">
+                  <p className="text-center text-sm">No deadline today</p>
                 </div>
               )}
             </div>
           </TabsContent>
-          <TabsContent value="all">
-            <div className="flex flex-col gap-2">
+          <TabsContent value="all" className="h-full">
+            <div className="flex flex-col gap-2 h-full">
               {isLoading ? (
                 <>
                   <Skeleton className="bg-neutral-100 w-full h-7" />
@@ -130,8 +130,8 @@ const TaskTabs = () => {
                   </div>
                 ))
               ) : (
-                <div>
-                  <p className="text-center text-xs">
+                <div className="text-center my-auto flex flex-col items-center justify-center h-full w-full text-sm">
+                  <p className="text-center text-sm">
                     You have not been assigned to a Task
                   </p>
                 </div>

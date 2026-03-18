@@ -12,14 +12,15 @@ interface useGetProjectsProps {
     dueDate?: string;
     ownerId?: string;
     archived?: boolean;
+    limit: string
 }
 
 export type AllProjectsResponseType = InferResponseType<typeof client.api.projects["$get"], 200>
 
-export const useGetProjects = ({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId }: useGetProjectsProps) => {
+export const useGetProjects = ({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId, limit }: useGetProjectsProps) => {
 
     const query = useQuery({
-        queryKey: ["projects", JSON.stringify({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId })
+        queryKey: ["projects", JSON.stringify({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId, limit })
         ],
         queryFn: async () => {
             const response = await client.api.projects["$get"]({
@@ -28,7 +29,8 @@ export const useGetProjects = ({ workspaceId, status, ownerId, dueDate, archived
                     status: status,
                     ownerId: ownerId,
                     dueDate: dueDate,
-                    search: search
+                    search: search,
+                    limit: limit
                 }
             });
 

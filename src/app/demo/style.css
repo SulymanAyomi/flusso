@@ -1,0 +1,11 @@
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    .font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+    .task-card { animation: fadeUp 0.3s ease both; }
+    .ai-dot { animation: bounce3 1.2s infinite; }
+    .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+    .spinner { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes bounce3 { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-4px); } }
+    .star-shape { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }

@@ -58,6 +58,8 @@ const app = new Hono()
                 status: z.nativeEnum(TaskStatus).nullish(),
                 search: z.string().nullish(),
                 dueDate: z.string().nullish(),
+                toDate: z.string().nullish(),
+                fromDate: z.string().nullish(),
             })
         ),
         sessionMiddleware,
@@ -68,15 +70,12 @@ const app = new Hono()
                 assignedToId,
                 status,
                 search,
-                dueDate
+                dueDate,
+                toDate,
+                fromDate
             } = c.req.valid("query")
 
-            console.log(workspaceId,
-                projectId,
-                assignedToId,
-                status,
-                search,
-                dueDate)
+
 
             const member = await getMember({
                 workspaceId,
@@ -108,11 +107,19 @@ const app = new Hono()
                 }
             }
 
+            if (toDate && fromDate) {
+                query.dueDate = {
+                    gte: fromDate,
+                    lte: toDate
+                }
+            }
+
             if (dueDate) {
                 query.dueDate = {
                     equals: dueDate
                 }
             }
+
 
             const tasks = await db.task.findMany({
                 where: query,
@@ -143,6 +150,12 @@ const app = new Hono()
                             id: true
                         }
                     },
+                    Subtask: true,
+                    Comment: {
+                        select: {
+                            id: true
+                        }
+                    }
                 }
 
             })

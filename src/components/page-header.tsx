@@ -20,6 +20,7 @@ import {
 import { id } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface PageHeadePrrops {
   header: string;
   subText: string;
@@ -32,6 +33,7 @@ const PageHeader = ({
   button,
   buttonType,
 }: PageHeadePrrops) => {
+  const isMobile = useIsMobile();
   return (
     <div className="flex justify-between items-start md:items-center bg-[#1546E7] px-3 py-8">
       <div className="flex flex-col gap-2">
@@ -40,7 +42,7 @@ const PageHeader = ({
         </div>
         <div className="text-white text-xs">{subText}</div>
       </div>
-      <div>{button && <PageButton buttonType={buttonType} />}</div>
+      <div>{!isMobile && button && <PageButton buttonType={buttonType} />}</div>
     </div>
   );
 };

@@ -10,13 +10,20 @@ import { cn, snakeCaseToTitleCase } from "@/lib/utils";
 import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetWorkspaceProjects } from "@/features/workspaces/api/use-get-workspace-projects";
+import { useRouter } from "next/navigation";
 
 const ProjectLists = () => {
+  const router = useRouter();
   const workspaceId = useWorkspaceId();
   const { open } = useCreateProjectModal();
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
     workspaceId,
+    limit: "3",
   });
+
+  const openProject = (id: string) => {
+    router.push(`/workspaces/${workspaceId}/projects/${id}`);
+  };
 
   if (isLoadingProjects) {
     return (
@@ -45,7 +52,7 @@ const ProjectLists = () => {
   }
 
   return (
-    <Card>
+    <Card className="flex min-h-60 flex-col">
       <CardHeader>
         <div className="flex justify-between items-center">
           <h3 className="text-[18px] font-semibold">Recent Projects</h3>
@@ -60,10 +67,13 @@ const ProjectLists = () => {
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 h-full">
         {projects?.length! > 0 ? (
           projects?.map((project) => (
-            <div className="flex gap-2 flex-col border shadow-sm rounded-[12px] px-3 py-4 ">
+            <div
+              className="flex gap-2 flex-col border shadow-sm rounded-[12px] px-3 py-4 cursor-pointer"
+              onClick={() => openProject(project.id)}
+            >
               <div className="flex justify-between items-center gap-3">
                 <div className="text-sm font-semibold">{project.name}</div>
                 <div className="text-xs">
@@ -76,7 +86,7 @@ const ProjectLists = () => {
                   color="#0EB97F"
                   className={cn(
                     project.stats.completionPercentage == 100 &&
-                      "text-green-700"
+                      "text-green-700",
                   )}
                 ></Progress>
               </div>

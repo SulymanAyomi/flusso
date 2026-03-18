@@ -2,11 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { TaskList } from "../demo/TaskList";
-import { CalendarDaysIcon, RefreshCcw } from "lucide-react";
+import {
+  CalendarDaysIcon,
+  Loader2,
+  Loader2Icon,
+  RefreshCcw,
+} from "lucide-react";
 import { format, formatISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/date-picker";
 import { toast } from "sonner";
+import { useConfirm } from "@/hooks/use-confirm";
 
 export interface Task {
   id: string;
@@ -32,9 +38,11 @@ export interface ProjectData {
 
 interface ProjectReviewProps {
   data: ProjectData;
-  onSave: () => void;
+  onSave: (project: ProjectData) => Promise<void>;
   onRegenerate: () => void;
   onDiscard: () => void;
+  closePanel: () => void;
+  isLoading: boolean;
 }
 
 export function ProjectReview({
@@ -42,6 +50,8 @@ export function ProjectReview({
   onSave,
   onRegenerate,
   onDiscard,
+  isLoading,
+  closePanel,
 }: ProjectReviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [projectName, setProjectName] = useState(data.project.name);
@@ -52,9 +62,29 @@ export function ProjectReview({
     data.project.startDate,
   );
   const [projectEndDate, setProjectEndDate] = useState(data.project.endDate);
+  const [projectEst, setProjectEst] = useState(
+    data.project.estimatedDurationDays,
+  );
   const [isEditing, setIsEditing] = useState<"name" | "description" | null>(
     null,
   );
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure you want to discard this project?",
+    "This action cannot be undone",
+    "destructive",
+  );
+  const handleDiscard = async () => {
+    const ok = await confirm();
+    if (!ok) return;
+
+    onDiscard();
+  };
+
+  const handleClose = () => {
+    if (!isLoading) {
+      closePanel();
+    }
+  };
 
   const validateDates = (start: string, end: string) => {
     if (!start || !end) return true;
@@ -94,6 +124,22 @@ export function ProjectReview({
     low: "bg-blue-100 text-blue-700 border-blue-200",
   };
 
+  const handleSave = () => {
+    const project = {
+      name: projectName,
+      startDate: projectStartDate,
+      endDate: projectEndDate,
+      description: projectDescription,
+      estimatedDurationDays: projectEst,
+    };
+    const savedata = {
+      project,
+      tasks: data.tasks,
+    };
+
+    onSave(savedata);
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -103,7 +149,7 @@ export function ProjectReview({
           transition-opacity duration-500
           ${isOpen ? "opacity-100" : "opacity-0"}
         `}
-        onClick={onDiscard}
+        onClick={handleClose}
       />
 
       {/* Slide-in panel */}
@@ -116,6 +162,7 @@ export function ProjectReview({
           overflow-hidden flex flex-col
         `}
       >
+        <ConfirmDialog />
         {/* Header */}
         <div className="bg-gradient-to-r  from-brand1 to-brand2 px-8 py-6 flex-shrink-0">
           <div className="flex items-start justify-between">
@@ -191,7 +238,7 @@ export function ProjectReview({
             </div>
 
             <button
-              onClick={onDiscard}
+              onClick={handleClose}
               className="ml-4 p-2 rounded-lg hover:bg-white/10 transition-colors text-white"
               aria-label="Close"
             >
@@ -222,7 +269,7 @@ export function ProjectReview({
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="text-2xl font-light text-slate-900">
-                  {data.project.estimatedDurationDays}
+                  {projectEst}
                 </div>
                 <div className="text-xs text-slate-600 mt-1">Total days</div>
               </div>
@@ -278,14 +325,31 @@ export function ProjectReview({
         {/* Footer actions */}
         <div className="flex-shrink-0 px-8 py-6 bg-slate-50 border-t border-slate-200 w-full">
           <div className="flex gap-3 items-end justify-end w-full">
-            <Button onClick={onDiscard} variant="destructive">
+            <Button
+              onClick={handleDiscard}
+              variant="destructive"
+              disabled={isLoading}
+            >
               Discard
             </Button>
-            <Button onClick={onRegenerate} variant="secondary">
+            <Button
+              onClick={onRegenerate}
+              variant="secondary"
+              disabled={isLoading}
+            >
               <RefreshCcw /> Regenerate
             </Button>
 
-            <Button onClick={onSave}>Save Project</Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {!isLoading ? (
+                "Save Project"
+              ) : (
+                <>
+                  <Loader2Icon className="animate-spin w-full h-full" />
+                  Saving...
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>

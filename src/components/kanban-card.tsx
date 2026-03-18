@@ -19,12 +19,15 @@ import { Separator } from "./ui/separator";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { format } from "date-fns";
 import { useGetTasksResponseType } from "@/features/tasks/api/use-get-tasks";
+import MemberDisplay from "@/features/members/components/member-display";
 
 interface KanbanCardProps {
   task: TasksType;
 }
 
 export const KanbanCard = ({ task }: KanbanCardProps) => {
+  const totalSubtask = task.Subtask.length;
+  const isDoneSubtask = task.Subtask.filter((t) => t.isDone).length;
   return (
     <div className="bg-white p-2.5 mb-1.5 rounded shadow-sm space-y-3">
       <div className="flex items-start justify-between gap-x-2">
@@ -44,9 +47,15 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
       <div className="flex items-center gap-x-1.5 justify-between text-xs text-gray-700">
         <p>Assignees:</p>
         <div className="flex flex-row-reverse">
-          <MemberAvatar
-            name={task.assignedTo?.user.name!}
-            className="ml-[-12px] size-6 bg-brand1"
+          {/* {task.assignedTo && (
+            <MemberAvatar
+              name={task.assignedTo?.user.name!}
+              className="ml-[-12px] size-6 bg-brand1"
+            />
+          )} */}
+          <MemberDisplay
+            assignedTo={task.assignedTo}
+            className="ml-[-12px] size-6"
           />
         </div>
       </div>
@@ -64,7 +73,7 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
       <DottedSeparator />
       <div className="flex items-center justify-between gap-1 text-xs text-gray-700">
         <div className="flex items-center gap-1">
-          <p>12</p>
+          <p>{task.Comment.length}</p>
           <MessagesSquareIcon className="size-4 " />
         </div>
         <div className="flex items-center gap-1">
@@ -73,7 +82,9 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
           {/* depends on 2 tasks */}
         </div>
         <div className="flex items-center">
-          <p>4/4</p>
+          <p>
+            {isDoneSubtask}/{totalSubtask}
+          </p>
           <ListCheckIcon className="size-4" />
         </div>
       </div>

@@ -7,7 +7,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetMembers } from "@/features/members/api/use-get-members";
-import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { FolderIcon, ListChecksIcon, SearchIcon, UserIcon } from "lucide-react";
 import { TaskStatus } from "../../types";
@@ -16,6 +15,7 @@ import { DatePicker } from "@/components/date-picker";
 import { Input } from "@/components/ui/input";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { useState } from "react";
+import { useGetQuickProjects } from "@/features/projects/api/use-get-quick-projects";
 
 interface DataFiltersProps {
   hideProjectFilter?: boolean;
@@ -24,7 +24,7 @@ interface DataFiltersProps {
 export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
   const workspaceId = useWorkspaceId();
   const [search, setSearch] = useState("");
-  const { data: projects, isLoading: isLoadingProject } = useGetProjects({
+  const { data: projects, isLoading: isLoadingProject } = useGetQuickProjects({
     workspaceId,
   });
   const { data: members, isLoading: isLoadindMembers } = useGetMembers({
@@ -63,7 +63,7 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
 
   return (
     <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-      <div className="flex flex-col lg:flex-row gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <Select
           defaultValue={status ?? undefined}
           onValueChange={(value) => onStatusChange(value)}

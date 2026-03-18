@@ -41,7 +41,6 @@ import { DataTable } from "./components/data-table";
 import { KanbanColumnHeader } from "@/components/kanban-column-header";
 import { TaskStatus } from "@/features/tasks/types";
 // import KanbanCard from "@/components/kaban-card";
-import { DataFilters } from "@/features/tasks/components/data-filters";
 
 const MyTasks = () => {
   const task = [
@@ -295,7 +294,7 @@ const MyTasks = () => {
           <DataFilters1 />
         </div>
         {/* my tasks table */}
-        <DataTable columns={columns} data={task ?? []} />
+        {/* <DataTable columns={columns} data={task ?? []} /> */}
 
         {/* my tasks kanban */}
         {/* <div className="flex overflow-x-auto">

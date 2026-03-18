@@ -1,17 +1,16 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
-import Link from "next/link";
+import { PageError } from "@/components/page-error";
 
 const ErrorPage = () => {
   return (
-    <div className="h-screen flex flex-col gap-y-4 items-center justify-center">
-      <AlertTriangle className="size-6" />
-      <p className="text-sm">something went wrong</p>
-      <Button variant="secondary" size="sm" asChild>
-        <Link href="/">Back to home</Link>
-      </Button>
-    </div>
+    <PageError
+      title="Something went wrong"
+      message="We ran into unexpected issue. Your data is safe."
+      primaryAction={{
+        label: "Go to dashboard",
+        href: `/workspaces`,
+      }}
+    />
   );
 };
 
