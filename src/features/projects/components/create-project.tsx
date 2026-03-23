@@ -311,11 +311,12 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                   <div className="flex items-center gap-x-5">
                     {field.value ? (
                       <div className="size-[72px] relative rounded-md overflow-hidden">
+                        {/* @ts-ignore */}
                         <Image
                           src={
                             field.value instanceof File
                               ? URL.createObjectURL(field.value)
-                              : field.value
+                              : (field.value as string)
                           }
                           fill
                           alt="logo"

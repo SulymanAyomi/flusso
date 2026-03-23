@@ -34,7 +34,7 @@ export const columns: ColumnDef<EditTask>[] = [
             <p className="line-clamp-1">{name}</p>
           </TooltipTrigger>
           <TooltipContent>
-            <p> {name}</p>
+            <p>{name}</p>
           </TooltipContent>
         </Tooltip>
       );

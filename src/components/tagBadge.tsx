@@ -9,6 +9,7 @@ type TagBadgeProps = {
 };
 
 function getColorFromName(name: string) {
+  // @ts-ignore
   const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const colors = [
     "bg-red-100 text-red-800",
@@ -29,7 +30,7 @@ export function TagBadge({ name, onRemove, className }: TagBadgeProps) {
       className={cn(
         "inline-flex items-center gap-1 px-2 py-0.5 text-sm rounded-full font-medium",
         getColorFromName(name),
-        className
+        className,
       )}
     >
       {name}

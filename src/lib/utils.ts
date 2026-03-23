@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import { format, formatDistanceToNow } from "date-fns"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -39,3 +40,14 @@ export function calculatePercentageChange(previousCount: number, currentCount: n
   return { change: Math.round(change), direction };
 }
 
+export function formatActivityDate(date: string) {
+  const newDate = new Date(date)
+  const now = new Date()
+  const diff = now.getTime() - newDate.getTime()
+  const ONE_WEEK = 7 * 24 * 24 * 60 * 60 * 1000
+  if (diff < ONE_WEEK) {
+    return formatDistanceToNow(date, { addSuffix: true })
+  }
+
+  return format(newDate, "MMM d, yyyy")
+}

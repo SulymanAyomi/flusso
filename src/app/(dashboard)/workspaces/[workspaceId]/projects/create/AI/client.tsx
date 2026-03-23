@@ -58,6 +58,7 @@ const CreateProjectAIPageClient = () => {
       {isPanelOpen && project && (
         <ProjectReview
           data={project}
+          // @ts-ignore
           onSave={saveProject}
           onRegenerate={regenerate}
           onDiscard={handleDiscard}

@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
-import { WorkspaceAvatar } from "@/features/workspaces/components/workspace-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { WorkspaceType } from "@/features/workspaces/types";
 
@@ -14,12 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Check,
-  ChevronsUpDown,
-  GalleryVerticalEnd,
-  PlusIcon,
-} from "lucide-react";
+import { ChevronsUpDown, GalleryVerticalEnd, PlusIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
 

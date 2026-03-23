@@ -423,25 +423,25 @@ const Page = () => {
             <div className="px-5 py-3.5 flex items-center justify-between border-t border-black/[0.09] mt-3 flex-wrap gap-3">
               <div className="flex gap-2 flex-wrap">
                 <button
-                  onClick={"useExample('Rebrand a SaaS product')"}
+                  // onClick={"useExample('Rebrand a SaaS product')"}
                   className="text-[11px] px-3 py-1 rounded-full border border-black/[0.09] text-ink-2 bg-surface hover:bg-accent-light hover:border-accent hover:text-accent-mid transition-colors cursor-pointer"
                 >
                   Rebrand a SaaS product
                 </button>
                 <button
-                  onClick="useExample('Plan a product launch')"
+                  // onClick="useExample('Plan a product launch')"
                   className="text-[11px] px-3 py-1 rounded-full border border-black/[0.09] text-ink-2 bg-surface hover:bg-accent-light hover:border-accent hover:text-accent-mid transition-colors cursor-pointer"
                 >
                   Plan a product launch
                 </button>
                 <button
-                  onClick="useExample('Build a company website')"
+                  // onClick="useExample('Build a company website')"
                   className="text-[11px] px-3 py-1 rounded-full border border-black/[0.09] text-ink-2 bg-surface hover:bg-accent-light hover:border-accent hover:text-accent-mid transition-colors cursor-pointer"
                 >
                   Build a company website
                 </button>
                 <button
-                  onClick="useExample('Onboard a new hire')"
+                  // onClick="useExample('Onboard a new hire')"
                   className="text-[11px] px-3 py-1 rounded-full border border-black/[0.09] text-ink-2 bg-surface hover:bg-accent-light hover:border-accent hover:text-accent-mid transition-colors cursor-pointer"
                 >
                   Onboard a new hire
@@ -449,7 +449,7 @@ const Page = () => {
               </div>
               <button
                 id="gen-btn"
-                onClick="generateProject()"
+                onClick={() => "generateProject()"}
                 className="bg-ink text-white text-sm font-medium px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-[#2c2c28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">

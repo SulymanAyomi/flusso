@@ -12,40 +12,76 @@ import { endOfMonth, startOfMonth } from "date-fns";
 import { logActivity } from "@/lib/log-activity";
 import { hasCircularDependency } from "@/lib/dep-check";
 import { sessionMiddleware } from "@/lib/require-auth";
-import { successResponse } from "@/lib/api-response";
+import { errorResponse, successResponse } from "@/lib/api-response";
 
 
 const app = new Hono()
     .delete("/:taskId", sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
 
-            const { taskId } = c.req.param()
 
-            const task = await db.task.findUnique({
-                where: {
-                    id: taskId
+                const user = c.get("user");
+
+                const { taskId } = c.req.param()
+
+                const task = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    }
+                })
+                if (!task) {
+                    return c.json({ error: "task not found" }, 400)
                 }
-            })
-            if (!task) {
-                return c.json({ error: "task not found" }, 400)
-            }
-            const member = await getMember({
-                workspaceId: task.workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                return c.json({ error: "Unauthorized" }, 401)
-            }
-
-
-            await db.task.delete({
-                where: {
-                    id: taskId
+                const member = await getMember({
+                    workspaceId: task.workspaceId,
+                    userId: user.id
+                })
+                if (!member) {
+                    return c.json({ error: "Unauthorized" }, 401)
                 }
-            })
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: task.workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    }
+                });
 
-            return c.json({ data: { id: task.id } })
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+
+                await db.$transaction(async (tx) => {
+                    await tx.taskDependency.deleteMany({
+                        where: {
+                            taskId
+                        }
+                    })
+                    await tx.task.delete({
+                        where: {
+                            id: taskId
+                        }
+                    })
+
+                    await logActivity(tx, {
+                        workspaceId: task.workspaceId, memberId: member.id,
+                        actionType: "TASK_DELETED", entityType: "PROJECT",
+                        entityId: null, entityTitle: task.name,
+                        metadata: {},
+                    })
+                })
+
+
+                return c.json(successResponse({ id: task.id }), 200)
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
         }
     )
     .get("/",
@@ -75,8 +111,6 @@ const app = new Hono()
                 fromDate
             } = c.req.valid("query")
 
-
-
             const member = await getMember({
                 workspaceId,
                 userId: user.id
@@ -84,6 +118,23 @@ const app = new Hono()
             if (!member) {
                 return c.json({ error: "unauthorized" }, 401)
             }
+
+            const workspace = await db.workspace.findUnique({
+                where: {
+                    id: workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                }
+            });
+
+            if (!workspace) {
+                return c.json(errorResponse("workspace not found"), 404);
+            }
+
             let query: Record<string, any> = {}
 
             query.workspaceId = workspaceId
@@ -181,230 +232,279 @@ const app = new Hono()
     .post("/",
         zValidator("json", createTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-            const {
-                name,
-                status,
-                workspaceId,
-                projectId,
-                dueDate,
-                startDate,
-                assignedToId,
-                description,
-                priority,
-                tags,
-                subTask,
-                comment,
-                dependencies
-            } = c.req.valid("json")
-            console.log("bava", c.req.valid("json"))
+                const user = c.get("user");
 
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
-            }
-            // prevent circular dependency
-            if (dependencies.length > 0) {
-                const existing = await db.task.findMany({
-                    where: { id: { in: dependencies } },
-                    select: { id: true }
-                })
-                const exisitingIds = new Set(existing.map(t => t.id))
-                const missing = dependencies.filter(id => !exisitingIds.has(id))
-                if (missing.length > 0) {
-                    return c.json({
-                        error: "Some dependencies do not exist", missing
-                    }, 400)
+                if (!user) {
+                    return c.json({ error: "Unauthourize" }, 401)
                 }
-            }
-            const highestPositionTask = await db.task.findMany({
-                where: {
-                    status,
-                    workspaceId
-                },
-                orderBy: {
-                    position: "asc"
-                },
-                take: 1
-            })
 
-            const newPosition = highestPositionTask.length > 0 ? highestPositionTask[0].position + 1000 : 1000
-
-            const tagRecords = await Promise.all(
-                tags.map(async (tag: string) => {
-                    const normalized = tag.trim()
-                    return db.tags.upsert({
-                        where: {
-                            workspaceId_name: {
-                                workspaceId: workspaceId as string,
-                                name: normalized
-                            }
-                        },
-                        update: {},
-                        create: {
-                            workspaceId,
-                            name: normalized
-                        }
-                    })
-                })
-            )
-
-            const now = new Date()
-            const thisMonthStart = startOfMonth(now)
-            const thisMonthEnd = endOfMonth(now)
-            const task = await db.task.create({
-                data: {
+                const {
                     name,
                     status,
                     workspaceId,
                     projectId,
-                    startDate: startDate ?? thisMonthStart,
-                    dueDate: dueDate ?? thisMonthEnd,
+                    dueDate,
+                    startDate,
                     assignedToId,
-                    position: newPosition,
                     description,
                     priority,
+                    tags,
+                    subTask,
+                    comment,
+                    dependencies
+                } = c.req.valid("json")
 
-                }
-            })
+                // const member = await getMember({
+                //     workspaceId,
+                //     userId: user.id
+                // })
+                // if (!member) {
+                //     c.json({ error: "Unauthorized" }, 401)
+                // }
 
-            if (dependencies.length > 0) {
-                await db.taskDependency.createMany({
-                    data: dependencies.map((dependsOnId) => ({
-                        taskId: task.id,
-                        dependsOnId,
-                    }))
-                });
-            }
-
-            await db.taskTags.createMany({
-                data: tagRecords.map((tag) => ({
-                    taskId: task.id,
-                    tagId: tag.id
-                })),
-                skipDuplicates: true
-            })
-            if (subTask.length > 0) {
-                await db.subtask.createMany({
-                    data: subTask.map((sub) => ({
-                        taskId: task.id,
-                        name: sub
-                    })),
-                    skipDuplicates: true
-                })
-            }
-            if (comment) {
-                await db.comment.create({
-                    data: {
-                        userId: member.id,
-                        content: comment,
-                        taskId: task.id
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    },
+                    include: {
+                        members: true
                     }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+                const member = workspace.members.find((member) => member.userId == user.id)
+                if (!member) {
+                    return c.json(errorResponse("workspace not found"), 404)
+                }
+                // prevent circular dependency
+                if (dependencies.length > 0) {
+                    const existing = await db.task.findMany({
+                        where: { id: { in: dependencies } },
+                        select: { id: true }
+                    })
+                    const exisitingIds = new Set(existing.map(t => t.id))
+                    const missing = dependencies.filter(id => !exisitingIds.has(id))
+                    if (missing.length > 0) {
+                        return c.json({
+                            error: "Some dependencies do not exist", missing
+                        }, 400)
+                    }
+                }
+
+                const highestPositionTask = await db.task.findMany({
+                    where: {
+                        status,
+                        workspaceId
+                    },
+                    orderBy: {
+                        position: "asc"
+                    },
+                    take: 1
                 })
+
+                const newPosition = highestPositionTask.length > 0 ? highestPositionTask[0].position + 1000 : 1000
+
+                const tagRecords = await Promise.all(
+                    tags.map(async (tag: string) => {
+                        const normalized = tag.trim()
+                        return db.tags.upsert({
+                            where: {
+                                workspaceId_name: {
+                                    workspaceId: workspaceId as string,
+                                    name: normalized
+                                }
+                            },
+                            update: {},
+                            create: {
+                                workspaceId,
+                                name: normalized
+                            }
+                        })
+                    })
+                )
+
+                const now = new Date()
+                const thisMonthStart = startOfMonth(now)
+                const thisMonthEnd = endOfMonth(now)
+
+                const result = await db.$transaction(async (tx) => {
+                    const task = await tx.task.create({
+                        data: {
+                            name,
+                            status,
+                            workspaceId,
+                            projectId,
+                            startDate: startDate ?? thisMonthStart,
+                            dueDate: dueDate ?? thisMonthEnd,
+                            assignedToId,
+                            position: newPosition,
+                            description,
+                            priority,
+
+                        }
+                    })
+
+                    if (dependencies.length > 0) {
+                        await tx.taskDependency.createMany({
+                            data: dependencies.map((dependsOnId) => ({
+                                taskId: task.id,
+                                dependsOnId,
+                            }))
+                        });
+                    }
+
+                    await tx.taskTags.createMany({
+                        data: tagRecords.map((tag) => ({
+                            taskId: task.id,
+                            tagId: tag.id
+                        })),
+                        skipDuplicates: true
+                    })
+
+                    if (subTask.length > 0) {
+                        await tx.subtask.createMany({
+                            data: subTask.map((sub) => ({
+                                taskId: task.id,
+                                name: sub
+                            })),
+                            skipDuplicates: true
+                        })
+                    }
+                    if (comment) {
+                        await tx.comment.create({
+                            data: {
+                                userId: member.id,
+                                content: comment,
+                                taskId: task.id
+                            }
+                        })
+                    }
+
+                    await logActivity(tx, {
+                        workspaceId: workspaceId, memberId: member.id,
+                        actionType: "TASK_CREATED", entityType: "TASK",
+                        entityId: task.id, entityTitle: task.name,
+                        metadata: {},
+                    })
+
+                    return task
+                })
+
+                return c.json({ data: result })
+            } catch (error) {
+
             }
-
-            await logActivity({
-                workspaceId,
-                memberId: member.id,
-                actionType: "TASK_CREATED",
-                entityType: "TASK",
-                entityId: task.id,
-                entityTitle: task.name,
-                metadata: {},
-            })
-
-
-            return c.json({ data: task })
         }
     )
     .patch("/:taskId",
         zValidator("json", createTaskSchema.partial()), sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
+                const user = c.get("user");
+                const { taskId } = c.req.param()
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-            const { taskId } = c.req.param()
-
-            const {
-                name,
-                status,
-                description,
-                projectId,
-                dueDate,
-                assignedToId,
-                dependencies
-            } = c.req.valid("json")
-            console.log(name,
-                status,
-                description,
-                projectId,
-                dueDate,
-                assignedToId,
-                dependencies)
-
-            const exisitingTask = await db.task.findUnique({
-                where: {
-                    id: taskId
-                }
-            })
-
-            if (!exisitingTask) {
-                return c.json({ error: "task not found" }, 400)
-            }
-
-
-            const member = await getMember({
-                workspaceId: exisitingTask.workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
-            }
-
-            const task = await db.task.update({
-                where: {
-                    id: taskId
-                },
-                data: {
+                const {
                     name,
                     status,
                     description,
                     projectId,
                     dueDate,
                     assignedToId,
-                }
-            })
+                    dependencies,
+                    workspaceId
+                } = c.req.valid("json")
 
-            if (dependencies && dependencies?.length > 0) {
-                // Check for circular dependency
-                const hasCycle = await hasCircularDependency(taskId, dependencies);
-                if (hasCycle) {
-                    return c.json({ error: 'Circular dependency detected.' }, { status: 400 });
-                }
-                await db.taskDependency.deleteMany({
-                    where: { taskId },
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    },
+                    include: {
+                        members: true
+                    }
                 });
 
-                // Add new dependencies
-                const newLinks = dependencies.map((dependsOnId: string) => ({
-                    taskId,
-                    dependsOnId,
-                }));
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
 
-                await db.taskDependency.createMany({ data: newLinks });
+                const member = workspace.members.find((member) => member.userId == user.id)
+
+                if (!member) {
+                    return c.json(errorResponse("Project not found"), 404)
+                }
+
+                const exisitingTask = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    }
+                })
+
+                if (!exisitingTask) {
+                    return c.json({ error: "task not found" }, 400)
+                }
+
+                const result = await db.$transaction(async (tx) => {
+                    const task = await tx.task.update({
+                        where: {
+                            id: taskId
+                        },
+                        data: {
+                            name,
+                            status,
+                            description,
+                            projectId,
+                            dueDate,
+                            assignedToId,
+                        }
+                    })
+                    if (dependencies && dependencies?.length > 0) {
+                        // Check for circular dependency
+                        const hasCycle = await hasCircularDependency(taskId, dependencies);
+                        if (hasCycle) {
+                            return c.json({ error: 'Circular dependency detected.' }, { status: 400 });
+                        }
+                        await tx.taskDependency.deleteMany({
+                            where: { taskId },
+                        });
+
+                        // Add new dependencies
+                        const newLinks = dependencies.map((dependsOnId: string) => ({
+                            taskId,
+                            dependsOnId,
+                        }));
+
+                        await tx.taskDependency.createMany({ data: newLinks });
+                    }
+                    await logActivity(tx, {
+                        workspaceId: task.workspaceId, memberId: member.id,
+                        actionType: "TASK_EDITED", entityType: "TASK",
+                        entityId: task.id, entityTitle: task.name,
+                        metadata: {},
+                    })
+                    return task
+                })
+
+                return c.json(successResponse(result), 200)
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+
             }
-
-            return c.json({ data: task })
-
         }
     )
     .patch("/:taskId/dependencies",
@@ -412,7 +512,6 @@ const app = new Hono()
         async (c) => {
 
             const user = c.get("user");
-
 
             const { taskId } = c.req.param()
 
@@ -681,7 +780,6 @@ const app = new Hono()
         async (c) => {
             const user = c.get("user");
 
-
             if (!user) {
                 return c.json({ error: "Unauthourize" }, 401)
             }
@@ -697,7 +795,7 @@ const app = new Hono()
                 select: {
                     id: true,
                     workspaceId: true,
-                    name: true
+                    name: true,
                 }
             })
 
@@ -705,13 +803,27 @@ const app = new Hono()
                 return c.json({ error: "task not found" }, 400)
             }
 
+            const workspace = await db.workspace.findUnique({
+                where: {
+                    id: exisitingTask.workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                },
+                include: {
+                    members: true
+                }
+            });
 
-            const member = await getMember({
-                workspaceId: exisitingTask.workspaceId,
-                userId: user.id
-            })
+            if (!workspace) {
+                return c.json(errorResponse("workspace not found"), 404);
+            }
+            const member = workspace.members.find((member) => member.userId == user.id)
             if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
+                return c.json(errorResponse("Project not found"), 404)
             }
 
             // const subtaskList = subTasks.map((task) => ({
@@ -725,275 +837,282 @@ const app = new Hono()
             //     skipDuplicates: true
             // })
 
-            const subTask = await db.subtask.create({
-                data: {
-                    taskId,
-                    name,
-                    isDone
-                },
+            const result = await db.$transaction(async (tx) => {
+                const subTask = await tx.subtask.create({
+                    data: {
+                        taskId,
+                        name,
+                        isDone
+                    },
+                })
+                await logActivity(tx, {
+                    workspaceId: exisitingTask.workspaceId,
+                    memberId: member.id,
+                    actionType: "SUBTASK_ADDED",
+                    entityType: "TASK",
+                    entityId: taskId,
+                    entityTitle: exisitingTask.name,
+                    metadata: {
+                        "subTaskName": subTask.name
+                    },
+                })
+                return subTask
             })
 
-            await logActivity({
-                workspaceId: exisitingTask.workspaceId,
-                memberId: member.id,
-                actionType: "SUBTASK_ADDED",
-                entityType: "TASK",
-                entityId: taskId,
-                entityTitle: exisitingTask.name,
-                metadata: {
-                    "subTaskName": subTask.name
-                },
-            })
 
-            return c.json({ data: subTask })
+
+
+            return c.json({ data: result })
         }
     )
     .patch("/:taskId/subtasks",
         zValidator("json", changeSubTaskSchema), sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
+                const user = c.get("user");
 
+                const { taskId } = c.req.param()
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-            const { taskId } = c.req.param()
+                const { id, isDone } = c.req.valid("json")
 
-            const { id, isDone } = c.req.valid("json")
+                const exisitingTask = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    },
+                    select: {
+                        id: true,
+                        workspaceId: true,
+                        name: true
+                    }
+                })
 
-
-            const exisitingTask = await db.task.findUnique({
-                where: {
-                    id: taskId
-                },
-                select: {
-                    id: true,
-                    workspaceId: true,
-                    name: true
+                if (!exisitingTask) {
+                    return c.json({ error: "task not found" }, 400)
                 }
-            })
 
-            if (!exisitingTask) {
-                return c.json({ error: "task not found" }, 400)
+                const result = await db.$transaction(async (tx) => {
+                    const subTask = await db.subtask.update({
+                        where: {
+                            id,
+                            taskId
+                        },
+                        data: {
+                            isDone
+                        }
+                    })
+                    return subTask
+
+                })
+
+                // if (!subTask) {
+                //     return c.json({ error: "subtask not found" }, 400)
+                // }
+
+
+                return c.json(successResponse(result))
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
             }
-
-
-            const member = await getMember({
-                workspaceId: exisitingTask.workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
-            }
-
-            const subTask = await db.subtask.update({
-                where: {
-                    id,
-                    taskId
-                },
-                data: {
-                    isDone
-                }
-            })
-            if (!subTask) {
-                return c.json({ error: "subtask not found" }, 400)
-            }
-
-
-            // await logActivity({
-            //     workspaceId: exisitingTask.workspaceId,
-            //     memberId: member.id,
-            //     actionType: "SUBTASK_ADDED",
-            //     entityType: "TASK",
-            //     entityId: subTask.id,
-            //     entityTitle: subTask.name,
-            //     metadata: {
-            //         "task_name": exisitingTask.name
-            //         ""
-            //     },
-            // })
-
-            return c.json({ data: subTask })
         }
     )
-    .delete("/:taskId/subtasks",
-        zValidator("json", changeSubTaskSchema), sessionMiddleware,
+    .delete("/:taskId/subtasks/:subtasksId",
+        sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
+                const user = c.get("user");
 
+                const { taskId, subtasksId } = c.req.param()
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-            const { taskId } = c.req.param()
+                const exisitingSubtask = await db.subtask.findUnique({
+                    where: {
+                        id: subtasksId
+                    },
+                    include: {
+                        task: {
+                            select: {
+                                workspaceId: true,
+                                name: true
+                            }
+                        }
+                    }
+                })
 
-            const { id, isDone } = c.req.valid("json")
-
-
-            const exisitingTask = await db.task.findUnique({
-                where: {
-                    id: taskId
-                },
-                select: {
-                    id: true,
-                    workspaceId: true,
-                    name: true
+                if (!exisitingSubtask) {
+                    return c.json({ error: "subtask not found" }, 400)
                 }
-            })
 
-            if (!exisitingTask) {
-                return c.json({ error: "task not found" }, 400)
+                const member = await getMember({
+                    workspaceId: exisitingSubtask.task.workspaceId,
+                    userId: user.id
+                })
+                if (!member) {
+                    return c.json({ error: "Unauthorized" }, 401)
+                }
+                const result = await db.$transaction(async (tx) => {
+                    const subTask = await tx.subtask.delete({
+                        where: {
+                            id: subtasksId,
+                            taskId
+                        },
+
+                    })
+
+                    await logActivity(tx, {
+                        workspaceId: exisitingSubtask.task.workspaceId,
+                        memberId: member.id,
+                        actionType: "SUBTASK_DELETED",
+                        entityType: "TASK",
+                        entityId: taskId,
+                        entityTitle: exisitingSubtask.task.name,
+                        metadata: {
+                            "subTaskName": subTask.name
+                        },
+                    })
+                    return subTask
+                })
+
+                return c.json(successResponse(result), 200)
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
             }
-
-
-            const member = await getMember({
-                workspaceId: exisitingTask.workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
-            }
-
-            const subTask = await db.subtask.delete({
-                where: {
-                    id,
-                    taskId
-                },
-
-            })
-            if (!subTask) {
-                return c.json({ error: "subtask not found" }, 400)
-            }
-
-
-            await logActivity({
-                workspaceId: exisitingTask.workspaceId,
-                memberId: member.id,
-                actionType: "SUBTASK_DELETED",
-                entityType: "TASK",
-                entityId: taskId,
-                entityTitle: exisitingTask.name,
-                metadata: {
-                    "subTaskName": subTask.name
-                },
-            })
-
-            return c.json({ data: subTask })
         }
     ).post("/:taskId/comments",
         zValidator("json", createCommentsSchema), sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
+                const user = c.get("user");
 
+                const { taskId } = c.req.param()
 
-            if (!user) {
-                return c.json({ error: "Unauthourize" }, 401)
-            }
-            const { taskId } = c.req.param()
+                const { content } = c.req.valid("json")
 
-            const { content } = c.req.valid("json")
+                const exisitingTask = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    },
+                    select: {
+                        id: true,
+                        workspaceId: true,
+                        name: true
+                    }
+                })
 
-            const exisitingTask = await db.task.findUnique({
-                where: {
-                    id: taskId
-                },
-                select: {
-                    id: true,
-                    workspaceId: true,
-                    name: true
+                if (!exisitingTask) {
+                    return c.json({ error: "task not found" }, 400)
                 }
-            })
 
-            if (!exisitingTask) {
-                return c.json({ error: "task not found" }, 400)
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: exisitingTask.workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    },
+                    include: {
+                        members: true
+                    }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const member = workspace.members.find((member) => member.userId == user.id)
+
+                if (!member) {
+                    return c.json(errorResponse("Project not found"), 404)
+                }
+
+                const result = await db.$transaction(async (tx) => {
+                    const comment = await tx.comment.create({
+                        data: {
+                            taskId,
+                            content,
+                            userId: member.id
+                        },
+                    })
+
+                    await logActivity(tx, {
+                        workspaceId: exisitingTask.workspaceId,
+                        memberId: member.id,
+                        actionType: "COMMENT_ADDED",
+                        entityType: "TASK",
+                        entityId: taskId,
+                        entityTitle: exisitingTask.name,
+                        metadata: {
+                        },
+                    })
+                    return comment
+                })
+
+                return c.json(successResponse(result))
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+
             }
-
-
-            const member = await getMember({
-                workspaceId: exisitingTask.workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                c.json({ error: "Unauthorized" }, 401)
-            }
-
-
-            const comment = await db.comment.create({
-                data: {
-                    taskId,
-                    content,
-                    userId: member.id
-                },
-            })
-
-            await logActivity({
-                workspaceId: exisitingTask.workspaceId,
-                memberId: member.id,
-                actionType: "COMMENT_ADDED",
-                entityType: "TASK",
-                entityId: taskId,
-                entityTitle: exisitingTask.name,
-                metadata: {
-                },
-            })
-
-            return c.json({ data: comment })
         }
     )
     .get("/:taskId/comments", sessionMiddleware,
         async (c) => {
-            const user = c.get("user");
+            try {
 
-            const { taskId } = c.req.param()
+                const user = c.get("user");
 
-            const task = await db.task.findUnique({
-                where: {
-                    id: taskId
-                },
-                select: {
-                    id: true,
-                    workspaceId: true,
+                const { taskId } = c.req.param()
+
+                const task = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    },
+                    select: {
+                        id: true,
+                        workspaceId: true,
+                    }
+
+                })
+                if (!task) {
+                    return c.json({ error: 'Task not found' }, 400)
                 }
+                const currentMember = await getMember({
+                    workspaceId: task.workspaceId,
+                    userId: user.id
+                })
 
-            })
-            if (!task) {
-                return c.json({ error: 'Task not found' }, 400)
-            }
-            const currentMember = await getMember({
-                workspaceId: task.workspaceId,
-                userId: user.id
-            })
-
-            if (!currentMember) {
-                return c.json({ error: "unauthorized" }, 401)
-            }
-            const comments = await db.comment.findMany({
-                where: {
-                    taskId
-                },
-                select: {
-                    id: true,
-                    content: true,
-                    // createdAt: true,
-                    user: {
-                        select: {
-                            user: {
-                                select: {
-                                    name: true
+                if (!currentMember) {
+                    return c.json({ error: "unauthorized" }, 401)
+                }
+                const comments = await db.comment.findMany({
+                    where: {
+                        taskId
+                    },
+                    select: {
+                        id: true,
+                        content: true,
+                        createdAt: true,
+                        user: {
+                            select: {
+                                user: {
+                                    select: {
+                                        name: true
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-            })
+                })
 
-            return c.json({
-                data: {
-                    comments
-                }
-            })
-
+                return c.json({
+                    data: {
+                        comments
+                    }
+                })
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
         }
     )
     .post("/bulk-update",
@@ -1065,6 +1184,7 @@ const app = new Hono()
                 return c.json({ data: updatedTasks })
             } catch (error) {
                 console.error("batch", error)
+                return c.json(errorResponse("Something went wrong"), 500)
             }
         }
     )

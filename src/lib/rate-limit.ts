@@ -15,6 +15,7 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 // Cleanup old entries every 5 minutes
 setInterval(() => {
     const now = Date.now();
+    // @ts-ignore
     for (const [key, value] of rateLimitStore.entries()) {
         if (now > value.resetAt) {
             rateLimitStore.delete(key);

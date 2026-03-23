@@ -17,10 +17,11 @@ export const useBulkUpdateTask = () => {
     >({
         mutationFn: async ({ json }) => {
             const response = await client.api.tasks["bulk-update"]["$post"]({ json })
+            const data = await response.json()
             if (!response.ok) {
-                throw new Error("Failed to create task")
+                throw new Error("Failed to update tasks")
             }
-            return await response.json()
+            return data
         },
         onSuccess: () => {
             toast.success("Task updated")

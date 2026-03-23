@@ -1,30 +1,34 @@
+import { Prisma, PrismaClient } from '@/generated/prisma'
 import { db } from './db'
 
 type LogActivityInput = {
     workspaceId: string
     memberId: string
-    actionType: 'TASK_CREATED' | 'TASK_STATUS_UPDATED' | 'TASK_EDITED' | 'TASK_ASSIGNED' | 'PROJECT_CREATED' | 'PROJECT_COMPLETED' | 'PROJECT_EDITED' | 'PROJECT_STATUS_UPDATED' | 'COMMENT_ADDED' | 'SUBTASK_ADDED' | 'SUBTASK_DELETED' | 'JOINED_WORKSPACE' | 'LEFT_WORKSPACE'
+    actionType: 'TASK_CREATED' | 'TASK_STATUS_UPDATED' | 'TASK_EDITED' | 'TASK_ASSIGNED' | 'TASK_DELETED' | 'PROJECT_CREATED' | 'PROJECT_COMPLETED' | 'PROJECT_EDITED' | 'PROJECT_STATUS_UPDATED' | 'PROJECT_DELETED' | 'COMMENT_ADDED' | 'SUBTASK_ADDED' | 'SUBTASK_DELETED' | 'JOINED_WORKSPACE' | 'LEFT_WORKSPACE' | 'WORKSPACE_DELETED' | 'WORKSPACE_UPDATED'
     entityType: 'TASK' | 'PROJECT' | 'COMMENT' | 'MEMBER' | 'WORKSPACE'
-    entityId: string
+    entityId: string | null
     entityTitle?: string
     metadata: Record<string, any>  // e.g., { from: "todo", to: "in_progress", taskTitle: "Design Homepage" }
 }
+type AppContext = {
+    db: PrismaClient
+    userId?: string
+}
+type DBClient = PrismaClient | Prisma.TransactionClient
+export async function logActivity(
+    ctx: DBClient,
+    input: LogActivityInput
+) {
+    await ctx.activity.create({
+        data: {
+            workspaceId: input.workspaceId,
+            memberId: input.memberId,
+            actionType: input.actionType,
+            entityType: input.entityType,
+            entityId: input.entityId ?? null,
+            metadata: input.metadata ?? {},
+            entityTitle: input.entityTitle ?? null,
+        },
+    })
 
-export async function logActivity(input: LogActivityInput) {
-    try {
-        await db.activity.create({
-            data: {
-                workspaceId: input.workspaceId,
-                memberId: input.memberId,
-                actionType: input.actionType,
-                entityType: input.entityType,
-                entityId: input.entityId ?? null,
-                metadata: input.metadata ?? {},
-                entityTitle: input.entityTitle ?? null,
-            },
-        })
-    } catch (err) {
-        console.error('Failed to log activity:', err)
-        // Optional: do not throw — logging failure shouldn’t crash the whole flow
-    }
 }

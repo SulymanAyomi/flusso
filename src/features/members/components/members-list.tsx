@@ -109,7 +109,7 @@ export const MembersList = () => {
               <Badge variant="CRITICAL">Owner</Badge>
               <MemberAction
                 userRole={user.role}
-                memberRole={owner?.role}
+                memberRole={owner?.role!}
                 memberId={owner?.id!}
                 handleDeleteMember={handleDeleteMember}
                 handleUpdateMember={handleUpdateMember}

@@ -1,10 +1,5 @@
-import Image from "next/image";
-import Link from "next/link";
-import { DottedSeparator } from "./dotted-separator";
 import { Navigation } from "./navigation";
 import { WorkspaceSwitcher } from "./workspace-switcher";
-import { ProjectSwitcher } from "./project-switcher";
-import { SettingsIcon } from "lucide-react";
 import LogoutButton from "./logout-button";
 
 const Sidebar = () => {

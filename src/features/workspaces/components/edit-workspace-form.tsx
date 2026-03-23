@@ -36,7 +36,7 @@ export const EditWorkspaceForm = ({}) => {
     if (!ok) return;
     deleteWorkspace(
       {
-        param: { workspaceId: workspace.id },
+        param: { workspaceId },
       },
       {
         onSuccess: () => {
@@ -61,7 +61,10 @@ export const EditWorkspaceForm = ({}) => {
       <div className="w-full h-full border-none shadow-none space-y-4 my-4">
         <SettingsWorkspace workspace={workspace} />
         <InviteCard workspace={workspace} />
-        <OwnerSettings workspaceId={workspace.id} ownerId={workspace.ownerId} />
+        <OwnerSettings
+          workspaceId={workspace.id}
+          ownerId={workspace.ownerId!}
+        />
 
         <Card className="w-full h-full border-none shadow-none">
           <CardContent className="p-7">

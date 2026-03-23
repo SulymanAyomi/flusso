@@ -17,6 +17,7 @@ import { ProjectsStatus } from "@/features/projects/types";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { ProjectStatus, Role, TaskPriority } from "@/generated/prisma";
 import { id } from "date-fns/locale";
+import { logActivity } from "@/lib/log-activity";
 
 const app = new Hono()
     .get("/", sessionMiddleware,
@@ -125,109 +126,147 @@ const app = new Hono()
         "/:workspaceId",
         zValidator("form", updateWorkspaceSchema),
         sessionMiddleware,
-
         async (c) => {
-            const user = c.get("user");
-            if (!user) {
-                return c.json(errorResponse("Unauthourize"), 401)
-            }
+            try {
 
-            const { workspaceId } = c.req.param()
-            const { name, image } = c.req.valid("form")
-
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
-            })
-
-            if (!member || member.role !== MemberRole.ADMIN) {
-                return c.json(errorResponse("Unauthorized"), 401)
-            }
-
-            let uploadedImageUrl: string | undefined
-
-            if (image instanceof File) {
-                // const file = await storage.createFile(
-                //     IMAGE_BUCKET_ID,
-                //     ID.unique(),
-                //     image
-                // )
-                // const arrayBuffer = await storage.getFilePreview(
-                //     IMAGE_BUCKET_ID,
-                //     file.$id
-                // )
-                // uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
-
-            } else {
-                uploadedImageUrl = image;
-            }
-
-
-            const workspace = await db.workspace.update({
-                where: {
-                    id: workspaceId
-                },
-                data: {
-                    name,
-                    imageUrl: uploadedImageUrl
+                const user = c.get("user");
+                if (!user) {
+                    return c.json(errorResponse("Unauthourize"), 401)
                 }
-            })
 
-            return c.json({ data: workspace })
+                const { workspaceId } = c.req.param()
+                const { name, image } = c.req.valid("form")
 
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    },
+                    include: {
+                        members: true
+                    }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const member = workspace.members.find((member) => member.userId == user.id)
+
+
+                if (!member || member.role !== MemberRole.ADMIN) {
+                    return c.json(errorResponse("Unauthorized"), 401)
+                }
+
+                let uploadedImageUrl: string | undefined
+
+                if (image instanceof File) {
+                    // const file = await storage.createFile(
+                    //     IMAGE_BUCKET_ID,
+                    //     ID.unique(),
+                    //     image
+                    // )
+                    // const arrayBuffer = await storage.getFilePreview(
+                    //     IMAGE_BUCKET_ID,
+                    //     file.$id
+                    // )
+                    // uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
+
+                } else {
+                    uploadedImageUrl = image;
+                }
+
+                const result = await db.$transaction(async (tx) => {
+                    const newWorkspace = await tx.workspace.update({
+                        where: {
+                            id: workspaceId
+                        },
+                        data: {
+                            name,
+                            imageUrl: uploadedImageUrl
+                        }
+                    })
+
+                    await logActivity(tx, {
+                        workspaceId: workspaceId,
+                        memberId: member.id,
+                        actionType: "WORKSPACE_UPDATED",
+                        entityType: "TASK",
+                        entityId: null,
+                        entityTitle: name,
+                        metadata: {
+                            "oldName": workspace.name,
+                            "image": workspace.imageUrl === uploadedImageUrl
+                        },
+                    })
+
+                    return newWorkspace
+                })
+
+                return c.json(successResponse(result))
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
         }
-
     )
     .delete(
         "/:workspaceId", sessionMiddleware,
-
         async (c) => {
-            const user = c.get("user");
+            try {
 
+                const user = c.get("user");
 
-            const { workspaceId } = c.req.param()
+                const { workspaceId } = c.req.param()
 
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
-            })
-
-            if (!member || member.role !== MemberRole.ADMIN) {
-                return c.json(errorResponse("Permission denied."), 401)
-            }
-            const existingWorkspace = await db.workspace.findUnique({
-                where: { id: workspaceId }
-            })
-            if (!existingWorkspace) {
-                return c.json(errorResponse("Workspace not found"), 404)
-            }
-            if (member.id !== existingWorkspace.ownerId) {
-                return c.json(errorResponse("Permission denied."), 404)
-            }
-
-            await db.$transaction(async (tx) => {
-                const deletedAt = new Date()
-                await tx.workspace.update({
-                    where: {
-                        id: workspaceId
-                    },
-                    data: {
-                        deletedAt
-                    }
+                const member = await getMember({
+                    workspaceId,
+                    userId: user.id
                 })
 
-                await tx.project.updateMany({
-                    where: {
-                        workspaceId: workspaceId
-                    },
-                    data: {
-                        deletedAt: deletedAt
-                    }
+                if (!member || member.role !== MemberRole.ADMIN) {
+                    return c.json(errorResponse("Permission denied."), 401)
+                }
+                const existingWorkspace = await db.workspace.findUnique({
+                    where: { id: workspaceId }
+                })
+                if (!existingWorkspace) {
+                    return c.json(errorResponse("Workspace not found"), 404)
+                }
+                if (member.id !== existingWorkspace.ownerId) {
+                    return c.json(errorResponse("Permission denied."), 404)
+                }
+
+                await db.$transaction(async (tx) => {
+                    const deletedAt = new Date()
+                    await tx.workspace.update({
+                        where: {
+                            id: workspaceId
+                        },
+                        data: {
+                            deletedAt
+                        }
+                    })
+
+                    await tx.project.updateMany({
+                        where: {
+                            workspaceId: workspaceId
+                        },
+                        data: {
+                            deletedAt: deletedAt
+                        }
+                    })
+
                 })
 
-            })
-
-            return c.json({ data: { id: workspaceId } })
+                return c.json({ data: { id: workspaceId } })
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
         }
 
     ).post(
@@ -266,36 +305,69 @@ const app = new Hono()
 
         zValidator("json", z.object({ code: z.string() })),
         async (c) => {
-            const user = c.get("user");
+            try {
 
-            const { workspaceId } = c.req.param()
-            const { code } = c.req.valid("json")
+                const user = c.get("user");
 
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
-            })
-            if (member) {
-                return c.json({ error: "Already a member" }, 400)
-            }
+                const { workspaceId } = c.req.param()
+                const { code } = c.req.valid("json")
 
-            const workspace = await db.workspace.findFirst({
-                where: { id: workspaceId }
-            })
-            if (workspace?.inviteCode !== code) {
-                return c.json({ error: "Invalid invite code" }, 400)
-            }
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    },
+                    include: {
+                        members: true
+                    }
+                });
 
-            await db.member.create({
-                data: {
-                    workspaceId,
-                    userId: user.id,
-                    role: MemberRole.MEMBER,
-                    imageUrl: ""
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
                 }
-            })
-            return c.json({ data: workspace })
 
+                const member = workspace.members.find((member) => member.userId == user.id)
+
+                if (member) {
+                    return c.json({ error: "Already a member" }, 400)
+                }
+
+                if (workspace?.inviteCode !== code) {
+                    return c.json({ error: "Invalid invite code" }, 400)
+                }
+
+                const result = await db.$transaction(async (tx) => {
+                    const member = await tx.member.create({
+                        data: {
+                            workspaceId,
+                            userId: user.id,
+                            role: MemberRole.MEMBER,
+                            imageUrl: ""
+                        }
+                    })
+                    await logActivity(tx, {
+                        workspaceId: workspaceId,
+                        memberId: member.id,
+                        actionType: "WORKSPACE_UPDATED",
+                        entityType: "TASK",
+                        entityId: null,
+                        entityTitle: "",
+                        metadata: {
+                        },
+                    })
+
+                })
+
+                return c.json(successResponse(workspace), 200)
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+
+            }
         }
     )
     .get("/:workspaceId/analytics", sessionMiddleware,

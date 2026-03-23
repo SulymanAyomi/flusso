@@ -111,7 +111,7 @@ export const TaskViewSwitcher = ({
   return (
     <Tabs defaultValue={view} onValueChange={setView} className="flex-1 w-full">
       <div className="h-full flex flex-col overflow-auto border-b px-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center  justify-between mb-3">
+        <div className="flex flex-row items-start md:items-center  justify-between mb-3">
           <p className="text-lg font-semibold">
             My Tasks{" "}
             <sup className="font-sans text-xs align-top mt-1 inline-block bg-brand1 text-white rounded-full text-center px-1">

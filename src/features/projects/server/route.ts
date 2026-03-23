@@ -1,26 +1,24 @@
 import { z, ZodError } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfToday, startOfWeek, subMonths, subWeeks } from "date-fns";
+import { addDays, endOfMonth, endOfWeek, startOfMonth, startOfToday, startOfWeek, subMonths, subWeeks } from "date-fns";
 
 import { getMember } from "@/features/members/utils";
 
-import { AIResponseSchema, createProjectSchema, updateProjectSchema, AIProjectResponseSchema, AItaskResponseSchema, PromptSchema, validatePromptInputSchema, aiGenerationResponseSchema, saveAiGeneratedProjectSchema } from "../schema";
+import { createProjectSchema, PromptSchema, validatePromptInputSchema, aiGenerationResponseSchema, saveAiGeneratedProjectSchema } from "../schema";
 
-import { validationPrompt, createProjectPrompt, createProjectTaskJson, generateTaskPrompt, flightPrompt, geminiValidationSchema } from "@/lib/prompt";
+import { generateTaskPrompt, } from "@/lib/prompt";
 
 import { TaskStatus } from "@/features/tasks/types";
 import { db } from "@/lib/db";
-import workspaceId from "@/app/(dashboard)/workspaces/[workspaceId]/page";
 import { ProjectsStatus } from "../types";
 import { logActivity } from "@/lib/log-activity";
 import { MemberRole } from "@/features/members/types";
-import { ai, generateProjectWithAI, safetySetting, validatePromptWithAI } from "@/lib/gemini";
-import { Type } from "@google/genai";
+import { ai, safetySetting, validatePromptWithAI } from "@/lib/gemini";
 import { sessionMiddleware } from "@/lib/require-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { ProjectStatus, TaskPriority } from "@/generated/prisma";
-import { containsMaliciousContent, sanitizePrompt, validatePromptLength } from "@/lib/validate/sanitize";
+import { containsMaliciousContent, sanitizePrompt } from "@/lib/validate/sanitize";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { calculateProjectDates, calculateTaskDates } from "@/lib/calculate-date";
 import { autoFixCircularDependencies, hasCircularDependencies, resolveDependencies } from "@/lib/dependencies";
@@ -215,6 +213,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -398,7 +397,7 @@ const app = new Hono()
                 // 1️⃣ Validate workspace
                 const workspace = await db.workspace.findUnique({
                     where: {
-                        id: workspaceId,
+                        id: workspaceId, deletedAt: null,
                         members: { some: { userId: user.id } },
                     },
                 });
@@ -559,6 +558,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -602,58 +602,66 @@ const app = new Hono()
 
                 // }
                 const imageUrl = ""
-
-                const tagRecords = await Promise.all(
-                    tags.map(async (tag: string) => {
-                        const normalized = tag.trim()
-                        return db.tags.upsert({
-                            where: {
-                                workspaceId_name: {
-                                    workspaceId: workspaceId as string,
-                                    name: normalized
-                                }
-                            },
-                            update: {},
-                            create: {
-                                workspaceId,
-                                name: normalized
-                            }
-                        })
-                    })
-                )
                 const now = new Date()
                 const thisMonthStart = startOfMonth(now)
                 const thisMonthEnd = endOfMonth(now)
-                const project = await db.project.create({
-                    data: {
-                        name,
-                        imageUrl,
-                        workspaceId,
-                        description,
-                        status: status,
-                        createdById: member.id,
-                        archived: false,
-                        startDate: startDate ?? thisMonthStart,
-                        endDate: endDate ?? thisMonthEnd,
-                    }
+
+                const result = await db.$transaction(async (tx) => {
+                    const tagRecords = await Promise.all(
+                        tags.map(async (tag: string) => {
+                            const normalized = tag.trim()
+                            return tx.tags.upsert({
+                                where: {
+                                    workspaceId_name: {
+                                        workspaceId: workspaceId as string,
+                                        name: normalized
+                                    }
+                                },
+                                update: {},
+                                create: {
+                                    workspaceId,
+                                    name: normalized
+                                }
+                            })
+                        })
+                    )
+                    const project = await tx.project.create({
+                        data: {
+                            name,
+                            imageUrl,
+                            workspaceId,
+                            description,
+                            status: status,
+                            createdById: member.id,
+                            archived: false,
+                            startDate: startDate ?? thisMonthStart,
+                            endDate: endDate ?? thisMonthEnd,
+                        }
+                    })
+                    await tx.projectTags.createMany({
+                        data: tagRecords.map((tag) => ({
+                            projectId: project.id,
+                            tagId: tag.id
+                        })),
+                        skipDuplicates: true
+                    })
+
+                    await logActivity
+                        (tx,
+                            {
+                                workspaceId,
+                                memberId: member.id,
+                                actionType: "PROJECT_CREATED",
+                                entityType: "PROJECT",
+                                entityId: project.id,
+                                entityTitle: project.name,
+                                metadata: {},
+                            })
+
+                    return project
                 })
-                await db.projectTags.createMany({
-                    data: tagRecords.map((tag) => ({
-                        projectId: project.id,
-                        tagId: tag.id
-                    })),
-                    skipDuplicates: true
-                })
-                await logActivity({
-                    workspaceId,
-                    memberId: member.id,
-                    actionType: "PROJECT_CREATED",
-                    entityType: "PROJECT",
-                    entityId: project.id,
-                    entityTitle: project.name,
-                    metadata: {},
-                })
-                return c.json(successResponse(project), 201)
+
+                return c.json(successResponse(result), 201)
             } catch (error) {
                 console.error("create project error:", error);
                 return c.json(errorResponse("Failed to create project"), 500);
@@ -673,6 +681,7 @@ const app = new Hono()
             const workspace = await db.workspace.findUnique({
                 where: {
                     id: workspaceId,
+                    deletedAt: null,
                     members: {
                         some: {
                             userId: user.id
@@ -716,15 +725,23 @@ const app = new Hono()
             if (!project) {
                 return c.json(errorResponse("Project not found"), 404)
             }
-            const member = await db.member.findFirst({
+
+            const workspace = await db.workspace.findUnique({
                 where: {
-                    workspaceId: project.workspaceId,
-                    userId: user.id
-                }
-            })
-            if (!member) {
-                return c.json(errorResponse("Project not found"), 404)
+                    id: project.workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                },
+            });
+
+            if (!workspace) {
+                return c.json(errorResponse("workspace not found"), 404)
             }
+
             // members assigned to task in this project 
             const team = await db.member.findMany({
                 where: {
@@ -748,7 +765,8 @@ const app = new Hono()
 
             return c.json({ data: project, team })
         })
-    .post("/validate", async (c) => {
+    .post("/validate", sessionMiddleware, async (c) => {
+
         const startTime = Date.now();
 
         try {
@@ -886,7 +904,7 @@ const app = new Hono()
             const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
             let aiResponse;
             try {
-                //   aiResponse = await validatePromptWithAI(sanitized, controller.signal);
+                // aiResponse = await validatePromptWithAI(sanitized, controller.signal);
                 aiResponse = validationResponse.find((v) => v.User == sanitized)?.response
 
             } catch (error: any) {
@@ -952,12 +970,14 @@ const app = new Hono()
                 return c.json(
                     {
                         valid: false,
-                        reason: aiResponse.reason,
-                        type: aiResponse.type,
+                        reason: aiResponse?.reason,
+                        type: aiResponse?.type,
                         rewrittenPrompt: null,
-                        suggestions: aiResponse.suggestions,
-                        metadata: aiResponse.detectedProjects ? {
-                            detectedProjects: aiResponse.detectedProjects
+                        suggestions: aiResponse?.suggestions,
+                        // @ts-ignore
+                        metadata: aiResponse?.detectedProjects ? {
+                            // @ts-ignore
+                            detectedProjects: aiResponse?.detectedProjects
                         } : undefined
                     },
                     { status: 200, headers }
@@ -986,7 +1006,7 @@ const app = new Hono()
     }
 
     )
-    .post("/generate/project",
+    .post("/generate/project", sessionMiddleware,
         async (c) => {
             const startTime = Date.now();
             try {
@@ -1271,7 +1291,7 @@ const app = new Hono()
             }
         }
     )
-    .post("/generate/tasks",
+    .post("/generate/tasks", sessionMiddleware,
         zValidator("json", PromptSchema),
         async (c) => {
             try {
@@ -1312,18 +1332,19 @@ const app = new Hono()
             }
         }
     )
-    .post("/AI/save",
+    .post("/generate/save",
         zValidator("json", saveAiGeneratedProjectSchema),
         sessionMiddleware,
         async (c) => {
             try {
-                await sleep(50_000);
+                // await sleep(50_000);
                 const user = c.get("user");
                 const { workspaceId, data } = c.req.valid("json")
 
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -1371,8 +1392,8 @@ const app = new Hono()
                             createdById: member.id,
                             imageUrl: "",
                             archived: false,
-                            startDate: new Date(project.startDate) ?? thisMonthStart,
-                            endDate: new Date(project.endDate) ?? thisMonthEnd,
+                            startDate: project.startDate ? new Date(project.startDate) : thisMonthStart,
+                            endDate: project.endDate ? new Date(project.endDate) : thisMonthEnd,
                             // aiGenerated: true
                         }
                     })
@@ -1420,12 +1441,27 @@ const app = new Hono()
                             }
                         }
                     }
+                    await logActivity(
+                        tx,
+                        {
+                            workspaceId,
+                            memberId: member.id,
+                            actionType: "PROJECT_CREATED",
+                            entityType: "PROJECT",
+                            entityId: newProject.id,
+                            entityTitle: newProject.name,
+                            metadata: {
+                                "AI": true
+                            },
+                        })
 
                     return await tx.project.findUniqueOrThrow({
                         where: {
                             id: newProject.id
                         }
                     })
+
+
                 })
                 // const results = {
                 //     id: 'ff891449-95f3-41d9-aa05-1f02edb607b0',
@@ -1458,8 +1494,26 @@ const app = new Hono()
             const user = c.get("user");
 
             const { projectId } = c.req.param()
-            const { name, image, endDate, startDate, status, description } = c.req.valid("json")
+            const { name, image, endDate, startDate, status, description, workspaceId } = c.req.valid("json")
 
+            const workspace = await db.workspace.findUnique({
+                where: {
+                    id: workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                },
+                include: {
+                    members: true
+                }
+            });
+
+            if (!workspace) {
+                return c.json(errorResponse("workspace not found"), 404);
+            }
 
             const existingProject = await db.project.findUnique({
                 where: {
@@ -1471,14 +1525,13 @@ const app = new Hono()
 
             }
 
-            const member = await db.member.findFirst({
-                where: {
-                    workspaceId: existingProject.workspaceId,
-                    userId: user.id
-                }
-            })
+            const member = workspace.members.find((member) => member.userId == user.id)
             if (!member) {
                 return c.json(errorResponse("Project not found"), 404)
+            }
+
+            if (member.role !== MemberRole.ADMIN) {
+                return c.json(errorResponse("You do not have permission to carry out action."), 403)
             }
 
             let uploadedImageUrl: string | undefined
@@ -1508,22 +1561,32 @@ const app = new Hono()
             //         imageUrl: uploadedImageUrl,
             //     }
             // )
-            const project = await db.project.update({
-                where: {
-                    id: projectId,
+            const result = await db.$transaction(async (tx) => {
+                const project = await tx.project.update({
+                    where: {
+                        id: projectId,
+                    },
+                    data: {
 
-                },
-                data: {
-                    name,
-                    imageUrl,
-                    status,
-                    startDate,
-                    endDate,
-                    description
-                }
+                        name,
+                        imageUrl,
+                        status,
+                        startDate,
+                        endDate,
+                        description
+                    }
+                })
+                await logActivity(tx, {
+                    workspaceId, memberId: member.id,
+                    actionType: "PROJECT_EDITED", entityType: "PROJECT",
+                    entityId: project.id, entityTitle: project.name,
+                    metadata: { "oldName": existingProject.name },
+                })
+
+                return project
             })
 
-            return c.json({ data: project })
+            return c.json({ data: result })
 
         }
 
@@ -1543,6 +1606,7 @@ const app = new Hono()
             if (!existingProject) {
                 return c.json(errorResponse("Project not found"), 404)
             }
+
 
             const member = await db.member.findFirst({
                 where: {
@@ -1576,6 +1640,12 @@ const app = new Hono()
                     where: {
                         id: projectId
                     },
+                })
+                await logActivity(tx, {
+                    workspaceId: existingProject.workspaceId, memberId: member.id,
+                    actionType: "PROJECT_DELETED", entityType: "PROJECT",
+                    entityId: null, entityTitle: existingProject.name,
+                    metadata: { "projectName": existingProject.name },
                 })
             })
             const data = { id: projectId }

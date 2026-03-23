@@ -18,7 +18,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatActivityDate } from "@/lib/utils";
 
 interface TaskCommentsProps {
   taskId: string;
@@ -44,7 +44,7 @@ const TaskComments = ({ taskId }: TaskCommentsProps) => {
         onSuccess: () => {
           form.setValue("content", "");
         },
-      }
+      },
     );
   };
 
@@ -127,7 +127,7 @@ interface TaskCommentListProps {
         name: string | null;
       };
     } | null;
-    createdAt: string;
+    createdAt?: string;
   };
 }
 const TaskCommentList = ({ comment }: TaskCommentListProps) => {
@@ -143,7 +143,7 @@ const TaskCommentList = ({ comment }: TaskCommentListProps) => {
             <p className="text-black font-semibold">
               {comment.user?.user.name}
               <span className="text-[10px] text-neutral-700 ml-1">
-                1 day ago
+                {formatActivityDate(comment.createdAt!)}
               </span>
             </p>
             <p className="text-xs">{comment.content}</p>

@@ -12,7 +12,7 @@ interface useGetProjectsProps {
     dueDate?: string;
     ownerId?: string;
     archived?: boolean;
-    limit: string
+    limit?: string
 }
 
 export type AllProjectsResponseType = InferResponseType<typeof client.api.projects["$get"], 200>

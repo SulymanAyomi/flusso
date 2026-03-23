@@ -124,7 +124,7 @@ export const EditTaskForm = ({
           form.reset();
           onCancel?.();
         },
-      }
+      },
     );
   };
 
@@ -330,7 +330,7 @@ export const EditTaskForm = ({
                       <p>Assignees</p>
                     </FormLabel>
                     <Select
-                      defaultValue={field.value}
+                      defaultValue={field.value ?? undefined}
                       onValueChange={field.onChange}
                     >
                       <div className="flex-1 text-sm">
@@ -484,7 +484,7 @@ const AddTags = ({
                 "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
                 selectedTags.includes(tag)
                   ? "bg-blue-200 text-blue-800"
-                  : "bg-neutral-200 border-gray-300"
+                  : "bg-neutral-200 border-gray-300",
               )}
             >
               {tag}
@@ -546,7 +546,7 @@ const TaskDependency = ({
                 "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
                 selectedTask.includes(task)
                   ? "bg-blue-200 text-blue-800"
-                  : "bg-neutral-200 border-gray-300"
+                  : "bg-neutral-200 border-gray-300",
               )}
             >
               {task.name}

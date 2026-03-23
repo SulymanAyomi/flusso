@@ -6,7 +6,7 @@ export type WorkspaceType = {
     id: string;
     imageUrl: string;
     inviteCode: string;
-    ownerId: string;
+    ownerId: string | null;
     createdAt: string | Date;
     updatedAt: string | Date;
 }

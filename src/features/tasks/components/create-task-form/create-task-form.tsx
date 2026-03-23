@@ -141,7 +141,7 @@ export const CreateTaskForm = ({
           form.reset();
           onCancel?.();
         },
-      }
+      },
     );
   };
 
@@ -218,7 +218,7 @@ export const CreateTaskForm = ({
                           className={cn(
                             field.value == undefined
                               ? "text-neutral-400"
-                              : "text-black"
+                              : "text-black",
                           )}
                         >
                           <SelectValue placeholder="Select status" />
@@ -282,7 +282,7 @@ export const CreateTaskForm = ({
                           className={cn(
                             field.value == undefined
                               ? "text-neutral-400"
-                              : "text-black"
+                              : "text-black",
                           )}
                         >
                           <SelectValue placeholder="Select priority" />
@@ -366,7 +366,7 @@ export const CreateTaskForm = ({
                     <p>Assignees</p>
                   </FormLabel>
                   <Select
-                    defaultValue={field.value}
+                    defaultValue={field.value ?? undefined}
                     onValueChange={field.onChange}
                   >
                     <div className="flex-1 text-sm">
@@ -375,7 +375,7 @@ export const CreateTaskForm = ({
                           className={cn(
                             field.value == undefined
                               ? "text-neutral-400"
-                              : "text-black"
+                              : "text-black",
                           )}
                         >
                           <SelectValue placeholder="Select assignee" />
@@ -646,7 +646,7 @@ const AddTags = ({
                 "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
                 selectedTags.includes(tag)
                   ? "bg-blue-200 text-blue-800"
-                  : "bg-neutral-200 border-gray-300"
+                  : "bg-neutral-200 border-gray-300",
               )}
             >
               {tag}
@@ -705,7 +705,7 @@ const TaskDependency = ({
                 "p-1 px-2  rounded-[12px] text-[10px] cursor-pointer",
                 selectedTask.includes(task)
                   ? "bg-blue-200 text-blue-800"
-                  : "bg-neutral-200 border-gray-300"
+                  : "bg-neutral-200 border-gray-300",
               )}
             >
               {task.name}

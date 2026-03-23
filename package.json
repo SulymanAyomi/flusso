@@ -1,7 +1,10 @@
 {
-  "name": "easyplan",
+  "name": "Flusso",
   "version": "0.1.0",
   "private": true,
+  "compilerOptions": {
+    "target": "es2015"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

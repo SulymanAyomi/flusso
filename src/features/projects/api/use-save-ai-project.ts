@@ -31,7 +31,7 @@ export const useSaveGeneratedProject = () => {
                 const data = await response.json()
 
                 if (!response.ok) {
-                    const errorData = data as ErrorResponse
+                    const errorData = data as unknown as ErrorResponse
                     throw new ProjectError(
                         errorData.error.type,
                         errorData.error.message,

@@ -17,6 +17,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id

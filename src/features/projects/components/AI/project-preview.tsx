@@ -127,8 +127,8 @@ export function ProjectReview({
   const handleSave = () => {
     const project = {
       name: projectName,
-      startDate: projectStartDate,
-      endDate: projectEndDate,
+      startDate: projectStartDate!,
+      endDate: projectEndDate!,
       description: projectDescription,
       estimatedDurationDays: projectEst,
     };

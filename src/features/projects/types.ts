@@ -288,8 +288,8 @@ export interface ProjectData {
         name: string;
         description: string;
         estimatedDurationDays: number;
-        startDate?: string;
-        endDate?: string;
+        startDate: string;
+        endDate: string;
     };
     tasks: Task[];
 }

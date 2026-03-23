@@ -28,7 +28,7 @@ const MyTaskSegmentation = () => {
             Today Tasks
           </AccordionTrigger>
           <AccordionContent className="bg-white ">
-            <DataTable columns={columns} data={data?.highpiorityTasks ?? []} />
+            {/* <DataTable columns={columns} data={data?.highPriorityTasks ?? []} /> */}
           </AccordionContent>
         </AccordionItem>
         <AccordionItem
@@ -39,7 +39,7 @@ const MyTaskSegmentation = () => {
             Today Tasks
           </AccordionTrigger>
           <AccordionContent className="bg-white ">
-            <DataTable columns={columns} data={data?.highpiorityTasks ?? []} />
+            {/* <DataTable columns={columns} data={data?.highPriorityTasks ?? []} /> */}
           </AccordionContent>
         </AccordionItem>
         <AccordionItem
@@ -50,7 +50,7 @@ const MyTaskSegmentation = () => {
             Today Tasks
           </AccordionTrigger>
           <AccordionContent className="bg-white ">
-            <DataTable columns={columns} data={data?.highpiorityTasks ?? []} />
+            {/* <DataTable columns={columns} data={data?.highPriorityTasks ?? []} /> */}
           </AccordionContent>
         </AccordionItem>
       </Accordion>

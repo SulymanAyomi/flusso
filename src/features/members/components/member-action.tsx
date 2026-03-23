@@ -9,9 +9,10 @@ import React from "react";
 
 import { MemberRole } from "../types";
 import { Button } from "@/components/ui/button";
+type role = "OWNER" | "ADMIN" | "MEMBER" | "VIWER";
 interface MemberActionProps {
-  userRole: MemberRole;
-  memberRole: MemberRole;
+  userRole: role;
+  memberRole: role;
   memberId: string;
   isUpdatingMember: boolean;
   handleUpdateMember: (id: string, role: MemberRole) => void;
@@ -28,10 +29,10 @@ const MemberAction = ({
   handleDeleteMember,
   isDeletingMember,
 }: MemberActionProps) => {
-  const isOwner = userRole === MemberRole.OWNER;
+  const isOwner = userRole === "OWNER";
   const isAdmin = userRole === MemberRole.ADMIN;
 
-  const isTargetOwner = memberRole === MemberRole.OWNER;
+  const isTargetOwner = memberRole === "OWNER";
   const isTargetAdmin = memberRole === MemberRole.ADMIN;
 
   const canManageRoles =

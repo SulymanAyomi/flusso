@@ -90,7 +90,7 @@ export function useProjectFlow() {
                         onRetry: () => startGeneration(prompt),
                         onReset: () => reset()
                     }),
-                    onSuggestion: (suggestion) => startGeneration(suggestion),
+                    onSuggestion: (suggestion) => { startGeneration(suggestion) },
                 });
 
                 return;
@@ -178,9 +178,9 @@ export function useProjectFlow() {
                     }
                 },
                 onReset: () => reset(),
-                onSuggestion: (suggestion) => startGeneration(suggestion),
                 retryAfter: appError.metadata?.retryAfter
-            })
+            }),
+            onSuggestion: (suggestion) => { startGeneration(suggestion) },
         });
 
     }, [flowState, addMessage, startGeneration])

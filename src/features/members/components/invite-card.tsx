@@ -18,7 +18,7 @@ interface InviteCardProp {
     createdAt: string;
     imageUrl: string;
     inviteCode: string;
-    ownerId: string;
+    ownerId: string | null;
     updatedAt: string;
   };
 }
