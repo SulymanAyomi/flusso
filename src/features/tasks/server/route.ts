@@ -229,6 +229,148 @@ const app = new Hono()
             })
         }
     )
+    .get("/my-task",
+        zValidator(
+            "query",
+            z.object({
+                workspaceId: z.string(),
+                projectId: z.string().nullish(),
+                status: z.nativeEnum(TaskStatus).nullish(),
+                search: z.string().nullish(),
+                dueDate: z.string().nullish(),
+                toDate: z.string().nullish(),
+                fromDate: z.string().nullish(),
+            })
+        ),
+        sessionMiddleware,
+        async (c) => {
+            const user = c.get("user");
+            const { workspaceId,
+                projectId,
+                status,
+                search,
+                dueDate,
+                toDate,
+                fromDate
+            } = c.req.valid("query")
+
+            const member = await getMember({
+                workspaceId,
+                userId: user.id
+            })
+            if (!member) {
+                return c.json({ error: "unauthorized" }, 401)
+            }
+
+            const workspace = await db.workspace.findUnique({
+                where: {
+                    id: workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                }
+            });
+
+            if (!workspace) {
+                return c.json(errorResponse("workspace not found"), 404);
+            }
+
+            let query: Record<string, any> = {}
+
+            query.workspaceId = workspaceId
+            query.assignedToId = member.id
+
+
+            if (projectId) {
+                query.projectId = projectId
+            }
+
+            if (search) {
+                query.name = {
+                    contains: search,
+                    mode: "insensitive"
+                }
+            }
+            if (status) {
+                query.status = {
+                    equals: status
+                }
+            }
+
+            if (toDate && fromDate) {
+                query.dueDate = {
+                    gte: fromDate,
+                    lte: toDate
+                }
+            }
+
+            if (dueDate) {
+                query.dueDate = {
+                    equals: dueDate
+                }
+            }
+
+
+            const tasks = await db.task.findMany({
+                where: query,
+                orderBy: {
+                    createdAt: "desc"
+                },
+                include: {
+                    assignedTo: {
+                        select: {
+                            id: true,
+                            user: {
+                                select: {
+                                    name: true,
+                                    email: true
+                                }
+                            }
+                        }
+                    },
+                    project: {
+                        select: {
+                            id: true,
+                            name: true,
+                            imageUrl: true
+                        }
+                    },
+                    blockedBy: {
+                        select: {
+                            id: true
+                        }
+                    },
+                    Subtask: true,
+                    Comment: {
+                        select: {
+                            id: true
+                        }
+                    }
+                }
+
+            })
+
+            if (tasks.length == 0) {
+                return c.json({
+                    data: {
+                        documents: [],
+                        total: 0
+                    }
+                })
+            }
+
+            return c.json({
+                data: {
+                    documents: tasks,
+                    total: tasks.length
+
+                }
+            })
+        }
+    )
     .post("/",
         zValidator("json", createTaskSchema), sessionMiddleware,
         async (c) => {

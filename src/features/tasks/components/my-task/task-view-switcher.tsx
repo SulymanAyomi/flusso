@@ -36,6 +36,7 @@ import {
   startOfToday,
   startOfWeek,
 } from "date-fns";
+import { useGetMyTasks } from "../../api/use-get-my-tasks";
 
 interface TaskViewSwitcherProps {
   hideProjectFilter?: boolean;
@@ -57,9 +58,8 @@ export const TaskViewSwitcher = ({
   const { open } = useCreateTaskModal();
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
-  const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
+  const { data: tasks, isLoading: isLoadingTasks } = useGetMyTasks({
     workspaceId,
-    assignedToId,
     status,
     projectId: paramProjectId || projectId,
     dueDate,
