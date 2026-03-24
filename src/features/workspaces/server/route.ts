@@ -306,9 +306,7 @@ const app = new Hono()
         zValidator("json", z.object({ code: z.string() })),
         async (c) => {
             try {
-
                 const user = c.get("user");
-
                 const { workspaceId } = c.req.param()
                 const { code } = c.req.valid("json")
 
@@ -316,11 +314,6 @@ const app = new Hono()
                     where: {
                         id: workspaceId,
                         deletedAt: null,
-                        members: {
-                            some: {
-                                userId: user.id
-                            }
-                        }
                     },
                     include: {
                         members: true
@@ -334,11 +327,11 @@ const app = new Hono()
                 const member = workspace.members.find((member) => member.userId == user.id)
 
                 if (member) {
-                    return c.json({ error: "Already a member" }, 400)
+                    return c.json(errorResponse("You can't join workspace. You are already a memebr."), 400)
                 }
 
                 if (workspace?.inviteCode !== code) {
-                    return c.json({ error: "Invalid invite code" }, 400)
+                    return c.json(errorResponse("Invalide invite code"), 400)
                 }
 
                 const result = await db.$transaction(async (tx) => {
@@ -353,8 +346,8 @@ const app = new Hono()
                     await logActivity(tx, {
                         workspaceId: workspaceId,
                         memberId: member.id,
-                        actionType: "WORKSPACE_UPDATED",
-                        entityType: "TASK",
+                        actionType: "JOINED_WORKSPACE",
+                        entityType: "MEMBER",
                         entityId: null,
                         entityTitle: "",
                         metadata: {
@@ -365,6 +358,7 @@ const app = new Hono()
 
                 return c.json(successResponse(workspace), 200)
             } catch (error) {
+                console.log(error)
                 return c.json(errorResponse("Something went wrong"), 500)
 
             }

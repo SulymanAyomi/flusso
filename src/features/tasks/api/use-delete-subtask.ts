@@ -4,8 +4,8 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-type ResponseType = InferResponseType<typeof client.api.tasks[":taskId"]["subtasks"]["$delete"], 200>
-type RequestType = InferRequestType<typeof client.api.tasks[":taskId"]["subtasks"]["$delete"]>
+type ResponseType = InferResponseType<typeof client.api.tasks[":taskId"]["subtasks"][":subtasksId"]["$delete"], 200>
+type RequestType = InferRequestType<typeof client.api.tasks[":taskId"]["subtasks"][":subtasksId"]["$delete"]>
 
 
 export const useDeleteSubTask = () => {
@@ -15,18 +15,18 @@ export const useDeleteSubTask = () => {
         Error,
         RequestType
     >({
-        mutationFn: async ({ param, json }) => {
-            const response = await client.api.tasks[":taskId"]["subtasks"]["$delete"]({ param, json })
+        mutationFn: async ({ param }) => {
+            const response = await client.api.tasks[":taskId"]["subtasks"][":subtasksId"]["$delete"]({ param })
             if (!response.ok) {
                 throw new Error("Failed to delete subtask")
             }
             return await response.json()
         },
-        onMutate: async ({ json, param }) => {
+        onMutate: async ({ param }) => {
             await queryClient.cancelQueries({ queryKey: ["sub-tasks", param.taskId] })
             const previous = queryClient.getQueryData(["sub-tasks", param.taskId])
             console.log("previous", previous)
-            queryClient.setQueryData(["sub-tasks", param.taskId], (old: ResponseType["data"][]) => old ? old.filter((task) => (task.id !== json.id)) : [])
+            queryClient.setQueryData(["sub-tasks", param.taskId], (old: ResponseType["data"][]) => old ? old.filter((task) => (task.id !== param.taskId)) : [])
             return { previous }
         },
         // onSuccess: ({ data }) => {

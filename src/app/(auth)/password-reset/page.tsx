@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 const RequestResetPage = async () => {
   const user = await getCurrent();
   if (user) {
-    redirect("/");
+    redirect("/workspaces");
   }
   return <RequestReset />;
 };

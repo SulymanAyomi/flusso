@@ -233,12 +233,7 @@ const app = new Hono()
         zValidator("json", createTaskSchema), sessionMiddleware,
         async (c) => {
             try {
-
                 const user = c.get("user");
-
-                if (!user) {
-                    return c.json({ error: "Unauthourize" }, 401)
-                }
 
                 const {
                     name,
@@ -295,9 +290,7 @@ const app = new Hono()
                     const exisitingIds = new Set(existing.map(t => t.id))
                     const missing = dependencies.filter(id => !exisitingIds.has(id))
                     if (missing.length > 0) {
-                        return c.json({
-                            error: "Some dependencies do not exist", missing
-                        }, 400)
+                        return c.json(errorResponse("Some dependencies do not exist", missing), 400)
                     }
                 }
 
@@ -314,30 +307,31 @@ const app = new Hono()
 
                 const newPosition = highestPositionTask.length > 0 ? highestPositionTask[0].position + 1000 : 1000
 
-                const tagRecords = await Promise.all(
-                    tags.map(async (tag: string) => {
-                        const normalized = tag.trim()
-                        return db.tags.upsert({
-                            where: {
-                                workspaceId_name: {
-                                    workspaceId: workspaceId as string,
-                                    name: normalized
-                                }
-                            },
-                            update: {},
-                            create: {
-                                workspaceId,
-                                name: normalized
-                            }
-                        })
-                    })
-                )
+
 
                 const now = new Date()
                 const thisMonthStart = startOfMonth(now)
                 const thisMonthEnd = endOfMonth(now)
 
                 const result = await db.$transaction(async (tx) => {
+                    const tagRecords = await Promise.all(
+                        tags.map(async (tag: string) => {
+                            const normalized = tag.trim()
+                            return tx.tags.upsert({
+                                where: {
+                                    workspaceId_name: {
+                                        workspaceId: workspaceId as string,
+                                        name: normalized
+                                    }
+                                },
+                                update: {},
+                                create: {
+                                    workspaceId,
+                                    name: normalized
+                                }
+                            })
+                        })
+                    )
                     const task = await tx.task.create({
                         data: {
                             name,
@@ -350,7 +344,6 @@ const app = new Hono()
                             position: newPosition,
                             description,
                             priority,
-
                         }
                     })
 
@@ -400,9 +393,9 @@ const app = new Hono()
                     return task
                 })
 
-                return c.json({ data: result })
+                return c.json(successResponse(result), 200)
             } catch (error) {
-
+                return c.json(errorResponse("Something went wrong"), 500)
             }
         }
     )
@@ -497,10 +490,10 @@ const app = new Hono()
                         entityId: task.id, entityTitle: task.name,
                         metadata: {},
                     })
-                    return task
                 })
+                const id = exisitingTask.id
 
-                return c.json(successResponse(result), 200)
+                return c.json(successResponse(id), 200)
             } catch (error) {
                 return c.json(errorResponse("Something went wrong"), 500)
 

@@ -24,11 +24,8 @@ export const useResetRequest = () => {
         },
         onSuccess: async (data) => {
             if (data.success) {
-                toast.success("Password request sent to mail")
                 queryClient.invalidateQueries({ queryKey: ["current"] })
                 queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-            } else {
-                toast.error("Email not found")
             }
         },
         onError: async (error) => {

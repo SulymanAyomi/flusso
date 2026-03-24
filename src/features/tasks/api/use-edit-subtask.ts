@@ -41,7 +41,7 @@ export const useEditSubTask = () => {
                 queryClient.setQueryData(["sub-tasks", variables.param.taskId], context.previous
                 )
             }
-            toast.error("Something went wrong!")
+            toast.error("failed to create subtask")
         },
         onSettled: (data) => {
             if (data) queryClient.invalidateQueries({ queryKey: ["sub-tasks", data.data.taskId] })

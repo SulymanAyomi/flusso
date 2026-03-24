@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { useJoinWorkspace } from "../api/use-join-workspace";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 
 interface JoinWorkspaceFormProps {
   initialValues: {
@@ -27,9 +28,11 @@ export const JoinWorkspaceForm = ({
   workspaceId,
 }: JoinWorkspaceFormProps) => {
   const router = useRouter();
+  const [error, setError] = useState("");
   const { mutate, isPending } = useJoinWorkspace();
 
   const onSubmit = () => {
+    setError("");
     mutate(
       {
         param: { workspaceId },
@@ -39,17 +42,22 @@ export const JoinWorkspaceForm = ({
         onSuccess: ({ data }) => {
           router.push(`/workspaces/${data.id}`);
         },
-      }
+        onError(error, variables, context) {
+          console.log(error, variables, context, "jjj");
+          setError(error.message);
+        },
+      },
     );
   };
 
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="p-7  text-white">
-        {/* <CardTitle className="text-xl font-bold"></CardTitle> */}
         <CardDescription>
-          You&apos;ve been invited to join <strong>{initialValues.name}</strong>{" "}
+          You&apos;ve been invited to join{" "}
+          <strong>{initialValues.name}</strong>{" "}
         </CardDescription>
+        {error && <p className="text-xs text-red-500">{error}</p>}
       </CardHeader>
       <div className="px-7">
         <Separator className="text-white" />

@@ -23,10 +23,14 @@ import {
 import { DottedSeparator } from "@/components/dotted-separator";
 import { useResetPassword } from "../api/use-reset-password";
 import { resetSchema } from "../schema";
+import { useState } from "react";
+import { Loader2Icon } from "lucide-react";
 
 export default function ResetPassword() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const [success, setSuccess] = useState(false);
+  const [show, setShow] = useState(false);
   const { mutate, isPending } = useResetPassword();
 
   const form = useForm<z.infer<typeof resetSchema>>({
@@ -38,10 +42,25 @@ export default function ResetPassword() {
   });
 
   const onSubmit = (values: z.infer<typeof resetSchema>) => {
-    mutate({ json: values });
+    setShow(false);
+    mutate(
+      { json: values },
+      {
+        onSuccess: (data) => {
+          setSuccess(true);
+          form.reset();
+        },
+        onError: () => {
+          setSuccess(false);
+        },
+        onSettled: () => {
+          setShow(true);
+        },
+      },
+    );
   };
   return (
-    <Card className="w-full h-full md:w-[487px] border-none shadow-none">
+    <Card className="w-fit h-fit md:w-[487px] border-none shadow-none">
       <CardHeader className="flex items-center justify-center text-center p-7">
         <CardDescription>
           <CardTitle className="text-xl">Password Reset</CardTitle>
@@ -70,8 +89,21 @@ export default function ResetPassword() {
               )}
             ></FormField>
             <Button disabled={isPending} size="lg" className="w-full">
-              Reset Password
+              {isPending ? (
+                <Loader2Icon className="text-white animate-spin size-4" />
+              ) : (
+                "Reset password"
+              )}
             </Button>
+            {show && (
+              <div className="text-sm">
+                {success ? (
+                  <p>Your password has been reset</p>
+                ) : (
+                  <p>Password reset failed</p>
+                )}
+              </div>
+            )}
           </form>
         </Form>
       </CardContent>

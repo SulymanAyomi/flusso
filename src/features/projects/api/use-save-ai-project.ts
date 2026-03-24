@@ -6,8 +6,8 @@ import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 import { ErrorResponse, ProjectError, ValidatePromptRequest } from "../types";
 
-type ResponseType = InferResponseType<typeof client.api.projects.AI.save["$post"], 200>
-type RequestType = InferRequestType<typeof client.api.projects.AI.save["$post"]>
+type ResponseType = InferResponseType<typeof client.api.projects.generate.save["$post"], 200>
+type RequestType = InferRequestType<typeof client.api.projects.generate.save["$post"]>
 
 
 export const useSaveGeneratedProject = () => {
@@ -27,7 +27,7 @@ export const useSaveGeneratedProject = () => {
                 //         true
                 //     );
                 // }
-                const response = await client.api.projects.AI.save["$post"]({ json })
+                const response = await client.api.projects.generate.save["$post"]({ json })
                 const data = await response.json()
 
                 if (!response.ok) {

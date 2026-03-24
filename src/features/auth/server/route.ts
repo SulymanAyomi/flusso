@@ -25,15 +25,7 @@ const app = new Hono()
             }
             // Hash password
             const hashedPassword = await bcrypt.hash(password, 10)
-            // Create user with emailVerified = null
-            const user = await db.user.create({
-                data: {
-                    name,
-                    email,
-                    password: hashedPassword,
-                    emailVerified: null,
-                },
-            })
+
             // Generate email verification token
             // 1 generate OTP
             const otp = generateOTP()
@@ -42,21 +34,37 @@ const app = new Hono()
             const hashedOtp = await bcrypt.hash(otp, 10)
 
             // 3 save to db
-            const vt = await db.verificationToken.upsert({
-                where: { email },
-                update: {
-                    email,
-                    otp: hashedOtp,
-                    expires: new Date(Date.now() + 10 * 60 * 1000),
-                    attempts: 0,
-                    createdAt: new Date()
-                },
-                create: {
-                    email,
-                    otp: hashedOtp,
-                    expires: new Date(Date.now() + 10 * 60 * 1000)
-                }
+
+            const result = await db.$transaction(async (tx) => {
+                // Create user with emailVerified = null
+
+                const user = await tx.user.create({
+                    data: {
+                        name,
+                        email,
+                        password: hashedPassword,
+                        emailVerified: null,
+                    },
+                })
+
+                const vt = await tx.verificationToken.upsert({
+                    where: { email },
+                    update: {
+                        email,
+                        otp: hashedOtp,
+                        expires: new Date(Date.now() + 10 * 60 * 1000),
+                        attempts: 0,
+                        createdAt: new Date()
+                    },
+                    create: {
+                        email,
+                        otp: hashedOtp,
+                        expires: new Date(Date.now() + 10 * 60 * 1000)
+                    }
+                })
+                return vt
             })
+
             console.log(otp)
             //  send otp
             // await sendOTPEmail({
@@ -64,7 +72,7 @@ const app = new Hono()
             //     code: otp
             // })
             const data = {
-                vid: vt.id
+                vid: result.id
             }
             return c.json(successResponse(data, "User registered successfully"), 201);
 
@@ -98,28 +106,34 @@ const app = new Hono()
         return c.json({ success: true, message: "Password reset successfully" }, 200)
     })
     .post("/reset-password", zValidator("json", resetSchema), async (c) => {
-        const { token, newPassword } = c.req.valid("json")
+        try {
 
-        const reset = await db.passwordResetToken.findUnique({
-            where: { token },
-            include: { user: true },
-        })
+            const { token, newPassword } = c.req.valid("json")
 
-        if (!reset || reset.expires < new Date()) {
-            return c.json({ error: "Token expired or invalid" }, { status: 400 })
+            const reset = await db.passwordResetToken.findUnique({
+                where: { token },
+                include: { user: true },
+            })
+
+            if (!reset || reset.expires < new Date()) {
+                return c.json(errorResponse("Token expired or invalid"), { status: 400 })
+            }
+
+            const hashedPassword = await hash(newPassword, 10)
+            await db.$transaction(async (tx) => {
+                await tx.user.update({
+                    where: { id: reset.userId },
+                    data: { password: hashedPassword },
+                })
+
+                await tx.passwordResetToken.delete({ where: { token } })
+            })
+
+            return c.json(successResponse({ success: true }), 200)
+        } catch (error) {
+            return c.json(errorResponse("Something went wrong"), 500);
+
         }
-
-        const hashedPassword = await hash(newPassword, 10)
-
-        await db.user.update({
-            where: { id: reset.userId },
-            data: { password: hashedPassword },
-        })
-
-        await db.passwordResetToken.delete({ where: { token } })
-
-        return c.json({ success: true })
-
     }).post("/verify-otp", zValidator("json", verifyOTPSchema), async (c) => {
         try {
             const { vid, otp } = c.req.valid("json")

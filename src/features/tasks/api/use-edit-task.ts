@@ -23,12 +23,12 @@ export const useEditTask = () => {
             return await response.json()
         },
         // @ts-ignore
-        onSuccess: ({ data }) => {
+        onSuccess: ({ data, }) => {
             toast.success("Task updated successfully")
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["tasks"] })
-            queryClient.invalidateQueries({ queryKey: ["task", data.id] })
+            queryClient.invalidateQueries({ queryKey: ["task", data] })
         },
         onError: () => {
             toast.error("Failed to update task")

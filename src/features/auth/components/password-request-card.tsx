@@ -25,6 +25,7 @@ import { DottedSeparator } from "@/components/dotted-separator";
 
 import { resetRequestSchema } from "../schema";
 import { useResetRequest } from "../api/use-reset-request";
+import { Loader2Icon } from "lucide-react";
 
 export default function RequestReset() {
   const [email, setEmail] = useState("");
@@ -39,11 +40,19 @@ export default function RequestReset() {
   });
 
   const onSubmit = (values: z.infer<typeof resetRequestSchema>) => {
-    mutate({ json: values });
+    setSent(false);
+    mutate(
+      { json: values },
+      {
+        onSettled: () => {
+          setSent(true);
+        },
+      },
+    );
   };
 
   return (
-    <Card className="w-full h-full md:w-[487px] border-none shadow-none">
+    <Card className="w-fit h-fit md:w-[487px] border-none shadow-none">
       <CardHeader className="flex items-center justify-center text-center p-7">
         <CardDescription>
           <CardTitle className="text-xl">Password Reset</CardTitle>
@@ -72,12 +81,16 @@ export default function RequestReset() {
               )}
             ></FormField>
             <Button disabled={isPending} size="lg" className="w-full">
-              Login
+              {isPending ? (
+                <Loader2Icon className="text-white animate-spin size-4" />
+              ) : (
+                "Reset password"
+              )}
             </Button>
             <CardContent>
-              <p className="text-green-500 text-sm">
-                Reset link sent if email exists.
-              </p>
+              {sent && (
+                <p className="text-sm">Reset link sent if email exists.</p>
+              )}
             </CardContent>
           </form>
         </Form>

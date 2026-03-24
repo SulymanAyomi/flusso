@@ -45,7 +45,7 @@ export const SignUpCard = () => {
         onError: async (error) => {
           setError(error.message);
         },
-      }
+      },
     );
   };
 
@@ -119,9 +119,7 @@ export const SignUpCard = () => {
               ></FormField>
               <Button disabled={isPending} size="lg" className="w-full">
                 {isPending && (
-                  <>
-                    <Loader2Icon className="mr-2 animate-spin h-full" />
-                  </>
+                  <Loader2Icon className="mr-2 animate-spin h-full w-full" />
                 )}
                 Sign up
               </Button>

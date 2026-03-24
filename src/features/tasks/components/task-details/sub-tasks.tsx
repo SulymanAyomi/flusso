@@ -19,7 +19,7 @@ const SubTasks = ({ taskId }: subTasksProps) => {
   const [showInput, setShowInput] = useState(false);
   const [input, setInput] = useState("");
   const [subTask, setSubTask] = useState<{ name: string; isDone: boolean }[]>(
-    []
+    [],
   );
   const [savedIds, setSavedIds] = useState<string[]>([]);
   //   const addSubItem = () => {
@@ -50,7 +50,7 @@ const SubTasks = ({ taskId }: subTasksProps) => {
         onSuccess: () => {
           setInput("");
         },
-      }
+      },
     );
   };
   const changeStatus = ({ id, isDone }: { id: string; isDone: boolean }) => {
@@ -67,21 +67,17 @@ const SubTasks = ({ taskId }: subTasksProps) => {
             setSavedIds((prev) => prev.filter((id) => id !== data.id));
           }, 1000);
         },
-      }
+      },
     );
   };
   const onDelete = ({ id, isDone }: { id: string; isDone: boolean }) => {
-    const sub = {
-      id,
-      isDone,
-    };
     deleteSubTask(
-      { json: sub, param: { taskId } },
+      { param: { taskId, subtasksId: id } },
       {
         onSuccess: ({ data }) => {
           setSavedIds((prev) => prev.filter((id) => id !== data.id));
         },
-      }
+      },
     );
   };
 
@@ -117,7 +113,7 @@ const SubTasks = ({ taskId }: subTasksProps) => {
                 <p
                   className={cn(
                     !task.isDone && "text-black",
-                    task.isDone && "line-through text-gray-500"
+                    task.isDone && "line-through text-gray-500",
                   )}
                 >
                   {task.name}

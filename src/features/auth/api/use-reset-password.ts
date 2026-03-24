@@ -20,7 +20,15 @@ export const useResetPassword = () => {
     >({
         mutationFn: async ({ json }) => {
             const response = await client.api.register["reset-password"]["$post"]({ json })
-            return response.json()
+            const data = await response.json()
+            // if (!response.ok) {
+            //     if (data.error) {
+            //         throw new Error(data.error)
+            //     } else {
+            //         throw new Error("Something went wrong")
+            //     }
+            // }
+            return data
         },
         onSuccess: async (data) => {
             if (data.success) {

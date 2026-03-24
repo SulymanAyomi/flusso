@@ -24,7 +24,7 @@ export const PageError = ({
 }: PageErrorProps) => {
   const router = useRouter();
   return (
-    <div className="h-[calc(100vh-88px)] w-full flex flex-col items-center justify-center bg-background p-4">
+    <div className="h-[calc(100vh-88px)] w-full flex flex-col items-center justify-center bg-inherit p-4">
       <div className="flex flex-col items-center text-center space-y-6 max-w-md">
         <div className="space-y-2 animate-in slide-in-from-bottom-4 duration-700 delay-200 fill-mode-backwards">
           <h2 className="text-3xl font-semibold tracking-tight first-letter:capitalize">

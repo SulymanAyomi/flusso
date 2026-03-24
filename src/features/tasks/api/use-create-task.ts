@@ -17,10 +17,11 @@ export const useCreateTask = () => {
     >({
         mutationFn: async ({ json }) => {
             const response = await client.api.tasks["$post"]({ json })
+            const data = await response.json()
             if (!response.ok) {
                 throw new Error("Failed to create task")
             }
-            return await response.json()
+            return data
         },
         onSuccess: () => {
             toast.success("Task created")

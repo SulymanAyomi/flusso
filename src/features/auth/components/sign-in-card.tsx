@@ -108,7 +108,7 @@ export const SignInCard = () => {
                   <div className="flex items-center">
                     <FieldLabel htmlFor="password">Password</FieldLabel>
                     <a
-                      href="#"
+                      href="/password-reset"
                       className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                     >
                       Forgot your password?
@@ -123,10 +123,8 @@ export const SignInCard = () => {
             ></FormField>
             <Button disabled={loading} size="lg" className="w-full">
               {loading && (
-                <>
-                  <Loader2Icon className="mr-1 animate-spin h-full" />
-                </>
-              )}{" "}
+                <Loader2Icon className="mr-1 animate-spin w-full h-full" />
+              )}
               Login
             </Button>
           </form>

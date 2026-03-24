@@ -41,9 +41,10 @@ export const getWorkspace = async ({ workspaceId }: GetWorkspaceProps) => {
         throw new Error("Unauthourize")
     }
 
-    const workspace = await db.workspace.findFirst({
+    const workspace = await db.workspace.findUnique({
         where: {
-            id: workspaceId
+            id: workspaceId,
+            deletedAt: null
         }
     })
 
@@ -59,15 +60,16 @@ interface GetWorkspaceInfoProps {
 export const getWorkspaceInfo = async ({ workspaceId }: GetWorkspaceInfoProps) => {
     const user = await getCurrent()
     if (!user) {
-        throw new Error("Unauthourize")
+        return null
     }
     const workspace = await db.workspace.findUnique({
         where: {
-            id: workspaceId
+            id: workspaceId,
+            deletedAt: null
         }
     })
     if (!workspace) {
-        throw new Error("workspace not found")
+        return null
 
     }
 
