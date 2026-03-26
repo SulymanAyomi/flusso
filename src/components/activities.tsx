@@ -32,6 +32,7 @@ const renderActivityText = ({
   const Bold = ({ children }: { children: React.ReactNode }) => (
     <span className="font-semibold">{children}</span>
   );
+  let date = new Date(createdAt);
 
   switch (actionType) {
     case "JOINED_WORKSPACE":
@@ -41,8 +42,8 @@ const renderActivityText = ({
             <Bold>{member.user.name}</Bold> joined workspace
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -53,8 +54,8 @@ const renderActivityText = ({
             <Bold>{member.user.name}</Bold> left workspace
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>{" "}
         </>
       );
@@ -67,8 +68,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -81,8 +82,8 @@ const renderActivityText = ({
             {metadata?.previousValue} to {metadata?.newValue}
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -94,8 +95,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold> as completed
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -107,8 +108,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -120,8 +121,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -134,8 +135,8 @@ const renderActivityText = ({
             {metadata?.previousValue} to {metadata.newValue}
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -147,8 +148,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold> to {metadata.newAssignee}
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -160,8 +161,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -173,8 +174,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -186,8 +187,8 @@ const renderActivityText = ({
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );
@@ -200,8 +201,8 @@ const renderActivityText = ({
             <Bold>{snakeCaseToTitleCase(actionType)}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
-            <p>{format(createdAt, "PP")},</p>
-            <p>{format(createdAt, "p")}</p>
+            <p>{format(date, "PP")},</p>
+            <p>{format(date, "p")}</p>
           </div>
         </>
       );

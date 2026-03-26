@@ -86,7 +86,7 @@ export const EditWorkspaceForm = ({}) => {
                 <div className="flex items-center flex-col justify-center gap-2">
                   <h3 className="font-semibold text-sm">CreatedAt</h3>
                   <p className="text-xs">
-                    {format(workspace.createdAt!, "MMM d, yyyy")}
+                    {format(new Date(workspace.createdAt!), "MMM d, yyyy")}
                   </p>
                 </div>
                 <div className="flex items-center flex-col justify-center gap-2">

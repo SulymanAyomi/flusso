@@ -1,44 +1,20 @@
 "use client";
 import React, { useState } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Archive,
-  ArrowUp,
-  Check,
-  CheckIcon,
   ChevronRightIcon,
   FilterIcon,
-  FlagIcon,
   Folder,
   HomeIcon,
-  Layout,
   LayoutGridIcon,
   LayoutIcon,
-  LayoutList,
-  MenuIcon,
-  MoreVerticalIcon,
-  Plus,
   SearchIcon,
-  TriangleAlert,
-  XIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 import ProjectsAnalytics from "@/components/projects-analytics";
-import { useGetProjectAnalytics } from "@/features/projects/api/use-get-project-analytics";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import ProjectCard from "@/components/project-dashboard/project-card";
-import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import PageHeader from "@/components/page-header";
-import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";

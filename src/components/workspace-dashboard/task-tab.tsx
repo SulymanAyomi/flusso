@@ -67,7 +67,7 @@ const TaskTabs = () => {
                     </Badge>
                     <div>
                       <p className="text-xs line-clamp-1">
-                        {format(task.dueDate!, "MMM d, yyyy")}
+                        {format(new Date(task.dueDate!), "MMM d, yyyy")}
                       </p>
                     </div>
                     <Badge variant={task.priority} className="text-[10px]">
@@ -109,7 +109,7 @@ const TaskTabs = () => {
                     </div>
                     <div className="w-1/4">
                       <p className="text-xs line-clamp-1 ">
-                        {format(task.dueDate!, "MMM d, yyyy")}
+                        {format(new Date(task.dueDate!), "MMM d, yyyy")}
                       </p>
                     </div>
                     <div className="w-1/4 flex items-start">

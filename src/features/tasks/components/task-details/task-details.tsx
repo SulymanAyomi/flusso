@@ -53,9 +53,9 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
           </div>
           <div className="flex-1">
             <p className="text-black">
-              {format(task.createdAt!, "MMMM d, yyyy")}{" "}
+              {format(new Date(task.createdAt!), "MMMM d, yyyy")}{" "}
               <span className="text-neutral-400">
-                {format(task.createdAt!, "p")}
+                {format(new Date(task.createdAt!), "p")}
               </span>
             </p>
           </div>
@@ -94,7 +94,10 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
             <p>Start Date</p>
           </div>
           <div className="flex-1">
-            <p className="text-black"> {format(task.startDate!, "PPPP")}</p>
+            <p className="text-black">
+              {" "}
+              {format(new Date(task.startDate!), "PPPP")}
+            </p>
           </div>
         </div>
         <div className="flex items-center w-full">
@@ -103,7 +106,10 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
             <p>Due Date</p>
           </div>
           <div className="flex-1">
-            <p className="text-black"> {format(task.dueDate!, "PPPP")}</p>
+            <p className="text-black">
+              {" "}
+              {format(new Date(task.dueDate!), "PPPP")}
+            </p>
           </div>
         </div>
         <div className="flex items-center w-full">

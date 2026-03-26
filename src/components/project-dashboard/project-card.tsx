@@ -67,7 +67,7 @@ function ProjectCard({ view, showFilter, search }: ProjectCardProp) {
         <div
           className={cn(
             "transition-all duration-1000 ease-in-out opacity-0 -translate-y-2",
-            showFilter && "opacity-100 translate-y-0  "
+            showFilter && "opacity-100 translate-y-0  ",
           )}
         >
           <DottedSeparator className="my-4" />
@@ -170,11 +170,11 @@ const ProjectGrid = ({ projects }: ProjectsType) => {
                     className={cn(
                       "text-[10px] flex",
                       project.stats.completionPercentage == 100 &&
-                        "text-green-700"
+                        "text-green-700",
                     )}
                   >
                     <p>Completed: </p>
-                    <span> {format(project.endDate!, "PP")}</span>
+                    <span> {format(new Date(project.endDate!), "PP")}</span>
                   </div>
                 </div>
                 <div className="flex w-full">

@@ -3,13 +3,12 @@ import { MenuIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 import Link from "next/link";
-import { FaMoneyBillWave } from "react-icons/fa";
 
 export const Mobilemenu = () => {
   return (
     <Popover>
-      <PopoverTrigger>
-        <button className="size-5 rounded-md lg:hidden py-3 bg-white text-black">
+      <PopoverTrigger asChild>
+        <button className="size-5 rounded-md lg:hidden bg-white text-black">
           <MenuIcon className="text-inherit" />
         </button>
       </PopoverTrigger>

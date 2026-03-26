@@ -46,7 +46,7 @@ export function formatActivityDate(date: string) {
   const diff = now.getTime() - newDate.getTime()
   const ONE_WEEK = 7 * 24 * 24 * 60 * 60 * 1000
   if (diff < ONE_WEEK) {
-    return formatDistanceToNow(date, { addSuffix: true })
+    return formatDistanceToNow(newDate, { addSuffix: true })
   }
 
   return format(newDate, "MMM d, yyyy")

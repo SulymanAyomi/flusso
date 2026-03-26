@@ -17,8 +17,17 @@ const StandloneLayout = async ({ children }: standloneLayoutProps) => {
       <main className="bg-neutral-100 min-h-screen">
         <div className="mx-auto max-w-screen-2xl">
           <nav className="flex justify-between items-center h-[73px] px-6">
-            <Link href="/">
-              <Image src="/logo.svg" alt="logo" width={40} height={48} />
+            <Link href="/workspaces" className="flex items-center gap-1">
+              <Image
+                src="/flusso.png"
+                alt="Logo"
+                width={40}
+                height={40}
+                priority
+              />
+              <p className="text-brand1 font-semibold hidden lg:block">
+                Flusso
+              </p>
             </Link>
             <UserButton />
           </nav>

@@ -1194,7 +1194,7 @@ const app = new Hono()
 
                 // Group activities by date for better UX
                 const groupedActivities = activitiesData.reduce((acc, activity) => {
-                    const date = format(activity.createdAt, 'yyyy-MM-dd');
+                    const date = format(new Date(activity.createdAt), 'yyyy-MM-dd');
                     if (!acc[date]) {
                         acc[date] = [];
                     }

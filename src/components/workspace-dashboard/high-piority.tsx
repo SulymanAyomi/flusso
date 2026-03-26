@@ -86,7 +86,7 @@ const HighPiority = () => {
                 </Badge>
               </div>
               <p className="text-xs w-1/5">
-                {format(task.dueDate!, "MMM d, yyyy")}
+                {format(new Date(task.dueDate!), "MMM d, yyyy")}
               </p>
               <div className="w-1/5">
                 <Badge variant={task.priority} className="text-xs">

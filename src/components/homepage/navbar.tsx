@@ -6,25 +6,25 @@ import { Mobilemenu } from "./menu";
 const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-white border-b flex items-center justify-between px-12 py-5">
-      <Link href="/" className="flex items-center gap-4">
-        <Image src="/lolo.png" alt="Logo" width={40} height={40} priority />
-        <p className="text-black font-semibold hidden lg:block">Flusso</p>
+      <Link href="/" className="flex items-center gap-1">
+        <Image src="/flusso.png" alt="Logo" width={40} height={40} priority />
+        <p className="text-brand1 font-semibold hidden lg:block">Flusso</p>
       </Link>
       <div className="lg:flex px-4 items-center gap-4 justify-between text-black hidden">
         <Link
-          href="/about"
+          href="/#home"
           className="text-sm font-medium p-2 px-3 hover:bg-brandBlue rounded-md"
         >
           Home
         </Link>
         <Link
-          href="/contact-us"
+          href="/#features"
           className="text-sm font-medium p-2 px-3 hover:bg-brandBlue rounded-md"
         >
           Features
         </Link>
         <Link
-          href="/contact-us"
+          href="/#pricing"
           className="text-sm font-medium p-2 px-3 hover:bg-brandBlue rounded-md"
         >
           Pricing
@@ -50,7 +50,7 @@ const Navbar = () => {
           Get Started
         </Link>
       </div>
-      <div className="lg:hidden">
+      <div className="lg:hidden flex items-center">
         <Mobilemenu />
       </div>
     </nav>

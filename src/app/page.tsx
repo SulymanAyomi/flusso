@@ -1,3 +1,5 @@
+import Footer from "@/components/homepage/footer";
+import Button1 from "@/components/homepage/home-button";
 import HomepageImage from "@/components/homepage/image";
 import Navbar from "@/components/homepage/navbar";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import {
   Share2Icon,
   StarIcon,
 } from "lucide-react";
+import Image from "next/image";
 import React from "react";
 import { FaStar } from "react-icons/fa";
 
@@ -17,7 +20,10 @@ const Page = () => {
   return (
     <div className="bg-white text-black">
       <Navbar />
-      <section className="max-w-3xl mx-auto px-12 pt-20 pb-20 text-center">
+      <section
+        className="max-w-3xl mx-auto px-12 pt-20 pb-20 text-center"
+        id="home"
+      >
         <div className="flex flex-col items-center justify-center w-full py-5">
           <div className="inline-flex items-center gap-1.5 bg-accent-light text-brand2 text-xs font-medium px-4 py-1.5 rounded-full mb-8 tracking-wide">
             <div className="w-1.5 h-1.5 bg-brand2 rounded-full"></div>
@@ -34,12 +40,7 @@ const Page = () => {
             insights into one calm, intelligent workspace.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button
-              size={"lg"}
-              className="text-[15px] font-medium px-7 py-5 rounded-lg"
-            >
-              Get started free
-            </Button>
+            <Button1 />
             <Button
               size={"lg"}
               variant={"outline"}
@@ -105,7 +106,7 @@ const Page = () => {
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-12 py-24">
+      <section className="max-w-5xl mx-auto px-12 py-24" id="features">
         <div className="text-[11px] font-medium tracking-[1.5px] text-brand2 uppercase mb-3 text-center">
           Features
         </div>
@@ -376,7 +377,7 @@ const Page = () => {
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-12 py-24">
+      <section className="max-w-5xl mx-auto px-12 py-24" id="pricing">
         <div className="text-[11px] font-medium tracking-[1.5px] text-brand2 uppercase mb-3 text-center">
           Pricing
         </div>
@@ -526,95 +527,7 @@ const Page = () => {
         </div>
       </section>
 
-      <footer className="max-w-5xl mx-auto bg-white border-t mt-12 px-12 py-10 ">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="font-serif text-lg">
-              Flusso<span className="text-accent">.</span>
-            </div>
-            <div>
-              <p className="text-sm font-semibold mb-2">Contact:</p>
-              <p className="text-xs text-neutral-500 pl-2">flusso@gmail.com</p>
-            </div>
-          </div>
-          <div className="flex gap-6">
-            <div>
-              <p className="text-sm font-semibold mb-3">Sitemap</p>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Home
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Features
-                  </a>
-                </li>{" "}
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Pricing
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold mb-3">Company</p>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold mb-3">Legal</p>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-xs text-neutral-500 hover:text-black hover:underline no-underline"
-                  >
-                    Terms
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="text-xs text-neutral-800 text-center">
-          © 2025 Flusso, Inc.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

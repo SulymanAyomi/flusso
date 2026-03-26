@@ -63,7 +63,7 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
         <div className="flex items-center">
           <CalendarDaysIcon className="size-4 gap-1" />
           <p className="text-[10px] ml-1">
-            {format(task.dueDate!, "MMM d, yyyy")}{" "}
+            {format(new Date(task.dueDate!), "MMM d, yyyy")}{" "}
           </p>
         </div>
         <Badge variant={task.priority} className="text-[10px] px-1 py-0.5">

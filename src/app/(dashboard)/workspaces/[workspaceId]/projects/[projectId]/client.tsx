@@ -135,9 +135,10 @@ export const ProjectIdClient = () => {
             <div className="flex  gap-1">
               <div className="text-black px-1 pr-1.5 py-1 flex gap-1 items-center justify-center rounded-xl text-xs">
                 <p>
-                  {format(project.startDate!, "MMM d, yyyy")} -{" "}
-                  {format(project.endDate!, "MMM d, yyyy")} (
-                  {differenceInDays(project.endDate!, today)} day(s) more)
+                  {format(new Date(project.startDate!), "MMM d, yyyy")} -{" "}
+                  {format(new Date(project.endDate!), "MMM d, yyyy")} (
+                  {differenceInDays(new Date(project.endDate!), today)} day(s)
+                  more)
                 </p>
               </div>
             </div>
