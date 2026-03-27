@@ -1,6 +1,6 @@
-import { TaskStatus as PrismaTaskStatus, TaskPriority as PrismaTaskPriority } from "@/generated/prisma"
-import { useGetTasksResponseType } from "./api/use-get-tasks"
-export enum TaskStatus {
+import { useGetTasksResponseType } from "./api/use-get-tasks";
+
+export enum TaskStatusEnum {
     BACKLOG = "BACKLOG",
     TODO = "TODO",
     IN_PROGRESS = "IN_PROGRESS",
@@ -8,18 +8,37 @@ export enum TaskStatus {
     DONE = "DONE",
 }
 
-export enum TaskPriority {
+export enum TaskPriorityEnum {
     LOW = "LOW",
     MEDIUM = "MEDIUM",
     HIGH = "HIGH",
     CRITICAL = "CRITICAL"
 }
 
+export const TaskStatus = {
+    TODO: "TODO",
+    IN_PROGRESS: "IN_PROGRESS",
+    IN_REVIEW: "IN_REVIEW",
+    DONE: "DONE",
+    BACKLOG: "BACKLOG"
+} as const;
+
+export const TaskPriority = {
+    LOW: "LOW",
+    MEDIUM: "MEDIUM",
+    HIGH: "HIGH",
+    CRITICAL: "CRITICAL",
+} as const;
+
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
+export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority];
+
+
 export type Task = {
     id: string
     name: string
-    status: TaskStatus | PrismaTaskStatus
-    priority: TaskPriority | PrismaTaskPriority
+    status: TaskStatus
+    priority: TaskPriority
     workspaceId: string
     assignedToId: string | null
     projectId: string

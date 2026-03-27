@@ -26,11 +26,15 @@ export const useJoinWorkspace = () => {
             }
             return data
         },
-        onSuccess: ({ data }) => {
-            toast.success("Workspace joined successfully")
-            router.refresh()
-            queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-            queryClient.invalidateQueries({ queryKey: ["workspace", data.id] })
+        onSuccess: (data) => {
+            if (data.success) {
+                toast.success("Workspace joined successfully")
+                router.refresh()
+                queryClient.invalidateQueries({ queryKey: ["workspaces"] })
+                queryClient.invalidateQueries({ queryKey: ["workspace", data.data.id] })
+                router.push(`/workspaces/${data.data.id}`);
+
+            }
         },
         onError: () => {
             toast.error("Failed to join workspace")

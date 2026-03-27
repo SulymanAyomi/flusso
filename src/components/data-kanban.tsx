@@ -12,7 +12,7 @@ import { KanbanCard } from "./kanban-card";
 interface DataKanbanProps {
   data: TasksType[];
   onChange: (
-    tasks: { id: string; status: TaskStatus; position: number }[]
+    tasks: { id: string; status: TaskStatus; position: number }[],
   ) => void;
 }
 
@@ -43,7 +43,7 @@ export const DataKanban = ({ data, onChange }: DataKanbanProps) => {
     });
     Object.keys(initialTasks).forEach((status) => {
       initialTasks[status as TaskStatus].sort(
-        (a, b) => a.position - b.position
+        (a, b) => a.position - b.position,
       );
     });
     return initialTasks;
@@ -152,7 +152,7 @@ export const DataKanban = ({ data, onChange }: DataKanbanProps) => {
       });
       onChange(updatesPayload);
     },
-    [onChange]
+    [onChange],
   );
 
   return (

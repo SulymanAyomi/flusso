@@ -4,7 +4,7 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-type ResponseType = InferResponseType<typeof client.api.tasks[":taskId"]["dependencies"]["$patch"], 200>
+type ResponseType = InferResponseType<typeof client.api.tasks[":taskId"]["dependencies"]["$patch"]>
 type RequestType = InferRequestType<typeof client.api.tasks[":taskId"]["dependencies"]["$patch"]>
 
 
@@ -23,7 +23,6 @@ export const useEditTaskDependencies = () => {
                 if (res?.error && res.error == 'Circular dependency detected.') {
                     throw new Error("Circular dependency detected!!")
                 } else {
-
                     throw new Error("Failed to edit task dependencies")
                 }
             }

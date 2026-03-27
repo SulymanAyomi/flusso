@@ -4,7 +4,7 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-type ResponseType = InferResponseType<typeof client.api.tasks["$post"], 200>
+type ResponseType = InferResponseType<typeof client.api.tasks["$post"]>
 type RequestType = InferRequestType<typeof client.api.tasks["$post"]>
 
 
@@ -18,7 +18,7 @@ export const useCreateTask = () => {
         mutationFn: async ({ json }) => {
             const response = await client.api.tasks["$post"]({ json })
             const data = await response.json()
-            if (!response.ok) {
+            if (!response.ok || !data.success) {
                 throw new Error("Failed to create task")
             }
             return data

@@ -31,7 +31,7 @@ import { DatePicker } from "@/components/date-picker";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 
 import { createTaskSchema } from "../../schema";
-import { EditTask, Task, TaskStatus } from "../../types";
+import { EditTask, Task, TaskPriority, TaskStatus } from "../../types";
 import { useEditTask } from "../../api/use-edit-task";
 import {
   ArrowUpIcon,
@@ -47,7 +47,6 @@ import {
   XIcon,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { TaskPriority } from "@/generated/prisma";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import {

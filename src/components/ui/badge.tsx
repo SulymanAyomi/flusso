@@ -2,8 +2,8 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
-import { ProjectStatus, TaskPriority, TaskStatus } from "@/generated/prisma";
-// import { ProjectsStatus } from "@/features/projects/types";
+import { ProjectStatus } from "@/features/projects/types";
+import { TaskPriority, TaskStatus } from "@/features/tasks/types";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",

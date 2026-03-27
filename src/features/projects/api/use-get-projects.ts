@@ -2,12 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc"
 import { InferResponseType } from "hono";
-import { ProjectsStatus } from "../types";
+import { ProjectStatus } from "../types";
 
 interface useGetProjectsProps {
     workspaceId: string;
     search?: string;
-    status?: ProjectsStatus;
+    status?: ProjectStatus;
     assigneeId?: string;
     dueDate?: string;
     ownerId?: string;

@@ -23,7 +23,7 @@ interface EventCardProps {
     id: string;
     imageUrl: string | null;
   };
-  status: TaskStatus | PrismaTaskStatus;
+  status: TaskStatus;
   id: string;
 }
 const statusColorMap: Record<TaskStatus, string> = {

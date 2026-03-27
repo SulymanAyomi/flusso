@@ -6,7 +6,7 @@ import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 import { ErrorResponse, ProjectError, ValidatePromptRequest } from "../types";
 
-type ResponseType = InferResponseType<typeof client.api.projects.validate["$post"], 200>
+type ResponseType = InferResponseType<typeof client.api.projects.validate["$post"]>
 type RequestType = ValidatePromptRequest
 
 
@@ -18,13 +18,13 @@ export const useValidatePrompt = () => {
         { json: RequestType; controller: AbortController }
     >({
         mutationFn: async ({ json }) => {
-            // if (typeof window !== 'undefined' && !navigator.onLine) {
-            //     throw new ProjectError(
-            //         'BROWSER_OFFLINE',
-            //         'You appear to be offline.',
-            //         true
-            //     );
-            // }
+            if (typeof window !== 'undefined' && !navigator.onLine) {
+                throw new ProjectError(
+                    'BROWSER_OFFLINE',
+                    'You appear to be offline.',
+                    true
+                );
+            }
             try {
                 const response = await client.api.projects.validate["$post"]({ json })
                 const data = await response.json()

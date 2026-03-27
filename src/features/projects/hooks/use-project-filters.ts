@@ -1,10 +1,10 @@
 import { parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
-import { ProjectsStatus } from "../types";
+import { ProjectStatus } from "../types";
 
 export const useProjectsFilters = () => {
     return useQueryStates({
         projectId: parseAsString,
-        status: parseAsStringEnum(Object.values(ProjectsStatus)),
+        status: parseAsStringEnum(Object.values(ProjectStatus)),
         assigneeId: parseAsString,
         search: parseAsString,
         dueDate: parseAsString,

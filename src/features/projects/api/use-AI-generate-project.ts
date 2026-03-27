@@ -6,7 +6,7 @@ import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 import { ErrorResponse, ProjectError, ValidatePromptRequest } from "../types";
 
-type ResponseType = InferResponseType<typeof client.api.projects.generate.project["$post"], 200>
+type ResponseType = InferResponseType<typeof client.api.projects.generate.project["$post"]>
 type RequestType = ValidatePromptRequest
 
 
@@ -20,13 +20,13 @@ export const useGenerateProject = () => {
     >({
         mutationFn: async ({ json }) => {
             try {
-                // if (typeof window !== 'undefined' && !navigator.onLine) {
-                //     throw new ProjectError(
-                //         'BROWSER_OFFLINE',
-                //         'You appear to be offline.',
-                //         true
-                //     );
-                // }
+                if (typeof window !== 'undefined' && !navigator.onLine) {
+                    throw new ProjectError(
+                        'BROWSER_OFFLINE',
+                        'You appear to be offline.',
+                        true
+                    );
+                }
                 const response = await client.api.projects.generate.project["$post"]({ json })
                 const data = await response.json()
 

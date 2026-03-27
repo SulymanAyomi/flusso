@@ -20,19 +20,19 @@ export const useCreateProject = () => {
         mutationFn: async ({ json }) => {
             const response = await client.api.projects["$post"]({ json })
             const data = await response.json()
-            if (!response.ok) {
-                // @ts-ignore
+            if (!data.success) {
                 throw new Error(data.error)
             }
-            console.log(data)
             return data
         },
         onSuccess: (data) => {
-            toast.success("Project created")
-            queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["projects", data.data.workspaceId] })
-            queryClient.invalidateQueries({ queryKey: ["workspace-activities", data.data.workspaceId] })
+            if (data.success) {
+                toast.success("Project created")
+                queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
+                queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
+                queryClient.invalidateQueries({ queryKey: ["projects", data.data.workspaceId] })
+                queryClient.invalidateQueries({ queryKey: ["workspace-activities", data.data.workspaceId] })
+            }
         },
         onError: (error) => {
             console.log(error)

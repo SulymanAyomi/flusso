@@ -9,19 +9,19 @@ import { createProjectSchema, PromptSchema, validatePromptInputSchema, aiGenerat
 
 import { generateTaskPrompt, } from "@/lib/prompt";
 
-import { TaskStatus } from "@/features/tasks/types";
+import { TaskPriority, TaskStatus } from "@/features/tasks/types";
 import { db } from "@/lib/db";
-import { ProjectsStatus } from "../types";
+import { ProjectStatus } from "../types";
 import { logActivity } from "@/lib/log-activity";
 import { MemberRole } from "@/features/members/types";
 import { ai, safetySetting, validatePromptWithAI } from "@/lib/gemini";
 import { sessionMiddleware } from "@/lib/require-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
-import { ProjectStatus, TaskPriority } from "@/generated/prisma";
 import { containsMaliciousContent, sanitizePrompt } from "@/lib/validate/sanitize";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { calculateProjectDates, calculateTaskDates } from "@/lib/calculate-date";
 import { autoFixCircularDependencies, hasCircularDependencies, resolveDependencies } from "@/lib/dependencies";
+
 const validationResponse = [
     {
         User: "Tell me a joke",
@@ -198,7 +198,7 @@ const app = new Hono()
     .get("/",
         zValidator("query", z.object({
             workspaceId: z.string(),
-            status: z.nativeEnum(ProjectsStatus).optional(),
+            status: z.nativeEnum(ProjectStatus).optional(),
             ownerId: z.string().optional(),
             search: z.string().optional(),
             dueDate: z.string().optional(),
@@ -379,7 +379,7 @@ const app = new Hono()
             "query",
             z.object({
                 workspaceId: z.string(),
-                status: z.nativeEnum(ProjectsStatus).optional(),
+                status: z.nativeEnum(ProjectStatus).optional(),
                 ownerId: z.string().optional(),
                 search: z.string().optional(),
                 dueDate: z.string().optional(),

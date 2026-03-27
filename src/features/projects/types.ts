@@ -1,15 +1,22 @@
-import { Project, ProjectStatus as PrismaProjectStatus } from "@/generated/prisma";
-// import { Models } from "node-appwrite";
 
-export enum ProjectsStatus {
+export enum ProjectsStatusEnum {
     ACTIVE = "ACTIVE",
     COMPLETED = "COMPLETED",
     ON_HOLD = "ON_HOLD",
     ARCHIVED = "ARCHIVED",
 }
+export const ProjectStatus = {
+    ACTIVE: "ACTIVE",
+    COMPLETED: "COMPLETED",
+    ON_HOLD: "ON_HOLD",
+    ARCHIVED: "ARCHIVED",
+} as const;
+
+export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
+
 export type ProjectType = {
     name: string;
-    status: ProjectsStatus | PrismaProjectStatus;
+    status: ProjectStatus;
     id: string;
     imageUrl: string | null;
     createdAt: string;

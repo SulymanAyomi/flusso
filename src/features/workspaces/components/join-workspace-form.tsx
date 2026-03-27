@@ -39,11 +39,7 @@ export const JoinWorkspaceForm = ({
         json: { code },
       },
       {
-        onSuccess: ({ data }) => {
-          router.push(`/workspaces/${data.id}`);
-        },
         onError(error, variables, context) {
-          console.log(error, variables, context, "jjj");
           setError(error.message);
         },
       },

@@ -2,8 +2,29 @@ import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { format } from "date-fns";
 import { snakeCaseToTitleCase } from "@/lib/utils";
-import { ActivityType } from "@/generated/prisma";
 
+export type ActivityType =
+  | "TASK_CREATED"
+  | "TASK_STATUS_UPDATED"
+  | "TASK_EDITED"
+  | "TASK_ASSIGNED"
+  | "TASK_TITLE_UPDATED"
+  | "TASK_DELETED"
+  | "PROJECT_CREATED"
+  | "PROJECT_EDITED"
+  | "PROJECT_COMPLETED"
+  | "PROJECT_STATUS_UPDATED"
+  | "PROJECT_DELETED"
+  | "SUBTASK_ADDED"
+  | "SUBTASK_DELETED"
+  | "COMMENT_ADDED"
+  | "MEMBER_INVITED"
+  | "MEMBER_JOINED"
+  | "MEMBER_REMOVED"
+  | "JOINED_WORKSPACE"
+  | "LEFT_WORKSPACE"
+  | "WORKSPACE_DELETED"
+  | "WORKSPACE_UPDATED";
 interface ActivityInterface {
   member: {
     user: {

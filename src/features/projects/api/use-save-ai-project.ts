@@ -5,6 +5,7 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 import { ErrorResponse, ProjectError, ValidatePromptRequest } from "../types";
+import { success } from "zod/v4";
 
 type ResponseType = InferResponseType<typeof client.api.projects.generate.save["$post"], 200>
 type RequestType = InferRequestType<typeof client.api.projects.generate.save["$post"]>
@@ -30,7 +31,7 @@ export const useSaveGeneratedProject = () => {
                 const response = await client.api.projects.generate.save["$post"]({ json })
                 const data = await response.json()
 
-                if (!response.ok) {
+                if (!data.success || !response.ok) {
                     const errorData = data as unknown as ErrorResponse
                     throw new ProjectError(
                         errorData.error.type,

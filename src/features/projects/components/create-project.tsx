@@ -35,7 +35,7 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 import { createProjectSchema } from "../schema";
 import { useRouter } from "next/navigation";
-import { ProjectsStatus } from "../types";
+import { ProjectsStatusEnum } from "../types";
 import { useCreateProject } from "../api/use-create-project";
 import Image from "next/image";
 import { useRef } from "react";
@@ -138,7 +138,7 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                         <SelectTrigger>
                           <SelectValue
                             placeholder="Select status"
-                            // defaultValue={ProjectsStatus.ACTIVE}
+                            // defaultValue={ProjectsStatusEnum.ACTIVE}
                           />
                         </SelectTrigger>
                       </FormControl>
@@ -146,25 +146,25 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                       <SelectContent className="">
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ACTIVE}
+                          value={ProjectsStatusEnum.ACTIVE}
                         >
                           Active
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ON_HOLD}
+                          value={ProjectsStatusEnum.ON_HOLD}
                         >
                           On Hold
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
+                          value={ProjectsStatusEnum.ARCHIVED}
                         >
                           Archived
                         </SelectItem>
                         <SelectItem
                           className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.COMPLETED}
+                          value={ProjectsStatusEnum.COMPLETED}
                         >
                           Completed
                         </SelectItem>

@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useConfirm } from "@/hooks/use-confirm";
 
-import { ProjectsStatus, ProjectType } from "../types";
+import { ProjectsStatusEnum, ProjectType } from "../types";
 import { useUpdateProject } from "../api/use-update-project";
 import { createProjectSchema, updateProjectSchema } from "../schema";
 import { useDeleteProject } from "../api/use-delete-project";
@@ -67,7 +67,7 @@ export const EditProjectForm = ({
   const [DeleteDialog, confirmDelete] = useConfirm(
     "Delete Project",
     "This action cannot be undone",
-    "destructive"
+    "destructive",
   );
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,9 +76,17 @@ export const EditProjectForm = ({
     defaultValues: {
       ...initialValues,
       image: initialValues.imageUrl ?? "",
-      // @ts-ignore
       status: initialValues.status,
       tags: [],
+      startDate: initialValues.startDate
+        ? new Date(initialValues.startDate)
+        : undefined,
+      endDate: initialValues.endDate
+        ? new Date(initialValues.endDate)
+        : undefined,
+      description: initialValues.description
+        ? initialValues.description
+        : undefined,
     },
   });
 
@@ -94,7 +102,7 @@ export const EditProjectForm = ({
           form.reset();
           onCancel?.();
         },
-      }
+      },
     );
   };
 
@@ -109,7 +117,7 @@ export const EditProjectForm = ({
         onSuccess: () => {
           window.location.href = "/";
         },
-      }
+      },
     );
   };
 
@@ -171,7 +179,7 @@ export const EditProjectForm = ({
                           <SelectTrigger>
                             <SelectValue
                               placeholder="Select status"
-                              // defaultValue={ProjectsStatus.ACTIVE}
+                              // defaultValue={ProjectsStatusEnum.ACTIVE}
                             />
                           </SelectTrigger>
                         </FormControl>
@@ -179,25 +187,25 @@ export const EditProjectForm = ({
                         <SelectContent className="">
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={ProjectsStatus.ACTIVE}
+                            value={ProjectsStatusEnum.ACTIVE}
                           >
                             Active
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={ProjectsStatus.ON_HOLD}
+                            value={ProjectsStatusEnum.ON_HOLD}
                           >
                             On Hold
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={ProjectsStatus.ARCHIVED}
+                            value={ProjectsStatusEnum.ARCHIVED}
                           >
                             Archived
                           </SelectItem>
                           <SelectItem
                             className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                            value={ProjectsStatus.COMPLETED}
+                            value={ProjectsStatusEnum.COMPLETED}
                           >
                             Completed
                           </SelectItem>
@@ -274,38 +282,38 @@ export const EditProjectForm = ({
                             <SelectContent className="">
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 Backlog
                               </SelectItem>
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 In Progress
                               </SelectItem>
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 In Review
                               </SelectItem>
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 Todo
                               </SelectItem>
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 Done
                               </SelectItem>
                               <SelectSeparator />
                               <SelectItem
                                 className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatus.ARCHIVED}
+                                value={ProjectsStatusEnum.ARCHIVED}
                               >
                                 <p className="flex items-center">
                                   <span>

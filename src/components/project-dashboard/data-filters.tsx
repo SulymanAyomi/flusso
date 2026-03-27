@@ -9,7 +9,7 @@ import {
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { ListChecksIcon, UserIcon } from "lucide-react";
-import { ProjectsStatus } from "@/features/projects/types";
+import { ProjectStatus } from "@/features/projects/types";
 import { DatePicker } from "@/components/date-picker";
 import { useProjectsFilters } from "@/features/projects/hooks/use-project-filters";
 import { snakeCaseToTitleCase } from "@/lib/utils";
@@ -28,7 +28,7 @@ export const DataFilters = () => {
   const [{ status, assigneeId, dueDate }, setFilters] = useProjectsFilters();
 
   const onStatusChange = (value: string) => {
-    setFilters({ status: value === "all" ? null : (value as ProjectsStatus) });
+    setFilters({ status: value === "all" ? null : (value as ProjectStatus) });
   };
   const onAssigneeChange = (value: string) => {
     setFilters({ assigneeId: value === "all" ? null : (value as string) });
@@ -51,20 +51,20 @@ export const DataFilters = () => {
         <SelectContent>
           <SelectItem value="all">All statuses</SelectItem>
           <SelectSeparator />
-          <SelectItem value={ProjectsStatus.ACTIVE}>
-            {snakeCaseToTitleCase(ProjectsStatus.ACTIVE)}
+          <SelectItem value={ProjectStatus.ACTIVE}>
+            {snakeCaseToTitleCase(ProjectStatus.ACTIVE)}
           </SelectItem>
 
-          <SelectItem value={ProjectsStatus.ON_HOLD}>
-            {snakeCaseToTitleCase(ProjectsStatus.ON_HOLD)}
+          <SelectItem value={ProjectStatus.ON_HOLD}>
+            {snakeCaseToTitleCase(ProjectStatus.ON_HOLD)}
           </SelectItem>
 
-          <SelectItem value={ProjectsStatus.ARCHIVED}>
-            {snakeCaseToTitleCase(ProjectsStatus.ARCHIVED)}
+          <SelectItem value={ProjectStatus.ARCHIVED}>
+            {snakeCaseToTitleCase(ProjectStatus.ARCHIVED)}
           </SelectItem>
 
-          <SelectItem value={ProjectsStatus.COMPLETED}>
-            {snakeCaseToTitleCase(ProjectsStatus.COMPLETED)}
+          <SelectItem value={ProjectStatus.COMPLETED}>
+            {snakeCaseToTitleCase(ProjectStatus.COMPLETED)}
           </SelectItem>
         </SelectContent>
       </Select>

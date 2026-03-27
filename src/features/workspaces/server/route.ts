@@ -2,22 +2,21 @@ import { promise, z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 
-import { MemberRole } from "@/features/members/types";
+import { MemberRole, Role } from "@/features/members/types";
 import { calculatePercentageChange, generateInviteCode } from "@/lib/utils";
 
 import { addDays, endOfDay, endOfMonth, endOfToday, endOfWeek, format, startOfDay, startOfMonth, startOfToday, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
 
 import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 import { getMember } from "@/features/members/utils";
-import { TaskStatus } from "@/features/tasks/types";
+import { TaskPriority, TaskStatus } from "@/features/tasks/types";
 import { db } from "@/lib/db";
 
 import { sessionMiddleware } from "@/lib/require-auth";
-import { ProjectsStatus } from "@/features/projects/types";
 import { errorResponse, successResponse } from "@/lib/api-response";
-import { ProjectStatus, Role, TaskPriority } from "@/generated/prisma";
 import { id } from "date-fns/locale";
 import { logActivity } from "@/lib/log-activity";
+import { ProjectStatus } from "@/features/projects/types";
 
 const app = new Hono()
     .get("/", sessionMiddleware,

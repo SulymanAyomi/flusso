@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ProjectsStatus } from "./types"
+import { ProjectStatus } from "./types"
 
 export const createAIProjectSchema = z.object({
     userPrompt: z.string().trim().min(1, "Required"),
@@ -18,7 +18,7 @@ export const updateProjectSchema = z.object({
     ]).optional(),
     // workspaceId: z.string(),
     description: z.string().optional(),
-    status: z.nativeEnum(ProjectsStatus, { required_error: "Required" }),
+    status: z.nativeEnum(ProjectStatus, { required_error: "Required" }),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
 })
@@ -31,7 +31,7 @@ export const createProjectSchema = z.object({
     ]).optional(),
     workspaceId: z.string(),
     description: z.string().optional(),
-    status: z.nativeEnum(ProjectsStatus, { required_error: "Required" }),
+    status: z.nativeEnum(ProjectStatus, { required_error: "Required" }),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
     tags: z.array(z.string())
