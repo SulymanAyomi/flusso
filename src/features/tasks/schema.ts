@@ -1,6 +1,5 @@
 import { z } from "zod";
-// import { TaskStatus } from "./types";
-import { TaskPriority, TaskStatus } from "@/generated/prisma";
+import { TaskPriority, TaskStatus } from "./types";
 
 
 export const createTaskSchema = z.object({
