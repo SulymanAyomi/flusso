@@ -111,13 +111,13 @@ const app = new Hono()
                 fromDate
             } = c.req.valid("query")
 
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
-            })
-            if (!member) {
-                return c.json({ error: "unauthorized" }, 401)
-            }
+            // const member = await getMember({
+            //     workspaceId,
+            //     userId: user.id
+            // })
+            // if (!member) {
+            //     return c.json(errorResponse("Unauthorized"), 401)
+            // }
 
             const workspace = await db.workspace.findUnique({
                 where: {
@@ -212,21 +212,18 @@ const app = new Hono()
             })
 
             if (tasks.length == 0) {
-                return c.json({
-                    data: {
-                        documents: [],
-                        total: 0
-                    }
-                })
+                return c.json(
+                    successResponse({ documents: [], total: 0 })
+                );
             }
 
-            return c.json({
-                data: {
+            return c.json(
+                successResponse({
                     documents: tasks,
                     total: tasks.length
+                })
+            )
 
-                }
-            })
         }
     )
     .get("/my-task",
