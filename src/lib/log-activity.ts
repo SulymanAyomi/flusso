@@ -1,5 +1,4 @@
-import { Prisma, PrismaClient } from '@/generated/prisma'
-import { db } from './db'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 type LogActivityInput = {
     workspaceId: string

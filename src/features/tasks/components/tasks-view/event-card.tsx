@@ -5,7 +5,6 @@ import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useRouter } from "next/navigation";
 import { useTaskDetailsModal } from "../../hooks/use-task-details-modal";
-import { TaskStatus as PrismaTaskStatus } from "@/generated/prisma";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MemberDisplay from "@/features/members/components/member-display";
 
