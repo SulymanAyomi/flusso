@@ -17,8 +17,8 @@ const MembersClientPage = ({ user }: MembersClientPageProps) => {
   return (
     <div className="w-full">
       <PageHeader
-        header={`Welcome, ${user.name}`}
-        subText={"Start to manage your workspace members."}
+        header={`Welcome back, ${user.name}`}
+        subText={"Manage your team, roles and collaboration."}
         button={true}
         buttonType={"project"}
       />

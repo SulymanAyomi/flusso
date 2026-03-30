@@ -44,7 +44,7 @@ export const WorkspaceIdClient = ({ user }: WorkspaceIdClientProps) => {
     <div className="flex flex-col">
       <PageHeader
         header={`Welcome, ${name}`}
-        subText="Start to manage your workspaces and their projects here"
+        subText="Here's an overview of your workspace, projects, and recent activity."
         button={true}
         buttonType="workspace"
       />

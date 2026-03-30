@@ -32,8 +32,8 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
   return (
     <div>
       <PageHeader
-        header={`Welcome, ${user.name}`}
-        subText={"Start to manage your projects and assigned tasks here"}
+        header={`Welcome back, ${user.name}`}
+        subText={"Create, organize, and track all your projects in one place."}
         button={true}
         buttonType={"project"}
       />

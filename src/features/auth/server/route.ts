@@ -3,7 +3,7 @@ import { deleteCookie, setCookie } from "hono/cookie"
 import { zValidator } from "@hono/zod-validator"
 import { loginSchema, registerSchema, resetRequestSchema, resetSchema, verifyOTPSchema } from "../schema";
 import { db } from "@/lib/db";
-import bcrypt, { hash } from "bcrypt"
+import bcrypt from "bcryptjs"
 import crypto, { randomBytes } from "crypto"
 import { sendOTPEmail } from "@/features/email/resend/resend";
 import { errorResponse, successResponse } from "@/lib/api-response";
@@ -119,7 +119,7 @@ const app = new Hono()
                 return c.json(errorResponse("Token expired or invalid"), { status: 400 })
             }
 
-            const hashedPassword = await hash(newPassword, 10)
+            const hashedPassword = await bcrypt.hash(newPassword, 10)
             await db.$transaction(async (tx) => {
                 await tx.user.update({
                     where: { id: reset.userId },

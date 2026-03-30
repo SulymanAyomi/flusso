@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import Sidebar from "@/components/siderbar";
 import AuthProvider from "@/components/AuthProvider";
-import { getCurrent } from "@/features/auth/query";
 import { CreateProjectModal } from "@/features/projects/components/create-project-modal";
 import { EditProjectModal } from "@/features/projects/components/edit-project-modal";
 import { CreateTaskModal } from "@/features/tasks/components/create-task-form/create-task-modal";
@@ -11,7 +10,6 @@ import { TaskDetailsModal } from "@/features/tasks/components/task-details/task-
 import { CreateWorkspaceModal } from "@/features/workspaces/components/create-workspace-modal";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { SessionProvider } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { TooltipProvider } from "@/components/ui/tooltip";
 

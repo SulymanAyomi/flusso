@@ -71,8 +71,8 @@ export const ProjectIdClient = () => {
   return (
     <div>
       <PageHeader
-        header={"Welcome, Ayomi"}
-        subText={"Start to manage your projects and assigned tasks here"}
+        header={`Project: ${project.name}`}
+        subText={"Track progress, manage tasks, and collaborate with your team"}
         button={true}
         buttonType={"project"}
       />

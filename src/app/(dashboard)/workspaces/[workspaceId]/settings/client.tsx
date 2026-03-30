@@ -12,8 +12,8 @@ const SettingsClientPage = () => {
   return (
     <div className="w-full">
       <PageHeader
-        header={`Welcome, user`}
-        subText={"Start to manage your workspace settings."}
+        header={`Settings`}
+        subText={"Customize your workspace, preferences and integrations."}
         button={true}
         buttonType={"project"}
       />
