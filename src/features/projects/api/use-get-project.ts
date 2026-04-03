@@ -15,11 +15,8 @@ export const useGetProject = ({ projectId }: useGetProjectProps) => {
             if (!response.ok) {
                 throw new Error("Failed to fetch project")
             }
-            const { data, team } = await response.json();
-            const res = {
-                ...data, team
-            }
-            return res;
+            const { data } = await response.json();
+            return data;
         }
     })
 

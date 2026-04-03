@@ -26,6 +26,7 @@ import PageHeader from "@/components/page-header";
 import { useEditProjectModal } from "@/features/projects/hooks/use-edit-project-modal";
 import Link from "next/link";
 import { snakeCaseToTitleCase } from "@/lib/utils";
+import { useAssignMemberModal } from "@/features/projects/hooks/use-assign-member";
 
 export const ProjectIdClient = () => {
   const [remainingDays, setRemainingDays] = useState("");
@@ -71,7 +72,7 @@ export const ProjectIdClient = () => {
   return (
     <div>
       <PageHeader
-        header={`Project: ${project.name}`}
+        header={`${project.name}`}
         subText={"Track progress, manage tasks, and collaborate with your team"}
         button={true}
         buttonType={"project"}
@@ -125,7 +126,7 @@ export const ProjectIdClient = () => {
               <UserCheck2Icon className="size-4 mr-2" />
               <p>Assignees</p>
             </div>
-            <TeamMembers teams={project.team} />
+            <TeamMembers teams={project.projectMembers} id={project.id} />
           </div>
           <div className="flex flex-1 items-center justify-start">
             <div className="flex text-sm w-[25%] lg:w-[12%] items-center justify-start">
@@ -178,57 +179,47 @@ export const ProjectIdClient = () => {
 
 interface TeamMembersProps {
   teams: {
-    id: string;
+    memberId: string;
     user: {
       name: string | null;
       imageUrl: string | null;
     };
   }[];
+  id: string;
 }
-const TeamMembers = ({ teams }: TeamMembersProps) => (
-  <div className="flex gap-1 flex-wrap">
-    {teams.map((team) =>
-      team.id ? (
-        <div
-          className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold"
-          key={team.id}
-        >
-          <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
-            {team.user.imageUrl ? (
-              <Image src={team.user.imageUrl} alt={team.user.name![0]} />
-            ) : (
-              team.user.name![0].toUpperCase()
-            )}
+const TeamMembers = ({ teams, id }: TeamMembersProps) => {
+  const { open } = useAssignMemberModal();
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {teams.map((team) =>
+        team.memberId ? (
+          <div
+            className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold"
+            key={team.memberId}
+          >
+            <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
+              {team.user.imageUrl ? (
+                <Image src={team.user.imageUrl} alt={team.user.name![0]} />
+              ) : (
+                team.user.name![0].toUpperCase()
+              )}
+            </div>
+            <p>{team.user.name}</p>
           </div>
-          <p>{team.user.name}</p>
+        ) : (
+          <></>
+        ),
+      )}
+
+      <div
+        onClick={() => open(id)}
+        className="cursor-pointer bg-sky-100 px-1 pr-1.5 py-1 flex gap-1 items-center justify-center rounded-xl text-xs font-semibold"
+      >
+        <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
+          <PlusCircle />
         </div>
-      ) : (
-        <></>
-      ),
-    )}
-    {/* <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold">
-      <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
-        A
+        <p>Assign member</p>
       </div>
-      <p>Baba Tunde</p>
     </div>
-    <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold">
-      <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
-        A
-      </div>
-      <p>Tolu James</p>
-    </div>
-    <div className="bg-sky-100 px-1 pr-1.5 py-1 flex gap-1 items-center justify-center rounded-xl text-xs font-semibold">
-      <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
-        A
-      </div>
-      <p>Musa Ridwan</p>
-    </div> */}
-    <div className="cursor-pointer bg-sky-100 px-1 pr-1.5 py-1 flex gap-1 items-center justify-center rounded-xl text-xs font-semibold">
-      <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5">
-        <PlusCircle />
-      </div>
-      <p>Assign task</p>
-    </div>
-  </div>
-);
+  );
+};

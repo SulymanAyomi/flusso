@@ -30,6 +30,7 @@ model User {
   AINote        AINote[]
 
   PasswordResetToken PasswordResetToken[]
+  projectMembers     ProjectMember[]
 }
 
 model Account {
@@ -114,19 +115,40 @@ model Member {
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  Comment        Comment[]   @relation("CommentCreator")
-  Task           Task[]      @relation("TaskAssignee")
+  Comment        Comment[]       @relation("CommentCreator")
+  Task           Task[]          @relation("TaskAssignee")
   Activity       Activity[]
   projects       Project[]
-  workspaceOwned Workspace[] @relation("workspaceOwner")
+  workspaceOwned Workspace[]     @relation("workspaceOwner")
+  projectMembers ProjectMember[]
 
   @@unique([workspaceId, userId])
+}
+
+model ProjectMember {
+  id String @id @default(cuid())
+
+  memberId  String
+  projectId String
+  userId    String
+  role      ProjectRole
+
+  member  Member  @relation(fields: [memberId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([memberId, projectId])
 }
 
 enum Role {
   ADMIN
   MEMBER
-  VIWER
+  VIEWER
+}
+
+enum ProjectRole {
+  CONTRIBUTOR
+  VIEWER
 }
 
 model Project {
@@ -148,7 +170,8 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  ProjectTags ProjectTags[]
+  ProjectTags    ProjectTags[]
+  projectMembers ProjectMember[]
 
   @@index([id, deletedAt])
 }

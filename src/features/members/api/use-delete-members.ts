@@ -19,18 +19,20 @@ export const useDeleteMembers = () => {
     >({
         mutationFn: async ({ param }) => {
             const response = await client.api.members[":memberId"]["$delete"]({ param })
-            if (!response.ok) {
-                throw new Error("Failed to remove member")
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error)
             }
-            return await response.json()
+            return data
         },
         onSuccess: () => {
             toast.success("Member removed successfully")
             router.refresh()
             queryClient.invalidateQueries({ queryKey: ["members"] })
         },
-        onError: () => {
-            toast.error("Failed to remove member")
+        onError: (error) => {
+            // toast.error("Failed to remove member")
+            toast.error(error.message)
         }
     })
     return mutation

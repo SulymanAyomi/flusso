@@ -2,11 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { Loader } from "lucide-react";
-import { useGetTask } from "../../api/use-get-task";
-import { useGetTasks } from "../../api/use-get-tasks";
+import { useGetTask } from "../../../tasks/api/use-get-task";
+import { useGetTasks } from "../../../tasks/api/use-get-tasks";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
-import { TaskDependency } from "./edit-dependencies";
-import { useGetTaskDependencies } from "../../api/use-get-tasks-dependencies";
+import { TaskDependency } from "../../../tasks/components/task-dependencies/edit-dependencies";
+import { useGetTaskDependencies } from "../../../tasks/api/use-get-tasks-dependencies";
 
 interface TaskDependenciesWrapperProps {
   onCancel: () => void;

@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "../db";
 import { AuthUser } from "@/features/auth/type";
+import bcrypt from "bcryptjs";
 
 declare module "next-auth" {
     interface Session {
@@ -41,9 +42,7 @@ export const authOptions: NextAuthOptions =
                         throw new Error("Invalid email or password")
                     }
                     // Verify password (using bcrypt)
-                    const isValid = await import("bcrypt").then(bc =>
-                        bc.compare(credentials.password, user.password!)
-                    )
+                    const isValid = await bcrypt.compare(credentials.password, user.password!)
                     if (!isValid) {
                         throw new Error("Invalid email or password")
                     }

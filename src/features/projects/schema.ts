@@ -222,3 +222,7 @@ export const saveAiGeneratedProjectSchema = z.object({
     workspaceId: z.string(),
     data: generationResponseSchema
 })
+
+export const assignMemberProject = z.object({
+    memberId: z.array(z.string()),
+})

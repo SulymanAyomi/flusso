@@ -44,7 +44,7 @@ export const MembersList = () => {
 
   const handleUpdateMember = (memberId: string, role: MemberRole) => {
     updateMember({
-      json: { role },
+      json: { role, workspaceId },
       param: { memberId },
     });
   };
@@ -81,10 +81,11 @@ export const MembersList = () => {
     );
   }
   const workspace = data.workspace;
-  const user = data.user!;
-  const owner = data.populateMembers.find((m) => m.role == "ADMIN");
-  const members = data.populateMembers.filter((m) => m.role == "MEMBER");
-  // const viwers
+  const currentUser = data.user!;
+  const owner = data.populateMembers.find((m) => m.id == workspace.ownerId);
+  const members = data.populateMembers.filter(
+    (m) => m.id !== workspace.ownerId,
+  );
 
   return (
     <div>
@@ -108,7 +109,9 @@ export const MembersList = () => {
               </div>
               <Badge variant="CRITICAL">Owner</Badge>
               <MemberAction
-                userRole={user.role}
+                userId={currentUser.id}
+                ownerId={owner?.id!}
+                userRole={currentUser.role!}
                 memberRole={owner?.role!}
                 memberId={owner?.id!}
                 handleDeleteMember={handleDeleteMember}
@@ -118,8 +121,8 @@ export const MembersList = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ">
-            {data?.populateMembers.map((member, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+            {members.map((member, index) => (
               <Fragment key={member.id}>
                 <div className="bg-white p-3 flex flex-col items-center justify-center">
                   <div className="flex items-center gap-4  p-3 border rounded-md">
@@ -137,44 +140,17 @@ export const MembersList = () => {
                     <Badge variant="ACTIVE" className="capitalize">
                       {member.role.toLowerCase()}
                     </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Button
-                          className="ml-auto border-none"
-                          variant="secondary"
-                          size="icon"
-                        >
-                          <MoreVerticalIcon className="size-4 text-muted-foreground " />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="bottom" align="end">
-                        <DropdownMenuItem
-                          className="font-medium"
-                          onClick={() =>
-                            handleUpdateMember(member.id, MemberRole.ADMIN)
-                          }
-                          disabled={isUpdatingMember}
-                        >
-                          Set as Administrator
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="font-medium"
-                          onClick={() =>
-                            handleUpdateMember(member.id, MemberRole.MEMBER)
-                          }
-                          disabled={isUpdatingMember}
-                        >
-                          Set as Member
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="font-medium text-amber-700"
-                          onClick={() => handleDeleteMember(member.id)}
-                          disabled={isDeletingMember}
-                        >
-                          Remove {member.user.name}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <MemberAction
+                      ownerId={owner?.id!}
+                      userId={currentUser.id}
+                      userRole={currentUser.role!}
+                      memberRole={member?.role!}
+                      memberId={member?.id!}
+                      handleDeleteMember={handleDeleteMember}
+                      handleUpdateMember={handleUpdateMember}
+                      isDeletingMember={isDeletingMember}
+                      isUpdatingMember={isUpdatingMember}
+                    />
                   </div>
                 </div>
               </Fragment>

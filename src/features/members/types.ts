@@ -1,14 +1,16 @@
+import { useGetAllWorkspaceMemberResponseType } from "./api/use-get-members";
+import { useGetMemberProjectsResponseType } from "./api/use-get-single-project-member";
 
 export enum MemberRole {
     ADMIN = "ADMIN",
     MEMBER = "MEMBER",
-    VIWER = "VIWER",
+    VIWER = "VIEWER",
 }
 
 export const Role = {
     ADMIN: "ADMIN",
     MEMBER: "MEMBER",
-    VIWER: "VIWER",
+    VIWER: "VIEWER",
 } as const;
 
 
@@ -23,3 +25,6 @@ export type Member = {
     joinedAt: Date;
     role: Role;
 }
+
+export type useGetMemberProjectsType = useGetMemberProjectsResponseType["data"]["member"]
+export type useGetAllWorkspaceMemberType = useGetAllWorkspaceMemberResponseType["data"]

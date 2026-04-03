@@ -19,18 +19,21 @@ export const useUpdateMembers = () => {
     >({
         mutationFn: async ({ param, json }) => {
             const response = await client.api.members[":memberId"]["$patch"]({ param, json })
-            if (!response.ok) {
-                throw new Error("Failed to update member")
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error)
             }
-            return await response.json()
+            return data
         },
         onSuccess: () => {
             toast.success("Member updated successfully")
             router.refresh()
             queryClient.invalidateQueries({ queryKey: ["members"] })
         },
-        onError: () => {
-            toast.error("Failed to remove member")
+        onError: (error) => {
+            toast.error("Failed to update member")
+            toast.error(error.message)
+
         }
     })
     return mutation

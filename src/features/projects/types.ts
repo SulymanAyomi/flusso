@@ -29,6 +29,42 @@ export type ProjectType = {
     endDate: string | null;
 }
 
+export type ProjectMembersType = {
+    user: {
+        name: string | null;
+        imageUrl: string | null;
+    };
+    memberId: string;
+}
+
+export type SingleProjectType = {
+    name: string;
+    status: ProjectStatus;
+    id: string;
+    imageUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+    workspaceId: string;
+    description: string | null;
+    createdById: string;
+    archived: boolean;
+    startDate: string | null;
+    endDate: string | null;
+    projectMembers: {
+        user: {
+            name: string | null;
+            imageUrl: string | null;
+        };
+        memberId: string;
+    }[]
+}
+
+export type QuickProjectsType = {
+    name: string;
+    id: string;
+    imageUrl: string | null;
+}[] | undefined
+
 export type Chat = {
     prompt: string,
     type: "user" | "AI"

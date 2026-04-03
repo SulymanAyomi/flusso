@@ -5,7 +5,7 @@ import { addDays, endOfMonth, endOfWeek, startOfMonth, startOfToday, startOfWeek
 
 import { getMember } from "@/features/members/utils";
 
-import { createProjectSchema, PromptSchema, validatePromptInputSchema, aiGenerationResponseSchema, saveAiGeneratedProjectSchema } from "../schema";
+import { createProjectSchema, PromptSchema, validatePromptInputSchema, aiGenerationResponseSchema, saveAiGeneratedProjectSchema, assignMemberProject } from "../schema";
 
 import { generateTaskPrompt, } from "@/lib/prompt";
 
@@ -21,6 +21,7 @@ import { containsMaliciousContent, sanitizePrompt } from "@/lib/validate/sanitiz
 import { checkRateLimit } from "@/lib/rate-limit";
 import { calculateProjectDates, calculateTaskDates } from "@/lib/calculate-date";
 import { autoFixCircularDependencies, hasCircularDependencies, resolveDependencies } from "@/lib/dependencies";
+import { Role, ProjectRole } from "@prisma/client";
 
 const validationResponse = [
     {
@@ -717,54 +718,133 @@ const app = new Hono()
 
             const { projectId } = c.req.param()
 
-            const project = await db.project.findUnique({
+            const project = await db.project.findFirst({
                 where: {
                     id: projectId,
-                }
-            })
+                    workspace: {
+                        deletedAt: null,
+                        members: {
+                            some: {
+                                userId: user.id,
+                            },
+                        },
+                    },
+                },
+                include: {
+                    projectMembers: {
+                        select: {
+                            memberId: true,
+                            user: {
+                                select: {
+                                    name: true,
+                                    imageUrl: true
+                                }
+                            }
+                        }
+                    },
+                },
+            });
+
             if (!project) {
                 return c.json(errorResponse("Project not found"), 404)
             }
 
-            const workspace = await db.workspace.findUnique({
-                where: {
-                    id: project.workspaceId,
-                    deletedAt: null,
-                    members: {
-                        some: {
-                            userId: user.id
-                        }
-                    }
-                },
-            });
+            return c.json({ data: project })
+        }).patch("/:projectId/member", zValidator("json", assignMemberProject), sessionMiddleware,
+            async (c) => {
+                try {
+                    const user = c.get("user");
+                    const { projectId } = c.req.param()
+                    const { memberId } = c.req.valid("json")
 
-            if (!workspace) {
-                return c.json(errorResponse("workspace not found"), 404)
-            }
-
-            // members assigned to task in this project 
-            const team = await db.member.findMany({
-                where: {
-                    Task: {
-                        some: {
-                            projectId
-                        }
-                    }
-                },
-                select: {
-                    id: true,
-                    user: {
+                    const project = await db.project.findUnique({
+                        where: {
+                            id: projectId,
+                            workspace: {
+                                deletedAt: null,
+                                members: {
+                                    some: {
+                                        userId: user.id,
+                                        role: {
+                                            in: ["ADMIN"]
+                                        }
+                                    }
+                                }
+                            }
+                        },
                         select: {
-                            name: true,
-                            imageUrl: true
+                            id: true,
+                            workspaceId: true,
+                            projectMembers: true
                         }
+                    })
+                    if (!project) {
+                        return c.json(errorResponse("Project not found"), 404)
                     }
+
+                    const validMembers = await db.member.findMany({
+                        where: {
+                            id: {
+                                in: memberId,
+                            },
+                            workspaceId: project.workspaceId
+                        },
+                        select: {
+                            id: true,
+                            role: true,
+                            userId: true
+                        }
+                    })
+
+                    if (validMembers.length !== memberId.length) {
+                        return c.json(errorResponse("Invalid member(s)"), 400);
+                    }
+
+                    const invalidRoleMembers = validMembers.filter(m => m.role === "VIEWER");
+
+                    if (invalidRoleMembers.length > 0) {
+                        return c.json(
+                            errorResponse("Viewer cannot be assigned to project"),
+                            400
+                        );
+                    }
+
+                    const existingSet = new Set(project.projectMembers.map(m => m.memberId));
+                    const incomingSet = new Set(memberId);
+                    const toAdd = memberId.filter(id => !existingSet.has(id));
+                    // @ts-ignore
+                    const toRemove = [...existingSet].filter(id => !incomingSet.has(id));
+
+                    const membersToAdd = validMembers.filter(m => toAdd.includes(m.id));
+
+                    // assigned a members to a project
+                    await db.$transaction([
+                        db.projectMember.createMany({
+                            data: membersToAdd.map(m => ({
+                                projectId,
+                                memberId: m.id,
+                                userId: m.userId,
+                                role: m.role === "VIEWER"
+                                    ? ProjectRole.VIEWER
+                                    : ProjectRole.CONTRIBUTOR
+                            })),
+                            skipDuplicates: true
+                        }),
+
+                        db.projectMember.deleteMany({
+                            where: {
+                                projectId,
+                                memberId: { in: toRemove }
+                            }
+                        })
+                    ]);
+
+                    return c.json(successResponse({ projectId }), 200)
+                } catch (error) {
+                    return c.json(errorResponse("Something went wrong"), 500)
 
                 }
             })
-
-            return c.json({ data: project, team })
-        })
     .post("/validate", sessionMiddleware, async (c) => {
 
         const startTime = Date.now();

@@ -12,6 +12,8 @@ import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AssignProjectMemberModal } from "@/features/projects/components/assign-project/assign-project-member-modal";
+import { AssignMembersModal } from "@/features/projects/components/assign-member-to-project/assign-members-project-modal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -31,6 +33,8 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
         <CreateProjectModal />
         <EditProjectModal />
         <CreateWorkspaceModal />
+        <AssignProjectMemberModal />
+        <AssignMembersModal />
         <div className="flex w-full h-full">
           <div className="fixed left-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">
             <Sidebar />

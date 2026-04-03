@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc"
 
 interface useGetMembersProps {
     workspaceId: string;
 }
+export type useGetAllWorkspaceMemberResponseType = InferResponseType<typeof client.api.members["$get"], 200>
 
 export const useGetMembers = ({
     workspaceId
@@ -17,8 +19,6 @@ export const useGetMembers = ({
                 throw new Error("Failed to fetch members")
             }
             const { data } = await response.json();
-            console.log(data, "members jj")
-
             return data;
         },
 

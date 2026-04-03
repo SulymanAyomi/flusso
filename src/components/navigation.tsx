@@ -41,20 +41,20 @@ export const Navigation = () => {
         pathname.includes("/workspaces") && pathname.includes("/my-tasks"),
     },
     {
-      label: "Settings",
-      href: "settings",
-      icon: SettingsIcon,
-      activeIcon: SettingsIcon,
-      isActive:
-        pathname.includes("/workspaces") && pathname.includes("/settings"),
-    },
-    {
       label: "Members",
       href: "members",
       icon: UsersIcon,
       activeIcon: UsersIcon,
       isActive:
         pathname.includes("/workspaces") && pathname.includes("/members"),
+    },
+    {
+      label: "Settings",
+      href: "settings",
+      icon: SettingsIcon,
+      activeIcon: SettingsIcon,
+      isActive:
+        pathname.includes("/workspaces") && pathname.includes("/settings"),
     },
   ];
   return (

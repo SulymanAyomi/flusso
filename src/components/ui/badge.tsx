@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { ProjectStatus } from "@/features/projects/types";
 import { TaskPriority, TaskStatus } from "@/features/tasks/types";
+import { Role } from "@prisma/client";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -43,6 +44,12 @@ const badgeVariants = cva(
           "border-transparent bg-green-200 text-green-800 hover:bg-green-100/80",
         [TaskPriority.CRITICAL]:
           "border-transparent bg-pink-200 text-pink-800 hover:bg-pink-200/80",
+        [Role.ADMIN]:
+          "border-transparent bg-yellow-200 text-yellow-800 hover:bg-yellow-200/80",
+        [Role.MEMBER]:
+          "border-transparent bg-blue-200 text-blue-800 hover:bg-blue-200/80",
+        [Role.VIEWER]:
+          "border-transparent bg-purple-200 text-purple-800 hover:bg-purple-200/80",
       },
     },
     defaultVariants: {
