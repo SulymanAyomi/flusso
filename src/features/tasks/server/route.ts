@@ -416,7 +416,7 @@ const app = new Hono()
                 if (!workspace) {
                     return c.json(errorResponse("workspace not found"), 404);
                 }
-                const member = workspace.members.find((member) => member.userId == user.id)
+                const member = await getMember({ workspaceId, userId: user.id })
                 if (!member) {
                     return c.json(errorResponse("workspace not found"), 404)
                 }
@@ -445,8 +445,6 @@ const app = new Hono()
                 })
 
                 const newPosition = highestPositionTask.length > 0 ? highestPositionTask[0].position + 1000 : 1000
-
-
 
                 const now = new Date()
                 const thisMonthStart = startOfMonth(now)
@@ -517,7 +515,8 @@ const app = new Hono()
                             data: {
                                 userId: member.id,
                                 content: comment,
-                                taskId: task.id
+                                taskId: task.id,
+                                userName: member.user.name ? member.user.name : user.name
                             }
                         })
                     }
@@ -1172,7 +1171,7 @@ const app = new Hono()
                             taskId,
                             content,
                             userId: member.id,
-                            userName: member.user.name
+                            userName: member.user.name ? member.user.name : user.name
                         },
                     })
 
@@ -1183,7 +1182,7 @@ const app = new Hono()
                         entityType: "TASK",
                         entityId: taskId,
                         entityTitle: exisitingTask.name,
-                        userName: user.name,
+                        userName: member.user.name ? member.user.name : user.name,
 
                         metadata: {
                         },
