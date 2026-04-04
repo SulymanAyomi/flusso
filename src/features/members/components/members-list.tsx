@@ -53,7 +53,7 @@ export const MembersList = () => {
     const ok = await confirm();
     if (!ok) return;
     deleteMember(
-      { param: { memberId } },
+      { param: { memberId, workspaceId } },
       {
         onSuccess: () => {
           window.location.reload();

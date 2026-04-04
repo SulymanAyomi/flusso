@@ -21,8 +21,9 @@ interface InviteCardProp {
     ownerId: string | null;
     updatedAt: string;
   };
+  isOwner: boolean;
 }
-const InviteCard = ({ workspace }: InviteCardProp) => {
+const InviteCard = ({ workspace, isOwner }: InviteCardProp) => {
   const router = useRouter();
   const { mutate: resetInviteCode, isPending: isResettingInviteCode } =
     useResetInviteCode();
@@ -75,22 +76,24 @@ const InviteCard = ({ workspace }: InviteCardProp) => {
               </Button>
             </div>
           </div>
-          <Button
-            className="mt-6 w-fit ml-auto"
-            size="sm"
-            variant="destructive"
-            type="button"
-            disabled={isResettingInviteCode}
-            onClick={handleReset}
-          >
-            {isResettingInviteCode ? (
-              <>
-                <Loader2Icon /> Reseting...{" "}
-              </>
-            ) : (
-              "Reset invite link"
-            )}
-          </Button>
+          {isOwner && (
+            <Button
+              className="mt-6 w-fit ml-auto"
+              size="sm"
+              variant="destructive"
+              type="button"
+              disabled={isResettingInviteCode}
+              onClick={handleReset}
+            >
+              {isResettingInviteCode ? (
+                <>
+                  <Loader2Icon /> Reseting...{" "}
+                </>
+              ) : (
+                "Reset invite link"
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

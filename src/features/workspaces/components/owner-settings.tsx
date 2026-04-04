@@ -7,26 +7,13 @@ import { MemberAvatar } from "@/features/members/components/member-avatar";
 import React from "react";
 
 interface OwnerSettingsProp {
-  workspaceId: string;
-  ownerId: string;
+  user: {
+    name: string | null;
+    email: string | null;
+    imageUrl: string | null;
+  };
 }
-const OwnerSettings = ({ workspaceId, ownerId }: OwnerSettingsProp) => {
-  const { data, isPending } = useOwner({ workspaceId, userId: ownerId });
-
-  if (isPending) {
-    return (
-      <Card className="w-full h-full border-none shadow-none p-7">
-        <Skeleton className="w-full h-full" />
-      </Card>
-    );
-  }
-  if (!data) {
-    return (
-      <Card className="w-full h-full border-none shadow-none p-7">
-        <Skeleton className="w-full h-full" />
-      </Card>
-    );
-  }
+const OwnerSettings = ({ user }: OwnerSettingsProp) => {
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardContent className="p-7">
@@ -36,13 +23,12 @@ const OwnerSettings = ({ workspaceId, ownerId }: OwnerSettingsProp) => {
             <MemberAvatar
               className="size-10"
               fallbackClassName="text-lg"
-              name={data.owner.user.name!}
+              name={user.name!}
+              imageUrl={user.imageUrl}
             />
             <div className="flex flex-col">
-              <p className="text-sm font-medium">{"owner?.user.name"}</p>
-              <p className="text-xs text-muted-foreground">
-                {data.owner.user.email}
-              </p>
+              <p className="text-sm font-medium">{user.name}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
             <Badge variant="CRITICAL">Owner</Badge>
           </div>

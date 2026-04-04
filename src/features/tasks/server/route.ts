@@ -73,6 +73,8 @@ const app = new Hono()
                         workspaceId: task.workspaceId, memberId: member.id,
                         actionType: "TASK_DELETED", entityType: "PROJECT",
                         entityId: null, entityTitle: task.name,
+                        userName: user.name,
+
                         metadata: {},
                     })
                 })
@@ -201,8 +203,8 @@ const app = new Hono()
                             id: true
                         }
                     },
-                    Subtask: true,
-                    Comment: {
+                    subtasks: true,
+                    comments: {
                         select: {
                             id: true
                         }
@@ -310,7 +312,6 @@ const app = new Hono()
                 }
             }
 
-
             const tasks = await db.task.findMany({
                 where: query,
                 orderBy: {
@@ -340,14 +341,13 @@ const app = new Hono()
                             id: true
                         }
                     },
-                    Subtask: true,
-                    Comment: {
+                    subtasks: true,
+                    comments: {
                         select: {
                             id: true
                         }
                     }
                 }
-
             })
 
             if (tasks.length == 0) {
@@ -526,6 +526,8 @@ const app = new Hono()
                         workspaceId: workspaceId, memberId: member.id,
                         actionType: "TASK_CREATED", entityType: "TASK",
                         entityId: task.id, entityTitle: task.name,
+                        userName: user.name,
+
                         metadata: {},
                     })
 
@@ -627,6 +629,8 @@ const app = new Hono()
                         workspaceId: task.workspaceId, memberId: member.id,
                         actionType: "TASK_EDITED", entityType: "TASK",
                         entityId: task.id, entityTitle: task.name,
+                        userName: user.name,
+
                         metadata: {},
                     })
                 })
@@ -883,7 +887,7 @@ const app = new Hono()
                 select: {
                     id: true,
                     workspaceId: true,
-                    Subtask: true
+                    subtasks: true
                 }
             })
             if (!task) {
@@ -897,7 +901,7 @@ const app = new Hono()
             if (!currentMember) {
                 return c.json({ error: "unauthorized" }, 401)
             }
-            const subTask = task.Subtask
+            const subTask = task.subtasks
 
             return c.json({
                 data: {
@@ -984,6 +988,8 @@ const app = new Hono()
                     entityType: "TASK",
                     entityId: taskId,
                     entityTitle: exisitingTask.name,
+                    userName: user.name,
+
                     metadata: {
                         "subTaskName": subTask.name
                     },
@@ -1096,6 +1102,8 @@ const app = new Hono()
                         entityType: "TASK",
                         entityId: taskId,
                         entityTitle: exisitingSubtask.task.name,
+                        userName: user.name,
+
                         metadata: {
                             "subTaskName": subTask.name
                         },
@@ -1120,7 +1128,7 @@ const app = new Hono()
 
                 const exisitingTask = await db.task.findUnique({
                     where: {
-                        id: taskId
+                        id: taskId,
                     },
                     select: {
                         id: true,
@@ -1142,9 +1150,6 @@ const app = new Hono()
                                 userId: user.id
                             }
                         }
-                    },
-                    include: {
-                        members: true
                     }
                 });
 
@@ -1152,10 +1157,13 @@ const app = new Hono()
                     return c.json(errorResponse("workspace not found"), 404);
                 }
 
-                const member = workspace.members.find((member) => member.userId == user.id)
+                const member = await getMember({
+                    workspaceId: exisitingTask.workspaceId,
+                    userId: user.id
+                })
 
                 if (!member) {
-                    return c.json(errorResponse("Project not found"), 404)
+                    return c.json(errorResponse("tasks not found"), 404)
                 }
 
                 const result = await db.$transaction(async (tx) => {
@@ -1163,7 +1171,8 @@ const app = new Hono()
                         data: {
                             taskId,
                             content,
-                            userId: member.id
+                            userId: member.id,
+                            userName: member.user.name
                         },
                     })
 
@@ -1174,6 +1183,8 @@ const app = new Hono()
                         entityType: "TASK",
                         entityId: taskId,
                         entityTitle: exisitingTask.name,
+                        userName: user.name,
+
                         metadata: {
                         },
                     })
@@ -1224,15 +1235,7 @@ const app = new Hono()
                         id: true,
                         content: true,
                         createdAt: true,
-                        user: {
-                            select: {
-                                user: {
-                                    select: {
-                                        name: true
-                                    }
-                                }
-                            }
-                        }
+                        userName: true
                     }
 
                 })

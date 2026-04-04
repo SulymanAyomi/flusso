@@ -57,60 +57,88 @@ const app = new Hono()
                 return c.json({ error: "Something went wrong" }, 500)
             }
         }
-    ).delete("/:memberId", sessionMiddleware,
+    ).delete("/:memberId/:workspaceId", sessionMiddleware,
         async (c) => {
             try {
                 const user = c.get("user");
+                const { memberId, workspaceId } = c.req.param();
 
-                const { memberId } = c.req.param()
+                // Fetch the requesting user's membership
+                const requestingMember = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId,
+                        },
+                    },
+                });
 
+                if (!requestingMember) {
+                    return c.json(errorResponse("You are not a member of this workspace"), 403);
+                }
+
+                const isSelfRemoval = requestingMember.id === memberId;
+                const isAdmin = requestingMember.role === Role.ADMIN;
+
+                // Only admins can remove others; anyone can remove themselves
+                if (!isAdmin && !isSelfRemoval) {
+                    return c.json(errorResponse("You do not have permission to perform this action"), 403);
+                }
+
+                // Fetch the target member, scoped to this workspace to prevent cross-workspace attacks
                 const memberToDelete = await db.member.findUnique({
                     where: {
-                        id: memberId
+                        id: memberId,
+                        workspaceId, // ensures the member belongs to this workspace
                     },
                     include: {
-                        workspace: true
-                    }
-                })
+                        workspace: true,
+                    },
+                });
 
                 if (!memberToDelete) {
-                    return c.json(errorResponse("Cannot remove member not in workspace"), 400)
+                    return c.json(errorResponse("Member not found in this workspace"), 404);
                 }
 
-                if (memberToDelete.workspace.ownerId == memberToDelete.id) {
-                    return c.json(errorResponse("Cannot remove workspace owner"), 400)
-
+                if (isSelfRemoval && memberToDelete.userId === memberToDelete.workspace.ownerId) {
+                    return c.json(errorResponse("Transfer ownership before leaving the workspace"), 400);
                 }
-                const allMembersInWorkspace = await db.member.findMany({
-                    where: {
-                        workspaceId: memberToDelete.workspaceId
+                // Prevent owner from being removed
+                if (memberToDelete.userId === memberToDelete.workspace.ownerId) {
+                    return c.json(errorResponse("Cannot remove the workspace owner"), 400);
+                }
+
+                // Prevent removing the last admin (guards both self-removal and admin removing another admin)
+                if (memberToDelete.role === Role.ADMIN) {
+                    const adminCount = await db.member.count({
+                        where: {
+                            workspaceId,
+                            role: Role.ADMIN,
+                        },
+                    });
+
+                    if (adminCount <= 1) {
+                        return c.json(errorResponse("Cannot remove the only admin in the workspace"), 400);
                     }
+                }
+                console.log("Deleting member with ID:", memberId, "from workspace:", workspaceId);
+
+                await db.$transaction(async (tx) => {
+                    await db.projectMember.deleteMany({
+                        where: {
+                            memberId: memberId,
+                            project: { workspaceId }
+                        }
+                    })
+                    await db.member.delete({
+                        where: { id: memberId },
+                    });
                 })
 
-                const currentUserMember = allMembersInWorkspace.find((m) => m.userId == user.id)
-
-                if (!currentUserMember || currentUserMember.role !== Role.ADMIN) {
-                    return c.json(errorResponse("You do not have permission to perform action"), 401)
-                }
-
-                if (allMembersInWorkspace.length === 1) {
-                    return c.json(errorResponse("Cannot delete the only member in the workspace"), 400)
-                }
-
-                if (allMembersInWorkspace.filter((m) => m.role == Role.ADMIN).length === 1) {
-                    return c.json(errorResponse("Cannot delete the only admin in the workspace"), 400)
-                }
-
-                await db.member.delete({
-                    where: {
-                        id: memberId
-                    }
-                })
-
-                return c.json(successResponse({ id: memberToDelete.id }), 200)
+                return c.json(successResponse({ id: memberToDelete.id }), 200);
             } catch (error) {
-                return c.json(errorResponse("Something went wrong"), 500)
-
+                console.error("Error deleting member:", error);
+                return c.json(errorResponse("Failed to remove member"), 500);
             }
         }
     ).patch("/:memberId",
@@ -131,9 +159,6 @@ const app = new Hono()
                                 userId: user.id
                             }
                         }
-                    },
-                    include: {
-                        members: true
                     }
                 });
 
@@ -141,25 +166,44 @@ const app = new Hono()
                     return c.json(errorResponse("workspace not found"), 404);
                 }
 
-                const memberToUpdate = workspace.members.find((m) => m.id == memberId)
-
-                // const memberToUpdate = await db.member.findUnique({
-                //     where: {
-                //         id: memberId
-                //     }
-                // })
-                if (!memberToUpdate) {
-                    return c.json(errorResponse("member not in workspace"), 400)
-                }
-                // const currentUserMember = await getMember({
-                //     workspaceId: memberToUpdate.workspaceId,
-                //     userId: user.id
-                // })
-                const currentUserMember = workspace.members.find((m) => m.userId == user.id)
+                const currentUserMember = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
+                    }
+                })
 
                 if (!currentUserMember || currentUserMember.role !== Role.ADMIN) {
                     return c.json(errorResponse("You do not have permission to perform action"), 401)
                 }
+
+                const memberToUpdate = await db.member.findUnique({
+                    where: {
+                        id: memberId,
+                        workspaceId: workspace.id
+                    }
+                })
+
+                if (!memberToUpdate) {
+                    return c.json(errorResponse("member not in workspace"), 400)
+                }
+                const isOwner = workspace.ownerId == memberToUpdate.id
+
+                if (isOwner) {
+
+                    if (memberToUpdate.role != "ADMIN") {
+                        await db.member.update({
+                            where: { id: memberId },
+                            data: { role: "ADMIN" }
+                        })
+                    }
+
+                    return c.json(errorResponse("cannot update owner role"), 401)
+                }
+
+
                 if (
                     memberToUpdate.role === Role.ADMIN &&
                     role !== Role.ADMIN
@@ -232,7 +276,62 @@ const app = new Hono()
                 return c.json({ error: "Something went wrong" }, 500)
             }
         }
-    ).get("/:memberId/projects",
+    )
+    .get("/current-member",
+        zValidator("query", z.object({ workspaceId: z.string() })), sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId } = c.req.valid("query")
+                console.log(workspaceId)
+                const workspace = await db.workspace.findUnique({
+                    where: {
+                        id: workspaceId,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    }
+                });
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+                console.log(workspace)
+
+                const member = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                imageUrl: true
+                            }
+                        }
+                    }
+                })
+                console.log(member)
+                if (!member) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+                return c.json(successResponse({
+                    member,
+                    workspace,
+                    isOwner: workspace.ownerId === member.id
+                }))
+            } catch (error) {
+                console.error("member", error)
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }
+    )
+    .get("/:memberId",
         zValidator("query", z.object({ workspaceId: z.string() })), sessionMiddleware,
         async (c) => {
             try {
@@ -254,19 +353,105 @@ const app = new Hono()
                 if (!workspace) {
                     return c.json(errorResponse("workspace not found"), 404);
                 }
-                console.log(memberId)
                 const member = await db.member.findFirst({
+                    where: { id: memberId, workspaceId },
+                    include: {
+                        user: { select: { name: true, email: true } },
+                        projectMembers: {
+                            select: {
+                                project: {
+                                    select: { id: true, name: true }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (!member) {
+                    return c.json(errorResponse("member not found"), 404);
+                }
+
+                const [taskAssigned, tasksCompleted, taskOverdue] = await Promise.all([
+                    db.task.count({
+                        where: {
+                            assignedToId: member.id,
+                            project: { workspaceId }
+                        }
+                    }),
+                    db.task.count({
+                        where: {
+                            assignedToId: member.userId,
+                            status: "DONE",
+                            project: { workspaceId }
+                        }
+                    }),
+                    db.task.count({
+                        where: {
+                            assignedToId: member.userId,
+                            dueDate: { lt: new Date() },
+                            NOT: { status: "DONE" },
+                            project: { workspaceId }
+                        }
+                    })
+                ]);
+
+                const data = {
+                    member: { ...member },
+                    stats: {
+                        taskAssigned: taskAssigned,
+                        tasksCompleted,
+                        taskOverdue
+                    },
+                    projects: member.projectMembers.map(pm => pm.project)
+                }
+
+                return c.json(successResponse({
+                    data
+                }), 200)
+            } catch (error) {
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }
+    )
+    .get("/:memberId/projects",
+        zValidator("query", z.object({ workspaceId: z.string() })), sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId } = c.req.valid("query")
+                const { memberId } = c.req.param()
+
+                const workspace = await db.workspace.findUnique({
                     where: {
-                        id: memberId
+                        id: workspaceId,
+                        members: {
+                            some: {
+                                userId: user.id
+                            }
+                        }
+                    }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const member = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
                     },
                     include: {
                         user: {
                             select: {
                                 name: true,
-                                email: true
+                                email: true,
                             }
                         },
                         projectMembers: true
+
                     }
                 })
 
@@ -314,18 +499,24 @@ const app = new Hono()
                 }
 
                 const workspaceId = currentUser.workspaceId;
-
-                const member = await db.member.findFirst({
+                ;
+                const member = await db.member.findUnique({
                     where: {
-                        id: memberId,
-                        workspaceId
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
                     },
-                    select: {
-                        id: true,
-                        userId: true,
-                        role: true
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                imageUrl: true
+                            }
+                        }
                     }
-                });
+                })
 
                 if (!member) {
                     return c.json(errorResponse("Member not found"), 404);
@@ -391,5 +582,6 @@ const app = new Hono()
 
             }
         })
+
 
 export default app

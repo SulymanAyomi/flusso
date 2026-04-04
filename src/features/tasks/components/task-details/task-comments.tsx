@@ -122,11 +122,7 @@ interface TaskCommentListProps {
   comment: {
     id: string;
     content: string;
-    user: {
-      user: {
-        name: string | null;
-      };
-    } | null;
+    userName: string;
     createdAt?: string;
   };
 }
@@ -137,11 +133,11 @@ const TaskCommentList = ({ comment }: TaskCommentListProps) => {
       <div className="flex flex-col gap-4">
         <div className="flex justify-start items-start gap-2">
           <div className="flex items-center justify-center">
-            <MemberAvatar className="size-8" name={comment.user?.user.name!} />
+            <MemberAvatar className="size-8" name={comment.userName!} />
           </div>
           <div className="flex flex-col gap-1 justify-start">
             <p className="text-black font-semibold">
-              {comment.user?.user.name}
+              {comment.userName}
               <span className="text-[10px] text-neutral-700 ml-1">
                 {formatActivityDate(comment.createdAt!)}
               </span>

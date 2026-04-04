@@ -5,8 +5,8 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 
-type ResponseType = InferResponseType<typeof client.api.members[":memberId"]["$delete"], 200>
-type RequestType = InferRequestType<typeof client.api.members[":memberId"]["$delete"]>
+type ResponseType = InferResponseType<typeof client.api.members[":memberId"][":workspaceId"]["$delete"], 200>
+type RequestType = InferRequestType<typeof client.api.members[":memberId"][":workspaceId"]["$delete"]>
 
 
 export const useDeleteMembers = () => {
@@ -18,7 +18,7 @@ export const useDeleteMembers = () => {
         RequestType
     >({
         mutationFn: async ({ param }) => {
-            const response = await client.api.members[":memberId"]["$delete"]({ param })
+            const response = await client.api.members[":memberId"][":workspaceId"]["$delete"]({ param })
             const data = await response.json()
             if (!data.success) {
                 throw new Error(data.error)
@@ -31,7 +31,7 @@ export const useDeleteMembers = () => {
             queryClient.invalidateQueries({ queryKey: ["members"] })
         },
         onError: (error) => {
-            // toast.error("Failed to remove member")
+            toast.error("Failed to remove member")
             toast.error(error.message)
         }
     })

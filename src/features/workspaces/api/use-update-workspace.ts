@@ -19,10 +19,11 @@ export const useUpdateWorkspace = () => {
     >({
         mutationFn: async ({ form, param }) => {
             const response = await client.api.workspaces[":workspaceId"]["$patch"]({ form, param })
-            if (!response.ok) {
-                throw new Error("Failed to update workspace")
+            const res = await response.json()
+            if (!res.success) {
+                throw new Error(res.error)
             }
-            return await response.json()
+            return res
         },
         onSuccess: ({ data }) => {
             toast.success("Workspace updated successfully")

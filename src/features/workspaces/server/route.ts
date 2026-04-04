@@ -24,6 +24,7 @@ const app = new Hono()
             const user = c.get("user");
             const workspaces = await db.workspace.findMany({
                 where: {
+                    deletedAt: null,
                     members: {
                         some: {
                             userId: user.id
@@ -46,6 +47,7 @@ const app = new Hono()
             const workspace = await db.workspace.findUnique({
                 where: {
                     id: workspaceId,
+                    deletedAt: null,
                     members: {
                         some: {
                             userId: user.id
@@ -58,9 +60,7 @@ const app = new Hono()
                 return c.json(errorResponse("workspace not found"), 404);
             }
 
-            return c.json(successResponse(workspace), 200, {
-                'Cache-Control': 'private, max-age=300' // Cache for 3 minutes
-            })
+            return c.json(successResponse(workspace), 200)
         }
     )
     .post("/",
@@ -129,10 +129,6 @@ const app = new Hono()
             try {
 
                 const user = c.get("user");
-                if (!user) {
-                    return c.json(errorResponse("Unauthourize"), 401)
-                }
-
                 const { workspaceId } = c.req.param()
                 const { name, image } = c.req.valid("form")
 
@@ -142,7 +138,10 @@ const app = new Hono()
                         deletedAt: null,
                         members: {
                             some: {
-                                userId: user.id
+                                userId: user.id,
+                                role: {
+                                    in: ["ADMIN"]
+                                }
                             }
                         }
                     },
@@ -157,8 +156,7 @@ const app = new Hono()
 
                 const member = workspace.members.find((member) => member.userId == user.id)
 
-
-                if (!member || member.role !== MemberRole.ADMIN) {
+                if (!member || member.role !== MemberRole.ADMIN || member.id != workspace.ownerId) {
                     return c.json(errorResponse("Unauthorized"), 401)
                 }
 
@@ -198,6 +196,7 @@ const app = new Hono()
                         entityType: "TASK",
                         entityId: null,
                         entityTitle: name,
+                        userName: user.name,
                         metadata: {
                             "oldName": workspace.name,
                             "image": workspace.imageUrl === uploadedImageUrl
@@ -222,16 +221,25 @@ const app = new Hono()
 
                 const { workspaceId } = c.req.param()
 
-                const member = await getMember({
-                    workspaceId,
-                    userId: user.id
+                const member = await db.member.findFirst({
+                    where: {
+                        workspaceId,
+                        userId: user.id,
+                        role: {
+                            in: ["ADMIN"]
+                        }
+                    }
                 })
 
                 if (!member || member.role !== MemberRole.ADMIN) {
-                    return c.json(errorResponse("Permission denied."), 401)
+                    return c.json(errorResponse("Workspace not found."), 401)
                 }
+
                 const existingWorkspace = await db.workspace.findUnique({
-                    where: { id: workspaceId }
+                    where: {
+                        id: workspaceId,
+                        ownerId: member.id
+                    }
                 })
                 if (!existingWorkspace) {
                     return c.json(errorResponse("Workspace not found"), 404)
@@ -270,22 +278,24 @@ const app = new Hono()
 
     ).post(
         "/:workspaceId/reset-invite-code", sessionMiddleware,
-
         async (c) => {
             const user = c.get("user");
 
-
             const { workspaceId } = c.req.param()
 
-            const member = await getMember({
-                workspaceId,
-                userId: user.id
+            const member = await db.member.findFirst({
+                where: {
+                    workspaceId,
+                    userId: user.id,
+                    role: {
+                        in: ["ADMIN"]
+                    }
+                }
             })
 
             if (!member || member.role !== MemberRole.ADMIN) {
                 return c.json({ error: "Unauthorized" }, 401)
             }
-
 
             const workspace = await db.workspace.update({
                 where: {
@@ -301,7 +311,6 @@ const app = new Hono()
 
         })
     .post("/:workspaceId/join", sessionMiddleware,
-
         zValidator("json", z.object({ code: z.string() })),
         async (c) => {
             try {
@@ -313,17 +322,20 @@ const app = new Hono()
                     where: {
                         id: workspaceId,
                         deletedAt: null,
-                    },
-                    include: {
-                        members: true
                     }
+
                 });
 
                 if (!workspace) {
                     return c.json(errorResponse("workspace not found"), 404);
                 }
 
-                const member = workspace.members.find((member) => member.userId == user.id)
+                const member = await db.member.findFirst({
+                    where: {
+                        userId: user.id,
+                        workspaceId: workspaceId,
+                    }
+                })
 
                 if (member) {
                     return c.json(errorResponse("You can't join workspace. You are already a memebr."), 400)
@@ -347,12 +359,12 @@ const app = new Hono()
                         memberId: member.id,
                         actionType: "JOINED_WORKSPACE",
                         entityType: "MEMBER",
+                        userName: user.name,
                         entityId: null,
                         entityTitle: "",
                         metadata: {
                         },
                     })
-
                 })
 
                 return c.json(successResponse(workspace), 200)
@@ -373,6 +385,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -569,9 +582,11 @@ const app = new Hono()
                     comments,
                     taskUpdates
                 }
-                return c.json(successResponse(data), 200, {
-                    'Cache-Control': 'private, max-age=180' // Cache for 3 minutes
-                })
+                return c.json(successResponse(data), 200,
+                    // {
+                    //     'Cache-Control': 'private, max-age=180' // Cache for 3 minutes
+                    // }
+                )
             } catch (error) {
                 console.error("Dashboard analytics error:", error);
                 return c.json(errorResponse("Failed to fetch analytics"), 500);
@@ -591,6 +606,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -648,48 +664,50 @@ const app = new Hono()
 
             const { workspaceId } = c.req.param()
 
-            const workspace = await db.workspace.findFirst({
-                where: { id: workspaceId }
-            })
+            const workspace = await db.workspace.findUnique({
+                where: {
+                    id: workspaceId,
+                    deletedAt: null,
+                    members: {
+                        some: {
+                            userId: user.id
+                        }
+                    }
+                }
+            });
             if (!workspace) {
                 return c.json({ error: 'Workspace not found ' }, 400)
             }
 
-            const member = await getMember(
-                {
-                    workspaceId: workspaceId,
-                    userId: user.id
-                }
-            )
-            if (!member) {
-                return c.json({ error: "Unauthorized" }, 401)
-            }
+
             const now = new Date()
             const today = startOfToday()
             const endToday = endOfToday()
 
-            const todayTasks = await db.task.count({
-                where: {
-                    workspaceId,
-                    assignedToId: user.id,
-                    dueDate: {
-                        equals: today
+            const [todayTasks, highpiorityTasks] = await Promise.all([
+                db.task.count({
+                    where: {
+                        workspaceId,
+                        assignedToId: user.id,
+                        dueDate: {
+                            equals: today
+                        }
+                    },
+                }),
+                db.task.findMany({
+                    where: {
+                        workspaceId,
+                        priority: {
+                            equals: "HIGH"
+                        }
+                    },
+                    select: {
+                        id: true,
+                        name: true,
+                        priority: true
                     }
-                },
-            })
-            const highpiorityTasks = await db.task.findMany({
-                where: {
-                    workspaceId,
-                    priority: {
-                        equals: "HIGH"
-                    }
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    priority: true
-                }
-            })
+                })
+            ])
 
             return c.json({
                 data: {
@@ -707,6 +725,7 @@ const app = new Hono()
                 const workspace = await db.workspace.findUnique({
                     where: {
                         id: workspaceId,
+                        deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
@@ -715,23 +734,26 @@ const app = new Hono()
                     },
                     select: {
                         id: true,
-                        members: {
-                            where: {
-                                userId: user.id
-                            },
-                            select: {
-                                id: true,
-                                role: true
-                            }
+                    }
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const member = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
                         }
                     }
                 });
 
-                if (!workspace || workspace.members.length === 0) {
-                    return c.json(errorResponse("workspace not found"), 404);
+                if (!member) {
+                    return c.json(errorResponse("member not found"), 404);
                 }
 
-                const member = workspace.members[0];
                 // Date ranges
                 const now = new Date();
                 const todayStart = startOfDay(now);
@@ -888,17 +910,16 @@ const app = new Hono()
             try {
                 const user = c.get("user");
                 const { workspaceId } = c.req.param()
-                const member = await db.member.findFirst({
+                const member = await db.member.findUnique({
                     where: {
-                        userId: user.id,
-                        workspace: {
-                            id: workspaceId,
-                            // status: "ACTIVE"
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
                         }
-                    },
+                    }
                 });
                 if (!member) {
-                    return c.json(errorResponse("workspace not found"), 404);
+                    return c.json(errorResponse("member not found"), 404);
                 }
 
                 // Date ranges
@@ -1093,7 +1114,6 @@ const app = new Hono()
                     priortyCard,
                     completedThisWeek,
                     taskDependency,
-
                 }
 
                 return c.json(successResponse(data), 200)

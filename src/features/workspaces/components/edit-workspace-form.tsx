@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { Badge } from "@/components/ui/badge";
 import OwnerSettings from "./owner-settings";
+import { useGetCurrentMember } from "@/features/members/api/use-get-current-member";
 
 export const EditWorkspaceForm = ({}) => {
   const workspaceId = useWorkspaceId();
@@ -24,6 +25,10 @@ export const EditWorkspaceForm = ({}) => {
   });
   const { mutate: deleteWorkspace, isPending: isDeletingWorkspace } =
     useDeleteWorkspace();
+
+  const { data: member, isPending: isPendingMember } = useGetCurrentMember({
+    workspaceId,
+  });
 
   const [DeleteDialog, confirmDelete] = useConfirm(
     "Delete Workspace",
@@ -46,12 +51,12 @@ export const EditWorkspaceForm = ({}) => {
     );
   };
 
-  if (isPendingWorkspace) {
+  if (isPendingWorkspace || isPendingMember) {
     <div className="h-[calc(100vh-190px)] flex items-center justify-center">
       <Loader2Icon className="size-9 animate-spin text-blue-400" />
     </div>;
   }
-  if (!workspace) {
+  if (!workspace || !member) {
     return <div></div>;
   }
 
@@ -59,13 +64,8 @@ export const EditWorkspaceForm = ({}) => {
     <div className="flex flex-col gap-y-4 w-full max-w-xl mx-auto">
       <DeleteDialog />
       <div className="w-full h-full border-none shadow-none space-y-4 my-4">
-        <SettingsWorkspace workspace={workspace} />
-        <InviteCard workspace={workspace} />
-        <OwnerSettings
-          workspaceId={workspace.id}
-          ownerId={workspace.ownerId!}
-        />
-
+        <SettingsWorkspace workspace={workspace} isOwner={member?.isOwner} />
+        <InviteCard workspace={workspace} isOwner={member?.isOwner} />
         <Card className="w-full h-full border-none shadow-none">
           <CardContent className="p-7">
             <div className="flex flex-col gap-4">
@@ -101,29 +101,32 @@ export const EditWorkspaceForm = ({}) => {
             </div>
           </CardContent>
         </Card>
-        <Card className="w-full h-full border-none shadow-none">
-          <CardContent className="p-7">
-            <div className="flex flex-col">
-              <h3 className="font-bold">Danger Zone</h3>
-              <p className="text-sm text-muted-foreground">
-                Deleting workspace is a irreversible operation and will remove
-                all associated data
-              </p>
-              <Separator className="my-2" />
+        {member.isOwner && <OwnerSettings user={member.member.user} />}
+        {member.isOwner && (
+          <Card className="w-full h-full border-none shadow-none">
+            <CardContent className="p-7">
+              <div className="flex flex-col">
+                <h3 className="font-bold">Danger Zone</h3>
+                <p className="text-sm text-muted-foreground">
+                  Deleting workspace is a irreversible operation and will remove
+                  all associated data
+                </p>
+                <Separator className="my-2" />
 
-              <Button
-                className="mt-6 w-fit ml-auto"
-                size="sm"
-                variant="destructive"
-                type="button"
-                disabled={isDeletingWorkspace}
-                onClick={handleDelete}
-              >
-                Delete workspace
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Button
+                  className="mt-6 w-fit ml-auto"
+                  size="sm"
+                  variant="destructive"
+                  type="button"
+                  disabled={isDeletingWorkspace}
+                  onClick={handleDelete}
+                >
+                  Delete workspace
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

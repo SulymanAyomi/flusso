@@ -10,7 +10,8 @@ import React from "react";
 import { MemberRole } from "../types";
 import { Button } from "@/components/ui/button";
 import { useAssignProjectMemberModal } from "@/features/projects/hooks/use-assign-member";
-type role = "ADMIN" | "MEMBER" | "VIWER";
+import { useMemberProfileModal } from "../hook/use-member-profile";
+type role = "ADMIN" | "MEMBER" | "VIEWER";
 interface MemberActionProps {
   userRole: role;
   memberRole: role;
@@ -44,6 +45,7 @@ const MemberAction = ({
     isOwner || (isAdmin && memberRole === MemberRole.MEMBER);
 
   const { open } = useAssignProjectMemberModal();
+  const { open: openProfile } = useMemberProfileModal();
 
   // const canRemove = isOwner
   //   ? !isTargetOwner
@@ -70,7 +72,7 @@ const MemberAction = ({
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          onClick={() => handleDeleteMember(memberId)}
+          onClick={() => openProfile(memberId)}
           disabled={isDeletingMember}
         >
           view profile

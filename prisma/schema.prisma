@@ -29,7 +29,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   AINote        AINote[]
 
-  PasswordResetToken PasswordResetToken[]
+  passwordResetToken PasswordResetToken[]
   projectMembers     ProjectMember[]
 }
 
@@ -95,11 +95,11 @@ model Workspace {
   ownerId    String?
   owner      Member?   @relation("workspaceOwner", fields: [ownerId], references: [id])
 
-  Task Task[]
+  tasks Task[]
 
-  Tags Tags[]
+  tags Tags[]
 
-  Activity Activity[]
+  activities Activity[]
 
   @@index([id, deletedAt])
 }
@@ -115,14 +115,15 @@ model Member {
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  Comment        Comment[]       @relation("CommentCreator")
-  Task           Task[]          @relation("TaskAssignee")
-  Activity       Activity[]
+  comments       Comment[]       @relation("CommentCreator")
+  tasks          Task[]          @relation("TaskAssignee")
+  activities     Activity[]
   projects       Project[]
   workspaceOwned Workspace[]     @relation("workspaceOwner")
   projectMembers ProjectMember[]
 
   @@unique([workspaceId, userId])
+  @@index([workspaceId, userId])
 }
 
 model ProjectMember {
@@ -161,7 +162,7 @@ model Project {
   workspaceId String
   tasks       Task[]
   createdById String
-  owner       Member        @relation(fields: [createdById], references: [id])
+  owner       Member        @relation(fields: [createdById], references: [id], onDelete: SetNull)
   archived    Boolean
   aiGenerated Boolean       @default(false)
   startDate   DateTime?
@@ -170,7 +171,7 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  ProjectTags    ProjectTags[]
+  projectTags    ProjectTags[]
   projectMembers ProjectMember[]
 
   @@index([id, deletedAt])
@@ -192,7 +193,7 @@ model Task {
   position     Int          @default(100)
   startDate    DateTime?
   dueDate      DateTime?
-  assignedTo   Member?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  assignedTo   Member?      @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   assignedToId String?
   project      Project      @relation(fields: [projectId], references: [id])
   projectId    String
@@ -205,15 +206,15 @@ model Task {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  Comment Comment[] @relation("TaskCommentedOn")
+  comments Comment[] @relation("TaskCommentedOn")
 
   dependencies TaskDependency[] @relation("TaskDependencyFrom")
 
   blockedBy TaskDependency[] @relation("TaskDependencyTo")
 
-  TaskTags TaskTags[]
+  taskTags TaskTags[]
 
-  Subtask Subtask[] @relation("TaskSubtasks")
+  subtasks Subtask[] @relation("TaskSubtasks")
 
   @@index([workspaceId, deletedAt])
   @@index([projectId, deletedAt])
@@ -266,7 +267,8 @@ model Comment {
   content   String
   userId    String
   taskId    String
-  user      Member?  @relation("CommentCreator", fields: [userId], references: [id])
+  userName  String
+  user      Member?  @relation("CommentCreator", fields: [userId], references: [id], onDelete: SetNull)
   task      Task?    @relation("TaskCommentedOn", fields: [taskId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
@@ -288,9 +290,9 @@ model Tags {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  TaskTags TaskTags[]
+  taskTags TaskTags[]
 
-  ProjectTags ProjectTags[]
+  projectTags ProjectTags[]
 
   @@unique([workspaceId, name], name: "workspaceId_name")
 }
@@ -332,12 +334,13 @@ model Activity {
   entityType  String?
   entityId    String?
   entityTitle String?
+  userName    String
   metadata    Json? // Extra context to render feed line
   createdAt   DateTime     @default(now())
 
   // Relations
   workspace Workspace @relation(fields: [workspaceId], references: [id])
-  member    Member    @relation(fields: [memberId], references: [id])
+  member    Member    @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId])
   @@index([memberId])

@@ -11,10 +11,20 @@ export const getMember = async ({
     userId
 }: GetMemberProps) => {
 
-    const member = await db.member.findFirst({
+    const member = await db.member.findUnique({
         where: {
-            workspaceId: workspaceId,
-            userId: userId
+            workspaceId_userId: {
+                workspaceId: workspaceId,
+                userId: userId
+            }
+        },
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                }
+            }
         }
     })
 

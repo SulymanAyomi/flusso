@@ -285,7 +285,7 @@ const app = new Hono()
                                 priority: true
                             }
                         },
-                        ProjectTags: {
+                        projectTags: {
                             select: {
                                 tag: {
                                     select: {
@@ -345,10 +345,10 @@ const app = new Hono()
                     }
 
                     // Extract tags
-                    const tags = project.ProjectTags.map(pt => pt.tag);
+                    const tags = project.projectTags.map(pt => pt.tag);
 
                     // Remove tasks from response (we only needed them for calculations)
-                    const { tasks: _, ProjectTags: __, ...projectData } = project;
+                    const { tasks: _, projectTags: __, ...projectData } = project;
 
                     return {
                         ...projectData,
@@ -441,7 +441,7 @@ const app = new Hono()
                                 user: { select: { id: true, name: true, imageUrl: true } },
                             },
                         },
-                        ProjectTags: { select: { tag: { select: { id: true, name: true } } } },
+                        projectTags: { select: { tag: { select: { id: true, name: true } } } },
                     },
                     orderBy: [{ createdAt: "desc" }], // stable for MVP
                     take: queryLimit,
@@ -525,9 +525,9 @@ const app = new Hono()
                     else if (daysUntilDue !== null && daysUntilDue <= 7 && completionPercentage < 70)
                         healthStatus = "at-risk";
 
-                    const tags = project.ProjectTags.map((pt) => pt.tag);
+                    const tags = project.projectTags.map((pt) => pt.tag);
 
-                    const { ProjectTags: _, ...projectData } = project;
+                    const { projectTags: _, ...projectData } = project;
 
                     return {
                         ...projectData,
@@ -656,6 +656,7 @@ const app = new Hono()
                                 entityType: "PROJECT",
                                 entityId: project.id,
                                 entityTitle: project.name,
+                                userName: user.name,
                                 metadata: {},
                             })
 
@@ -1530,6 +1531,8 @@ const app = new Hono()
                             entityType: "PROJECT",
                             entityId: newProject.id,
                             entityTitle: newProject.name,
+                            userName: user.name,
+
                             metadata: {
                                 "AI": true
                             },
@@ -1659,7 +1662,7 @@ const app = new Hono()
                 await logActivity(tx, {
                     workspaceId, memberId: member.id,
                     actionType: "PROJECT_EDITED", entityType: "PROJECT",
-                    entityId: project.id, entityTitle: project.name,
+                    entityId: project.id, entityTitle: project.name, userName: user.name,
                     metadata: { "oldName": existingProject.name },
                 })
 
@@ -1724,7 +1727,7 @@ const app = new Hono()
                 await logActivity(tx, {
                     workspaceId: existingProject.workspaceId, memberId: member.id,
                     actionType: "PROJECT_DELETED", entityType: "PROJECT",
-                    entityId: null, entityTitle: existingProject.name,
+                    entityId: null, entityTitle: existingProject.name, userName: user.name,
                     metadata: { "projectName": existingProject.name },
                 })
             })

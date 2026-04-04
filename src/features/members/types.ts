@@ -1,3 +1,4 @@
+import { useGetMemberResponseType } from "./api/use-get-member";
 import { useGetAllWorkspaceMemberResponseType } from "./api/use-get-members";
 import { useGetMemberProjectsResponseType } from "./api/use-get-single-project-member";
 
@@ -28,3 +29,4 @@ export type Member = {
 
 export type useGetMemberProjectsType = useGetMemberProjectsResponseType["data"]["member"]
 export type useGetAllWorkspaceMemberType = useGetAllWorkspaceMemberResponseType["data"]
+export type useGetMemberType = useGetMemberResponseType["data"]["data"]

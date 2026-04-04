@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 
 type LogActivityInput = {
+    userName: string
     workspaceId: string
     memberId: string
     actionType: 'TASK_CREATED' | 'TASK_STATUS_UPDATED' | 'TASK_EDITED' | 'TASK_ASSIGNED' | 'TASK_DELETED' | 'PROJECT_CREATED' | 'PROJECT_COMPLETED' | 'PROJECT_EDITED' | 'PROJECT_STATUS_UPDATED' | 'PROJECT_DELETED' | 'COMMENT_ADDED' | 'SUBTASK_ADDED' | 'SUBTASK_DELETED' | 'JOINED_WORKSPACE' | 'LEFT_WORKSPACE' | 'WORKSPACE_DELETED' | 'WORKSPACE_UPDATED'
@@ -27,6 +28,7 @@ export async function logActivity(
             entityId: input.entityId ?? null,
             metadata: input.metadata ?? {},
             entityTitle: input.entityTitle ?? null,
+            userName: input.userName
         },
     })
 

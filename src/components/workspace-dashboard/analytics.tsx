@@ -84,7 +84,7 @@ const Analytics = () => {
               15% since last month
             </div>
             <Link
-              href={`workspaces/${workspaceId}/projects`}
+              href={`/workspaces/${workspaceId}/projects`}
               className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
             >
               view projects
@@ -135,7 +135,7 @@ const Analytics = () => {
               {PercentShow({ data: analytics?.projectChange })}
             </div>
             <Link
-              href={`workspaces/${workspaceId}/projects`}
+              href={`/workspaces/${workspaceId}/projects`}
               className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
             >
               view projects
@@ -183,7 +183,7 @@ const Analytics = () => {
             <div className="bg-yellow-700 text-yellow-100 text-[10px] rounded-[6px] py-1.5 px-1 flex items-center">
               {PercentShow({ data: analytics?.taskChange })}
             </div>
-            <Link
+            {/* <Link
               href={`workspaces/${workspaceId}/tasks`}
               className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
             >
@@ -191,7 +191,7 @@ const Analytics = () => {
               <span>
                 <ChevronRightIcon className="size-3" />
               </span>
-            </Link>
+            </Link> */}
           </div>
         </CardFooter>
       </Card>

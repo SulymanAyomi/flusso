@@ -1,32 +1,17 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { differenceInDays, format } from "date-fns";
+import { format } from "date-fns";
 import {
-  XIcon,
-  Star,
-  MoreVerticalIcon,
   Clock,
   Loader,
   CheckCircle2Icon,
   Calendar,
   TagIcon,
   UsersIcon,
-  Plus,
-  SmileIcon,
-  ImageIcon,
-  FileIcon,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import React from "react";
-import { Button } from "react-day-picker";
-import { Task } from "../../types";
 import { Badge } from "@/components/ui/badge";
 import { GetTaskResponseType } from "../../api/use-get-task";
-import { DottedSeparator } from "@/components/dotted-separator";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import TaskActivities from "./task-activities";
 import SubTasks from "./sub-tasks";
