@@ -63,9 +63,14 @@ export const SignInCard = () => {
       router.push("/workspaces");
       queryClient.invalidateQueries({ queryKey: ["current"] });
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-    } else {
-      setError("Invalid email or password");
     }
+
+    const err = res?.error;
+    if (err === "EMAIL_NOT_VERIFIED") {
+      router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+      return;
+    }
+    setError("Invalid email or password");
     setLoading(false);
   };
   if (error) {

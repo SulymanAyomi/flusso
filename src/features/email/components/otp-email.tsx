@@ -37,10 +37,10 @@ export default function OtpMail({ code }: { code: string }) {
           }}
         >
           <Img
-            src={`${PUBLIC_APP_URL}/lolo.png`}
+            src={`${PUBLIC_APP_URL}/flusso.png`}
             width="80"
             height="60"
-            alt="Momlimited's Logo"
+            alt="Flusso's Logo"
           />
           <div style={{ padding: "20px" }}>
             <Heading style={{ fontWeight: 600, fontSize: "18px" }}>
@@ -48,8 +48,7 @@ export default function OtpMail({ code }: { code: string }) {
             </Heading>
             <Text style={{}}>
               Just one more step and you're there. Please use the code below to
-              verify your email and continue using Momlimited as a signed-in
-              user.
+              verify your email and continue using flusso as a signed-in user.
             </Text>
 
             {/* Center the button */}
@@ -77,7 +76,7 @@ export default function OtpMail({ code }: { code: string }) {
               }}
             >
               This code will only work for the next 5 minutes. If you don't want
-              to continue with Momlimited, you can safely ignore this mail.
+              to continue with flusso, you can safely ignore this mail.
             </Text>
           </div>
         </Container>

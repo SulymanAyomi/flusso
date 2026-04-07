@@ -38,7 +38,7 @@ const app = new Hono()
             const result = await db.$transaction(async (tx) => {
                 // Create user with emailVerified = null
 
-                const user = await tx.user.create({
+                await tx.user.create({
                     data: {
                         name,
                         email,
@@ -67,12 +67,13 @@ const app = new Hono()
 
             console.log(otp)
             //  send otp
-            // await sendOTPEmail({
-            //     to: email,
-            //     code: otp
-            // })
+            await sendOTPEmail({
+                to: email,
+                code: otp
+            })
             const data = {
-                vid: result.id
+                vid: result.id,
+                email
             }
             return c.json(successResponse(data, "User registered successfully"), 201);
 
@@ -165,8 +166,18 @@ const app = new Hono()
                 return c.json(errorResponse("Code invalid"), 400)
 
             }
-            await db.verificationToken.delete({ where: { email: record.email } });
-
+            await db.$transaction(async (tx) => {
+                // Create user with emailVerified = null
+                await tx.user.update({
+                    where: {
+                        email: record.email
+                    },
+                    data: {
+                        emailVerified: true,
+                    },
+                })
+                await tx.verificationToken.delete({ where: { email: record.email } });
+            })
             return c.json(successResponse("", "Code valid, proceed to login"), 200);
 
         } catch (error) {
@@ -174,13 +185,11 @@ const app = new Hono()
         }
     }
     ).get("/request-otp",
-        // zValidator("json", resetRequestSchema),
+        zValidator("query", resetRequestSchema),
         async (c) => {
-
             try {
-                // const { email } = c.req.valid("json")
-                let email = "doe@gmail.com";
-
+                const { email } = c.req.valid("query")
+                // let email = "doe@gmail.com";
                 // Check if user already exists
                 const existing = await db.user.findUnique({ where: { email } })
                 if (!existing) {
@@ -225,6 +234,53 @@ const app = new Hono()
             } catch (e) {
                 console.log(e)
                 return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }).post("/resend-otp", zValidator("json", resetRequestSchema), async (c) => {
+            try {
+                const { email } = c.req.valid("json")
+
+                // Check user exists and is not already verified
+                const user = await db.user.findUnique({ where: { email } })
+                if (!user) return c.json(errorResponse("User not found"), 404)
+                if (user.emailVerified) return c.json(errorResponse("Email already verified"), 400)
+
+                // Rate limit — check how recently the last OTP was created
+                const existing = await db.verificationToken.findUnique({ where: { email } })
+                if (existing) {
+                    const secondsSinceLast = (Date.now() - existing.createdAt.getTime()) / 1000
+                    if (secondsSinceLast < 60) {
+                        return c.json(errorResponse("Please wait before requesting another code"), 429)
+                    }
+                }
+
+                const otp = generateOTP()
+                const hashedOtp = await bcrypt.hash(otp, 10)
+
+                const vt = await db.verificationToken.upsert({
+                    where: { email },
+                    update: {
+                        otp: hashedOtp,
+                        expires: new Date(Date.now() + 10 * 60 * 1000),
+                        attempts: 0,
+                        createdAt: new Date()
+                    },
+                    create: {
+                        email,
+                        otp: hashedOtp,
+                        expires: new Date(Date.now() + 10 * 60 * 1000)
+                    }
+                })
+
+                console.log(otp)
+
+                // const { success } = await sendOTPEmail({ to: email, code: otp })
+                // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
+
+                return c.json(successResponse({ vid: vt.id }, "Verification code sent"), 200)
+
+            } catch (e) {
+                console.log(e)
+                return c.json(errorResponse("Something went wrong. Try again"), 500)
             }
         })
 

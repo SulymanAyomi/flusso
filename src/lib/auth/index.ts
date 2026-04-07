@@ -29,33 +29,36 @@ export const authOptions: NextAuthOptions =
                 password: {},
             },
             async authorize(credentials) {
-                try {
-                    // Validate input
-                    if (!credentials?.email || !credentials?.password) {
-                        throw new Error("Missing email or password")
-                    }
-                    // Look up user from the database
-                    const user = await db.user.findUnique({
-                        where: { email: credentials.email },
-                    })
-                    if (!user || !user.password) {
-                        throw new Error("Invalid email or password")
-                    }
-                    // Verify password (using bcrypt)
-                    const isValid = await bcrypt.compare(credentials.password, user.password!)
-                    if (!isValid) {
-                        throw new Error("Invalid email or password")
-                    }
-                    // If credentials are valid, return user object
-                    return {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        image: user.imageUrl ?? "",
-                    }
-                } catch (error: any) {
-                    return null
+                // Validate input
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error("Missing email or password")
                 }
+                // Look up user from the database
+                const user = await db.user.findUnique({
+                    where: { email: credentials.email },
+                })
+                if (!user || !user.password) {
+                    throw new Error("Invalid email or password")
+                }
+                // Verify password (using bcrypt)
+                const isValid = await bcrypt.compare(credentials.password, user.password!)
+                if (!isValid) {
+                    throw new Error("Invalid email or password")
+                }
+
+                // Block unverified users here
+                if (!user.emailVerified) {
+                    throw new Error("EMAIL_NOT_VERIFIED")
+                }
+
+                // If credentials are valid, return user object
+                return {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    image: user.imageUrl ?? "",
+                }
+
             },
 
         }),
@@ -85,8 +88,16 @@ export const authOptions: NextAuthOptions =
                         },
                     })
                 }
+                return true // Google users always pass through
             }
 
+            if (account?.provider === "credentials") {
+                const dbUser = await db.user.findUnique({
+                    where: { email: user.email! },
+                })
+                // Belt-and-suspenders check alongside the authorize throw
+                if (!dbUser?.emailVerified) return false
+            }
             return true
         },
 

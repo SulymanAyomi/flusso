@@ -1,10 +1,10 @@
 import { Resend } from "resend";
 import { render } from "@react-email/components";
 
-import { PUBLIC_APP_URL } from "@/config";
+import { PUBLIC_APP_URL, RESEND_API_KEY } from "@/config";
 import OtpMail from "../components/otp-email"
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(RESEND_API_KEY);
 export async function sendOTPEmail({
     to,
     code
@@ -17,17 +17,17 @@ export async function sendOTPEmail({
     )
     )
     const { data, error } = await resend.emails.send({
-        from: "MOM Bridge Limited <onboarding@resend.dev>",
+        from: "Flusso <noreply@flusso.dev>",
         to: to,
         subject: "Verification code",
         html: html
     });
     if (error) {
         console.log(error)
-        throw new Error(error.message)
-
+        return { success: false, error }  // never throw, let caller decide
     }
-    return data
+    console.log("email ran for email:", to)
+    return { success: true, data }
 }
 
 

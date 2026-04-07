@@ -28,6 +28,7 @@ import { useVerifyOtp } from "../api/use-verify-otp";
 // import { useOpenLoginModal } from "../hook/use-login";
 // import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ResendOtpButton } from "./resend-otp-button";
 
 interface OTPFormProps {
   vid: string;
@@ -36,15 +37,20 @@ export function OTPForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const vid = searchParams.get("vid");
+  const email = searchParams.get("email");
 
+  const [verId, setVerId] = useState(vid ?? "");
   const [value, setValue] = useState("");
 
   const [errors, setErrors] = useState("");
   const { mutate, isPending } = useVerifyOtp();
+  const changeVerId = (id: string) => {
+    setVerId(id);
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!vid) {
+    if (!verId) {
       setErrors("Invalid code.");
       return;
     }
@@ -52,7 +58,7 @@ export function OTPForm() {
     mutate(
       {
         json: {
-          vid,
+          vid: verId,
           otp: value,
         },
       },
@@ -66,7 +72,7 @@ export function OTPForm() {
         onError: async (error) => {
           setErrors(error.message);
         },
-      }
+      },
     );
   };
   return (
@@ -127,12 +133,18 @@ export function OTPForm() {
                       <>Verify</>
                     )}
                   </Button>
-                  <FieldDescription className="text-center">
-                    Didn&apos;t receive the code? <a href="#">Resend</a>
-                  </FieldDescription>
                 </FieldGroup>
               </FieldGroup>
             </form>
+            <div className="text-center my-3">
+              {email && (
+                <ResendOtpButton
+                  email={email}
+                  onResend={() => toast.success("Code sent!")}
+                  changeVerId={changeVerId}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

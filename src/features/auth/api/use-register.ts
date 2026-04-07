@@ -35,7 +35,7 @@ export const useRegister = () => {
                 toast.success("User registration successful")
                 queryClient.invalidateQueries({ queryKey: ["current"] })
                 queryClient.invalidateQueries({ queryKey: ["workspaces"] })
-                router.push(`/verification?vid=${data.data.vid}`)
+                router.push(`/verification?email=${data.data.email}&&vid=${data.data.vid}`)
             }
         },
         onError: async (error) => {
