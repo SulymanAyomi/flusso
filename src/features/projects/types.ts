@@ -23,7 +23,7 @@ export type ProjectType = {
     updatedAt: string;
     workspaceId: string;
     description: string | null;
-    createdById: string;
+    createdById: string | null;
     archived: boolean;
     startDate: string | null;
     endDate: string | null;
@@ -46,7 +46,7 @@ export type SingleProjectType = {
     updatedAt: string;
     workspaceId: string;
     description: string | null;
-    createdById: string;
+    createdById: string | null;
     archived: boolean;
     startDate: string | null;
     endDate: string | null;

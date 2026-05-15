@@ -1,3 +1,4 @@
+import { GetTaskResponseActivitiesType } from "./api/use-get-task-activities";
 import { useGetTasksResponseType } from "./api/use-get-tasks";
 
 export enum TaskStatusEnum {
@@ -81,3 +82,5 @@ export type EditTask = Task & {
 }
 
 export type TasksType = useGetTasksResponseType["data"]["documents"][0];
+
+export type TasksActivityType = GetTaskResponseActivitiesType["data"]

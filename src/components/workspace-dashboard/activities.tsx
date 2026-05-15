@@ -7,6 +7,7 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { format } from "date-fns";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
+import { Role } from "@/features/members/types";
 
 const Activities = () => {
   const workspaceId = useWorkspaceId();
@@ -62,18 +63,19 @@ type Activity = {
   metadata: any;
   member: {
     id: string;
+    role: Role;
     user: {
-      name: string | null;
       id: string;
+      name: string | null;
       imageUrl: string | null;
     };
-    role: any;
-  };
+  } | null;
 };
 
 const renderActivityText = (activity: Activity) => {
   const { member, actionType, entityTitle, createdAt, metadata } = activity;
 
+  if (!member) return null;
   const Bold = ({ children }: { children: React.ReactNode }) => (
     <span className="font-semibold">{children}</span>
   );
@@ -269,8 +271,8 @@ export const ActivityFeed: React.FC<Props> = ({ activities }) => {
           <div className="flex items-center justify-center">
             <MemberAvatar
               className="size-8 hover:opacity-75 transition border border-neutral-300"
-              name={activity.member.user.name!}
-              imageUrl={activity.member.user.imageUrl}
+              name={activity?.member?.user.name!}
+              imageUrl={activity?.member?.user.imageUrl}
               imgClassName="size-8"
             />
           </div>

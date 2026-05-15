@@ -9,7 +9,6 @@ import { useState } from "react";
 import { Loader2Icon } from "lucide-react";
 import { useGetMemberProjectsType } from "@/features/members/types";
 import { QuickProjectsType } from "../../types";
-import { useAssignProjectMember } from "../../api/use-aasign-project-member";
 import { useAssignMemberToProjects } from "@/features/members/api/use-assign-project-member";
 
 interface AssignProjectMemberProps {
