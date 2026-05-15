@@ -52,19 +52,23 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     try {
       setIsLoadingImg(true);
       const image = values.image instanceof File ? values.image : "";
-      const finalValues = {
+      const finalValues: {
+        name: string;
+        imageUrl: string | null;
+        imageUrlPublicId: string | null;
+      } = {
         name: values.name,
-        imageUrl: "",
-        imageUrlPublicId: "",
+        imageUrl: null,
+        imageUrlPublicId: null,
       };
       if (image) {
         const { url, publicId } = await uploadFile(image, "avatar");
         finalValues.imageUrl = url;
-        finalValues.imageUrlPublicId;
+        finalValues.imageUrlPublicId = publicId;
         setIsLoadingImg(false);
       }
       mutate(
-        { form: finalValues },
+        { json: finalValues },
         {
           onSuccess: (data) => {
             form.reset();

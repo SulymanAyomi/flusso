@@ -64,13 +64,13 @@ const app = new Hono()
         }
     )
     .post("/",
-        zValidator("form", createWorkspaceSchema1),
+        zValidator("json", createWorkspaceSchema1),
         sessionMiddleware,
         async (c) => {
             try {
                 const user = c.get("user");
 
-                const { name, imagePublicId, imageUrl } = c.req.valid("form")
+                const { name, imagePublicId, imageUrl } = c.req.valid("json")
 
                 const userId = user.id
                 const inviteCode = generateInviteCode(6)
