@@ -1,6 +1,6 @@
 "use client";
 import { useConfirm } from "@/hooks/use-confirm";
-import { LogOutIcon } from "lucide-react";
+import { ChevronRightIcon, LogOutIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import React from "react";
 
@@ -8,7 +8,7 @@ const LogoutButton = () => {
   const [ConfirmDialog, confirm] = useConfirm(
     "Sign out",
     "You will be signed out of the app",
-    "primary"
+    "destructive",
   );
   const onLogout = async () => {
     const ok = await confirm();
@@ -22,8 +22,11 @@ const LogoutButton = () => {
         onClick={onLogout}
         className="flex w-full items-center justify-between bg-blue-100 p-3 rounded-lg font-medium cursor-pointer"
       >
-        Logout
-        <LogOutIcon />
+        <div className="flex items-center gap-2">
+          <LogOutIcon />
+          Logout
+        </div>
+        <ChevronRightIcon className="size-4" />
       </button>
     </>
   );

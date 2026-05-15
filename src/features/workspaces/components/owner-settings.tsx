@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useOwner } from "@/features/members/api/use-get-owner";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import React from "react";
+import { useTransferWorkspaceModal } from "../hooks/use-transfer-workspace-modal";
 
 interface OwnerSettingsProp {
   user: {
@@ -12,8 +13,10 @@ interface OwnerSettingsProp {
     email: string | null;
     imageUrl: string | null;
   };
+  workspaceId: string;
 }
-const OwnerSettings = ({ user }: OwnerSettingsProp) => {
+const OwnerSettings = ({ user, workspaceId }: OwnerSettingsProp) => {
+  const { open } = useTransferWorkspaceModal();
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardContent className="p-7">
@@ -25,6 +28,7 @@ const OwnerSettings = ({ user }: OwnerSettingsProp) => {
               fallbackClassName="text-lg"
               name={user.name!}
               imageUrl={user.imageUrl}
+              imgClassName="size-10"
             />
             <div className="flex flex-col">
               <p className="text-sm font-medium">{user.name}</p>
@@ -33,9 +37,10 @@ const OwnerSettings = ({ user }: OwnerSettingsProp) => {
             <Badge variant="CRITICAL">Owner</Badge>
           </div>
           <Button
+            onClick={() => open(workspaceId)}
             className="mt-2 w-fit ml-auto"
             size="sm"
-            variant="primary"
+            variant="destructive"
             type="button"
             // disabled={isDeletingWorkspace}
             // onClick={handleDelete}

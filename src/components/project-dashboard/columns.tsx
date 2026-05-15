@@ -34,9 +34,10 @@ export const columns: ColumnDef<ProjectType>[] = [
       return (
         <div className="flex items-center gap-x-2 font-medium">
           <ProjectAvatar
-            className="size-6"
+            className="size-6 rounded-full"
             name={project.name}
             image={project.imageUrl ?? ""}
+            fallbackClassname=""
           />
           <Link
             href={`/workspaces/${project.workspaceId}/projects/${project.id}`}

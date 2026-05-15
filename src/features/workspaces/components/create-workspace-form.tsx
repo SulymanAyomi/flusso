@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { ImageIcon, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -30,12 +30,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { createWorkspaceSchema } from "../schemas";
 import { useCreateWorkspace } from "../api/use-create-workspace";
 import { Separator } from "@/components/ui/separator";
+import { uploadFile } from "@/lib/upload";
 
 interface CreateWorkspaceFormProps {
   onCancel?: () => void;
 }
 
 export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
+  const [isLoadingImg, setIsLoadingImg] = useState(false);
   const router = useRouter();
   const { mutate, isPending } = useCreateWorkspace();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,20 +48,34 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof createWorkspaceSchema>) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : "",
-    };
-    mutate(
-      { form: finalValues },
-      {
-        onSuccess: (data) => {
-          form.reset();
-          // router.push(`/workspaces/${data.data.id}`);
-        },
+  const onSubmit = async (values: z.infer<typeof createWorkspaceSchema>) => {
+    try {
+      setIsLoadingImg(true);
+      const image = values.image instanceof File ? values.image : "";
+      const finalValues = {
+        name: values.name,
+        imageUrl: "",
+        imageUrlPublicId: "",
+      };
+      if (image) {
+        const { url, publicId } = await uploadFile(image, "avatar");
+        finalValues.imageUrl = url;
+        finalValues.imageUrlPublicId;
+        setIsLoadingImg(false);
       }
-    );
+      mutate(
+        { form: finalValues },
+        {
+          onSuccess: (data) => {
+            form.reset();
+            // router.push(`/workspaces/${data.data.id}`);
+          },
+        },
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingImg(false);
+    }
   };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,6 +83,8 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
       form.setValue("image", file);
     }
   };
+
+  const isLoading = isPending || isLoadingImg;
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -143,7 +161,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                         {field.value ? (
                           <Button
                             type="button"
-                            disabled={isPending}
+                            disabled={isLoading}
                             variant="destructive"
                             size="xs"
                             className="w-fit mt-2"
@@ -159,7 +177,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                         ) : (
                           <Button
                             type="button"
-                            disabled={isPending}
+                            disabled={isLoading}
                             variant="teritary"
                             size="xs"
                             className="w-fit mt-2"
@@ -187,10 +205,10 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
               </Button>
               <Button
                 size="lg"
-                disabled={isPending}
+                disabled={isLoading}
                 className="disabled:opacity-50"
               >
-                {isPending ? (
+                {isLoading ? (
                   <>
                     <Loader2Icon className="mr-1 h-full animate-spin " />
                     Creating workspace

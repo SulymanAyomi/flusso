@@ -14,7 +14,7 @@ import { db } from "@/lib/db";
 import { ProjectStatus } from "../types";
 import { logActivity } from "@/lib/log-activity";
 import { MemberRole } from "@/features/members/types";
-import { ai, safetySetting, validatePromptWithAI } from "@/lib/gemini";
+import { ai, generateProjectWithAI, safetySetting, validatePromptWithAI } from "@/lib/gemini";
 import { sessionMiddleware } from "@/lib/require-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { containsMaliciousContent, sanitizePrompt } from "@/lib/validate/sanitize";
@@ -985,8 +985,8 @@ const app = new Hono()
             const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
             let aiResponse;
             try {
-                // aiResponse = await validatePromptWithAI(sanitized, controller.signal);
-                aiResponse = validationResponse.find((v) => v.User == sanitized)?.response
+                aiResponse = await validatePromptWithAI(sanitized, controller.signal);
+                // aiResponse = validationResponse.find((v) => v.User == sanitized)?.response
 
             } catch (error: any) {
                 clearTimeout(timeout);
@@ -1217,18 +1217,17 @@ const app = new Hono()
 
                 // Create abort controller for timeout
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                // const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
                 let aiResponse;
 
                 try {
                     // await sleep(45_000)
-                    // aiResponse = await generateProjectWithAI(sanitized, controller.signal);
-                    aiResponse = generateProjectResponseExample
+                    aiResponse = await generateProjectWithAI(sanitized, controller.signal);
+                    // aiResponse = generateProjectResponseExample
                 } catch (error: any) {
-                    clearTimeout(timeout);
-
-
+                    console.error('Project generation error:', error);
+                    // clearTimeout(timeout);
                     // Handle timeout
                     if (error.name === 'AbortError') {
                         return c.json(
@@ -1287,8 +1286,11 @@ const app = new Hono()
                     )
 
                 } finally {
-                    clearTimeout(timeout);
+                    // clearTimeout(timeout);
                 }
+
+                const durationt = Date.now() - startTime;
+                console.log(`[Validation] ${aiResponse ? 'Valid' : 'Invalid'} - ${durationt}ms - IP: ${ip}`);
 
                 let validatedAIResponse;
                 try {

@@ -37,6 +37,7 @@ export const CreateTaskFormWrapper = ({
   const memberOptions = members?.populateMembers.map((member) => ({
     id: member.id,
     name: member.user.name!,
+    img: member.user.imageUrl,
   }));
   const taskOptions = tasks?.documents.map((task) => ({
     id: task.id,

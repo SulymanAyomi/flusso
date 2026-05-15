@@ -101,7 +101,9 @@ export const EditWorkspaceForm = ({}) => {
             </div>
           </CardContent>
         </Card>
-        {member.isOwner && <OwnerSettings user={member.member.user} />}
+        {member.isOwner && (
+          <OwnerSettings user={member.member.user} workspaceId={workspace.id} />
+        )}
         {member.isOwner && (
           <Card className="w-full h-full border-none shadow-none">
             <CardContent className="p-7">

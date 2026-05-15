@@ -7,7 +7,7 @@ import { calculatePercentageChange, generateInviteCode } from "@/lib/utils";
 
 import { addDays, endOfDay, endOfMonth, endOfToday, endOfWeek, format, startOfDay, startOfMonth, startOfToday, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
 
-import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
+import { createWorkspaceSchema, createWorkspaceSchema1, transferWorkspaceOwnershipSchema, updateWorkspaceSchema } from "../schemas";
 import { getMember } from "@/features/members/utils";
 import { TaskPriority, TaskStatus } from "@/features/tasks/types";
 import { db } from "@/lib/db";
@@ -64,28 +64,14 @@ const app = new Hono()
         }
     )
     .post("/",
-        zValidator("form", createWorkspaceSchema),
+        zValidator("form", createWorkspaceSchema1),
         sessionMiddleware,
         async (c) => {
             try {
                 const user = c.get("user");
 
-                const { name, image } = c.req.valid("form")
-                // let uploadedImageUrl: "" | undefined
-                let imageUrl = ""
+                const { name, imagePublicId, imageUrl } = c.req.valid("form")
 
-                // if (image instanceof File) {
-                //     const file = await storage.createFile(
-                //         IMAGE_BUCKET_ID,
-                //         ID.unique(),
-                //         image
-                //     )
-                //     const arrayBuffer = await storage.getFilePreview(
-                //         IMAGE_BUCKET_ID,
-                //         file.$id
-                //     )
-                //     uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
-                // }
                 const userId = user.id
                 const inviteCode = generateInviteCode(6)
 
@@ -94,6 +80,7 @@ const app = new Hono()
                         data: {
                             name,
                             imageUrl,
+                            imageUrlPublicId: imagePublicId,
                             inviteCode,
                             ownerId: null
                         }
@@ -127,7 +114,6 @@ const app = new Hono()
         sessionMiddleware,
         async (c) => {
             try {
-
                 const user = c.get("user");
                 const { workspaceId } = c.req.param()
                 const { name, image } = c.req.valid("form")
@@ -372,6 +358,180 @@ const app = new Hono()
                 console.log(error)
                 return c.json(errorResponse("Something went wrong"), 500)
 
+            }
+        }
+    )
+    .post(
+        "/:workspaceId/transfer-ownership",
+        zValidator("json", transferWorkspaceOwnershipSchema),
+        sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId } = c.req.param()
+                const { newOwnerId } = c.req.valid("json")
+
+                const workspace = await db.workspace.findUnique({
+                    where: { id: workspaceId, deletedAt: null },
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const currentMember = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
+                    },
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                })
+
+                if (!currentMember) {
+                    return c.json(errorResponse("member not found"), 404);
+                }
+
+                if (workspace.ownerId !== currentMember?.id) {
+                    return c.json(errorResponse("Only owner can transfer ownership"), 404);
+
+                }
+
+                if (workspace.ownerId == newOwnerId) {
+                    return c.json(errorResponse("You are already the owner"), 400);
+
+                }
+
+                const newOwnerMember = await db.member.findUnique({
+                    where: {
+                        id: newOwnerId
+                    },
+                    select: {
+                        user: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                })
+
+                if (!newOwnerMember) {
+                    return c.json(errorResponse("User is not a member of this workspace"), 400);
+                }
+
+                const result = await db.$transaction(async (tx) => {
+                    // a. Update workspace ownerId
+                    await tx.workspace.update({
+                        where: { id: workspaceId },
+                        data: { ownerId: newOwnerId },
+                    });
+
+                    // b. Update new owner's role
+                    await tx.member.update({
+                        where: {
+                            id: newOwnerId,
+                            workspaceId
+                        },
+                        data: { role: "ADMIN" },
+                    });
+
+                    await logActivity(tx, {
+                        workspaceId: workspaceId,
+                        memberId: currentMember.id,
+                        actionType: "WORKSPACE_TRANSFERED",
+                        entityType: "MEMBER",
+                        entityId: null,
+                        userName: user.name,
+                        metadata: {
+                            "oldOwner": currentMember.user.name,
+                            "newOwner": newOwnerMember.user.name
+                        }
+                    })
+
+                })
+
+                return c.json(successResponse({ workspaceId: workspace.id }))
+            } catch (error) {
+                console.log(error)
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }
+    )
+    .post(
+        "/:workspaceId/leave",
+        sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+                const { workspaceId } = c.req.param()
+
+                const workspace = await db.workspace.findUnique({
+                    where: { id: workspaceId, deletedAt: null },
+                });
+
+                if (!workspace) {
+                    return c.json(errorResponse("workspace not found"), 404);
+                }
+
+                const currentMember = await db.member.findUnique({
+                    where: {
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId
+                        }
+                    },
+                    select: {
+                        id: true,
+                        user: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                })
+
+                if (!currentMember) {
+                    return c.json(errorResponse("member not found"), 404);
+                }
+
+                if (workspace.ownerId == currentMember?.id) {
+                    return c.json(errorResponse("Transfer ownership before leaving the workspace"), 400);
+                }
+
+                await db.$transaction(async (tx) => {
+                    await db.projectMember.deleteMany({
+                        where: {
+                            memberId: currentMember.id,
+                            project: { workspaceId }
+                        }
+                    })
+                    await db.member.delete({
+                        where: { id: currentMember.id, workspaceId },
+                    });
+                    await logActivity(tx, {
+                        workspaceId: workspaceId,
+                        memberId: currentMember.id,
+                        actionType: "LEFT_WORKSPACE",
+                        entityType: "MEMBER",
+                        entityId: null,
+                        userName: user.name,
+                        metadata: {
+                        }
+                    })
+                })
+
+                return c.json(successResponse({ workspaceId }))
+            } catch (error) {
+                console.log(error)
+                return c.json(errorResponse("Something went wrong"), 500)
             }
         }
     )

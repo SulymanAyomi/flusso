@@ -77,6 +77,8 @@ export const columns: ColumnDef<TasksType>[] = [
               className="size-6"
               fallbackClassName="text-xs"
               name={assignee.name!}
+              imageUrl={assignee.imageUrl}
+              imgClassName="size-6"
             />
             <p className="line-clamp-1">{assignee.name}</p>
           </div>

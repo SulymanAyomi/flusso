@@ -10,15 +10,26 @@ interface MemberDisplayProps {
     user: {
       name: string | null;
       email: string | null;
+      imageUrl: string | null;
     };
   } | null;
   className?: string;
+  imgClassName?: string;
 }
-const MemberDisplay = ({ assignedTo, className }: MemberDisplayProps) => {
+const MemberDisplay = ({
+  assignedTo,
+  className,
+  imgClassName,
+}: MemberDisplayProps) => {
   return (
     <div>
       {assignedTo ? (
-        <MemberAvatar name={assignedTo?.user.name!} className={className} />
+        <MemberAvatar
+          name={assignedTo?.user.name!}
+          className={className}
+          imgClassName={imgClassName}
+          imageUrl={assignedTo.user.imageUrl}
+        />
       ) : (
         <Avatar
           className={cn(

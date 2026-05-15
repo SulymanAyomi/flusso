@@ -40,7 +40,8 @@ const app = new Hono()
                         user: {
                             select: {
                                 name: true,
-                                email: true
+                                email: true,
+                                imageUrl: true
                             }
                         }
                     }

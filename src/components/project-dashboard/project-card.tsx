@@ -187,8 +187,8 @@ const ProjectGrid = ({ projects }: ProjectsType) => {
               <div className="flex justify-between items-center w-full mt-1.5 pl-2">
                 <div className="flex flex-row-reverse">
                   <MemberAvatar
-                    name={project.owner.user.name!}
-                    imageUrl={project.owner.user.imageUrl ?? undefined}
+                    name={project.owner?.user.name!}
+                    imageUrl={project.owner?.user.imageUrl}
                     className="size-7 hover:opacity-75 transition border border-neutral-300 ml-[-10px]"
                     fallbackClassName="bg-blue-600 text-sm font-medium text-blue-100 flex items-center justify-center"
                   />

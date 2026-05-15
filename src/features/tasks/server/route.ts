@@ -19,8 +19,6 @@ const app = new Hono()
     .delete("/:taskId", sessionMiddleware,
         async (c) => {
             try {
-
-
                 const user = c.get("user");
 
                 const { taskId } = c.req.param()
@@ -186,7 +184,8 @@ const app = new Hono()
                             user: {
                                 select: {
                                     name: true,
-                                    email: true
+                                    email: true,
+                                    imageUrl: true
                                 }
                             }
                         }
@@ -557,39 +556,90 @@ const app = new Hono()
                     workspaceId
                 } = c.req.valid("json")
 
+                const exisitingTask = await db.task.findUnique({
+                    where: {
+                        id: taskId
+                    },
+                    select: {
+                        id: true,
+                        workspaceId: true,
+                        projectId: true,
+                        blockedBy: {
+                            select: {
+                                dependsOnId: true,
+                            }
+                        }
+                    }
+
+                })
+
+                if (!exisitingTask) {
+                    return c.json({ error: "Task not found" }, 400)
+                }
+
                 const workspace = await db.workspace.findUnique({
                     where: {
-                        id: workspaceId,
+                        id: exisitingTask.workspaceId,
                         deletedAt: null,
                         members: {
                             some: {
                                 userId: user.id
                             }
                         }
-                    },
-                    include: {
-                        members: true
                     }
                 });
 
                 if (!workspace) {
-                    return c.json(errorResponse("workspace not found"), 404);
+                    return c.json(errorResponse("Task not found"), 404);
                 }
 
-                const member = workspace.members.find((member) => member.userId == user.id)
-
-                if (!member) {
-                    return c.json(errorResponse("Project not found"), 404)
-                }
-
-                const exisitingTask = await db.task.findUnique({
+                const member = await db.member.findUnique({
                     where: {
-                        id: taskId
+                        workspaceId_userId: {
+                            userId: user.id,
+                            workspaceId: exisitingTask.workspaceId
+                        }
+                    },
+                    select: {
+                        id: true
                     }
                 })
 
-                if (!exisitingTask) {
-                    return c.json({ error: "task not found" }, 400)
+                if (!member) {
+                    return c.json(errorResponse("Task not found"), 404)
+                }
+
+                const projectMember = await db.projectMember.findUnique({
+                    where: {
+                        memberId_projectId: {
+                            memberId: member.id,
+                            projectId: exisitingTask.projectId
+                        }
+                    },
+                    select: {
+                        id: true
+                    }
+                })
+
+                if (member.id !== workspace.ownerId && !projectMember) {
+                    return c.json(errorResponse("You do not have access to edit project"), 403)
+                }
+
+                const blocked = exisitingTask.blockedBy.map((b) => b.dependsOnId)
+
+                const nonCompletedDependencies = await db.task.count({
+                    where: {
+                        id: {
+                            in: blocked
+                        },
+                        status: {
+                            not: "DONE"
+                        }
+                    }
+                })
+
+                if (nonCompletedDependencies > 0) {
+                    return c.json(errorResponse("One or more dependencies not completed"), 403)
                 }
 
                 const result = await db.$transaction(async (tx) => {
@@ -637,6 +687,7 @@ const app = new Hono()
 
                 return c.json(successResponse(id), 200)
             } catch (error) {
+                console.log(error)
                 return c.json(errorResponse("Something went wrong"), 500)
 
             }
@@ -1269,7 +1320,7 @@ const app = new Hono()
                     return c.json({ error: "Unauthourize" }, 401)
                 }
                 const { tasks } = c.req.valid("json")
-
+                console.log(tasks, "bulkk")
                 const tasksToUpdate = await db.task.findMany({
                     where: {
                         id: {

@@ -13,6 +13,12 @@ export const registerSchema = z.object({
 export const resetRequestSchema = z.object({
     email: z.string().email(),
 });
+export const requestProfileChangeSchema = z.object({
+    name: z.string().min(2).max(50).optional(),
+    bio: z.string().max(160).optional(),
+    imageUrl: z.string().url().optional().nullable(),
+    imagePublicId: z.string().optional().nullable(),
+});
 
 export const resetSchema = z.object({
     token: z.string().min(2, "Minimum of 2 characters"),
@@ -23,4 +29,10 @@ export const resetSchema = z.object({
 export const verifyOTPSchema = z.object({
     vid: z.string(),
     otp: z.string().max(6).min(6),
+})
+
+export const verifyEmailChangeOTPSchema = z.object({
+    vid: z.string(),
+    otp: z.string().max(6).min(6),
+    email: z.string().email(),
 })

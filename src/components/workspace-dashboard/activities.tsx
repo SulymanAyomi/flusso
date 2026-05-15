@@ -6,6 +6,7 @@ import { useGetWorkspaceActivities } from "@/features/workspaces/api/use-get-wor
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { format } from "date-fns";
 import { snakeCaseToTitleCase } from "@/lib/utils";
+import { MemberAvatar } from "@/features/members/components/member-avatar";
 
 const Activities = () => {
   const workspaceId = useWorkspaceId();
@@ -266,11 +267,12 @@ export const ActivityFeed: React.FC<Props> = ({ activities }) => {
           className="flex justify-start items-center gap-2"
         >
           <div className="flex items-center justify-center">
-            <Avatar className="size-8 hover:opacity-75 transition border border-neutral-300">
-              <AvatarFallback className="bg-neutral-200 font-medium text-neutral-500 flex items-center justify-center">
-                A
-              </AvatarFallback>
-            </Avatar>
+            <MemberAvatar
+              className="size-8 hover:opacity-75 transition border border-neutral-300"
+              name={activity.member.user.name!}
+              imageUrl={activity.member.user.imageUrl}
+              imgClassName="size-8"
+            />
           </div>
           <div className="flex justify-between items-center flex-1">
             {renderActivityText(activity)}

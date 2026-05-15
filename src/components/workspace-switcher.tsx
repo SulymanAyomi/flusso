@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronsUpDown, GalleryVerticalEnd, PlusIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
+import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 
 export const WorkspaceSwitcher = () => {
   const router = useRouter();
@@ -65,12 +66,19 @@ export const WorkspaceSwitcher = () => {
             size="lg"
             className="bg-[#EBF2FF] focus-visible:border-[#EBF2FF] focus-visible:ring-0 transition text-black data-[state=open]:bg-brand1/30 data-[state=open]:text-black  border-[#EBF2FF]   hover:bg-[#EBF2FF/90] px-3 py-6"
           >
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <GalleryVerticalEnd className="size-4" />
-            </div>
+            {/* <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"> */}
+            {/* <GalleryVerticalEnd className="size-4" /> */}
+            {selected?.name && (
+              <ProjectAvatar
+                name={selected?.name}
+                className="size-8 rounded-full"
+                fallbackClassname="size-8 rounded-full"
+                image={selected?.imageUrl ?? ""}
+              />
+            )}
+            {/* </div> */}
             <div className="flex flex-col gap-0.5 leading-none">
               <p className="font-medium">{selected?.name}</p>
-              {/* <p className="text-xs">Amin</p> */}
             </div>
             <ChevronsUpDown className="ml-auto" />
           </Button>

@@ -26,8 +26,8 @@ interface KanbanCardProps {
 }
 
 export const KanbanCard = ({ task }: KanbanCardProps) => {
-  const totalSubtask = task.Subtask.length;
-  const isDoneSubtask = task.Subtask.filter((t) => t.isDone).length;
+  const totalSubtask = task.subtasks.length;
+  const isDoneSubtask = task.subtasks.filter((t) => t.isDone).length;
   return (
     <div className="bg-white p-2.5 mb-1.5 rounded shadow-sm space-y-3">
       <div className="flex items-start justify-between gap-x-2">
@@ -47,15 +47,10 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
       <div className="flex items-center gap-x-1.5 justify-between text-xs text-gray-700">
         <p>Assignees:</p>
         <div className="flex flex-row-reverse">
-          {/* {task.assignedTo && (
-            <MemberAvatar
-              name={task.assignedTo?.user.name!}
-              className="ml-[-12px] size-6 bg-brand1"
-            />
-          )} */}
           <MemberDisplay
             assignedTo={task.assignedTo}
             className="ml-[-12px] size-6"
+            imgClassName="size-6"
           />
         </div>
       </div>
@@ -73,7 +68,7 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
       <DottedSeparator />
       <div className="flex items-center justify-between gap-1 text-xs text-gray-700">
         <div className="flex items-center gap-1">
-          <p>{task.Comment.length}</p>
+          <p>{task.comments.length}</p>
           <MessagesSquareIcon className="size-4 " />
         </div>
         <div className="flex items-center gap-1">

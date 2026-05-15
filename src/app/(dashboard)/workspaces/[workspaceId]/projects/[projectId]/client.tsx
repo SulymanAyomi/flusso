@@ -199,7 +199,11 @@ const TeamMembers = ({ teams, id }: TeamMembersProps) => {
           >
             <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
               {team.user.imageUrl ? (
-                <Image src={team.user.imageUrl} alt={team.user.name![0]} />
+                <img
+                  src={team.user.imageUrl}
+                  alt={team.user.name![0]}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 team.user.name![0].toUpperCase()
               )}

@@ -1,10 +1,7 @@
-// import { Models } from "node-appwrite";
-
-
 export type WorkspaceType = {
     name: string;
     id: string;
-    imageUrl: string;
+    imageUrl: string | null;
     inviteCode: string;
     ownerId: string | null;
     createdAt: string | Date;

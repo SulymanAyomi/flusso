@@ -1,28 +1,17 @@
 "use client";
-import { ArrowLeftIcon, Loader2Icon, MoreVerticalIcon } from "lucide-react";
-import Link from "next/link";
+import { Loader2Icon } from "lucide-react";
 import { Fragment } from "react";
 
-import { DottedSeparator } from "@/components/dotted-separator";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetMembers } from "../api/use-get-members";
 import { MemberAvatar } from "./member-avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useDeleteMembers } from "../api/use-delete-members";
 import { useUpdateMembers } from "../api/use-update-members";
 import { MemberRole } from "../types";
 import { useConfirm } from "@/hooks/use-confirm";
 import { Badge } from "@/components/ui/badge";
-import { PageLoader } from "@/components/page-loader";
 import { PageError } from "@/components/page-error";
 import InviteCard from "./invite-card";
 import MemberAction from "./member-action";
@@ -100,6 +89,8 @@ export const MembersList = () => {
                 className="size-10"
                 fallbackClassName="text-lg"
                 name={owner?.user.name!}
+                imageUrl={owner?.user.imageUrl}
+                imgClassName="size-10"
               />
               <div className="flex flex-col">
                 <p className="text-sm font-medium">{owner?.user.name}</p>
@@ -130,6 +121,8 @@ export const MembersList = () => {
                       className="size-10"
                       fallbackClassName="text-lg"
                       name={member.user.name!}
+                      imageUrl={member.user.imageUrl}
+                      imgClassName="size-10"
                     />
                     <div className="flex flex-col">
                       <p className="text-sm font-medium">{member.user.name}</p>
@@ -159,7 +152,7 @@ export const MembersList = () => {
         </CardContent>
       </Card>
       <div className="w-full lg:max-w-xl mx-auto border rounded-md">
-        <InviteCard workspace={workspace} />
+        <InviteCard workspace={workspace} isOwner={false} />
       </div>
     </div>
   );

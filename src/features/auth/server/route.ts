@@ -1,12 +1,14 @@
 import { Hono } from "hono";
-import { deleteCookie, setCookie } from "hono/cookie"
 import { zValidator } from "@hono/zod-validator"
-import { loginSchema, registerSchema, resetRequestSchema, resetSchema, verifyOTPSchema } from "../schema";
+import { loginSchema, registerSchema, requestProfileChangeSchema, resetRequestSchema, resetSchema, verifyEmailChangeOTPSchema, verifyOTPSchema } from "../schema";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs"
 import crypto, { randomBytes } from "crypto"
 import { sendOTPEmail } from "@/features/email/resend/resend";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { sessionMiddleware } from "@/lib/require-auth";
+import cloudinary from "@/lib/clodinary";
+import { Role } from "@prisma/client";
 
 const TOKEN_EXPIRATION_HOURS = 24
 
@@ -67,10 +69,8 @@ const app = new Hono()
 
             console.log(otp)
             //  send otp
-            await sendOTPEmail({
-                to: email,
-                code: otp
-            })
+            // const { success } = await sendOTPEmail({ to: email, code: otp })
+            // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
             const data = {
                 vid: result.id,
                 email
@@ -161,6 +161,7 @@ const app = new Hono()
             }
 
             const isValid = await bcrypt.compare(otp, record.otp)
+
             if (!isValid) {
                 await db.verificationToken.update({ where: { email: record.email }, data: { attempts: { increment: 1 } } })
                 return c.json(errorResponse("Code invalid"), 400)
@@ -222,10 +223,8 @@ const app = new Hono()
 
                 console.log(otp)
                 //  send otp
-                // await sendOTPEmail({
-                //     to: email,
-                //     code: otp
-                // })
+                // const { success } = await sendOTPEmail({ to: email, code: otp })
+                // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
                 const data = {
                     vid: vt.id
                 }
@@ -235,30 +234,278 @@ const app = new Hono()
                 console.log(e)
                 return c.json(errorResponse("Something went wrong"), 500)
             }
-        }).post("/resend-otp", zValidator("json", resetRequestSchema), async (c) => {
+        }
+    ).post("/resend-otp", zValidator("json", resetRequestSchema), async (c) => {
+        try {
+            const { email } = c.req.valid("json")
+
+            // Check user exists and is not already verified
+            const user = await db.user.findUnique({ where: { email } })
+            if (!user) return c.json(errorResponse("User not found"), 404)
+            if (user.emailVerified) return c.json(errorResponse("Email already verified"), 400)
+
+            // Rate limit — check how recently the last OTP was created
+            const existing = await db.verificationToken.findUnique({ where: { email } })
+            if (existing) {
+                const secondsSinceLast = (Date.now() - existing.createdAt.getTime()) / 1000
+                if (secondsSinceLast < 60) {
+                    return c.json(errorResponse("Please wait before requesting another code"), 429)
+                }
+            }
+
+            const otp = generateOTP()
+            const hashedOtp = await bcrypt.hash(otp, 10)
+
+            const vt = await db.verificationToken.upsert({
+                where: { email },
+                update: {
+                    otp: hashedOtp,
+                    expires: new Date(Date.now() + 10 * 60 * 1000),
+                    attempts: 0,
+                    createdAt: new Date()
+                },
+                create: {
+                    email,
+                    otp: hashedOtp,
+                    expires: new Date(Date.now() + 10 * 60 * 1000)
+                }
+            })
+
+            console.log(otp)
+
+            // const { success } = await sendOTPEmail({ to: email, code: otp })
+            // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
+
+            return c.json(successResponse({ vid: vt.id }, "Verification code sent"), 200)
+
+        } catch (e) {
+            console.log(e)
+            return c.json(errorResponse("Something went wrong. Try again"), 500)
+        }
+    }
+    ).get("/profile",
+        sessionMiddleware,
+        async (c) => {
             try {
-                const { email } = c.req.valid("json")
+                const user = c.get("user");
 
-                // Check user exists and is not already verified
-                const user = await db.user.findUnique({ where: { email } })
-                if (!user) return c.json(errorResponse("User not found"), 404)
-                if (user.emailVerified) return c.json(errorResponse("Email already verified"), 400)
-
-                // Rate limit — check how recently the last OTP was created
-                const existing = await db.verificationToken.findUnique({ where: { email } })
-                if (existing) {
-                    const secondsSinceLast = (Date.now() - existing.createdAt.getTime()) / 1000
-                    if (secondsSinceLast < 60) {
-                        return c.json(errorResponse("Please wait before requesting another code"), 429)
+                const dbUser = await db.user.findUnique({
+                    where: {
+                        id: user.id
+                    },
+                    select: {
+                        name: true,
+                        imageUrl: true,
+                        email: true
                     }
+                })
+                if (!dbUser) {
+                    return c.json(errorResponse("User not found"), 404)
                 }
 
+                return c.json(successResponse({
+                    user: {
+                        name: dbUser.name,
+                        email: dbUser.email,
+                        imageUrl: dbUser.imageUrl
+                    }
+                }))
+            } catch (error) {
+                console.error("member", error)
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }
+    ).get("/profile/workspaces",
+        sessionMiddleware,
+        async (c) => {
+            try {
+                const user = c.get("user");
+
+                const members = await db.member.findMany({
+                    where: {
+                        userId: user.id
+                    },
+                    select: {
+                        id: true,
+                        workspaceId: true,
+                        role: true,
+                        joinedAt: true
+                    }
+                })
+
+                const workspaces = await db.workspace.findMany({
+                    where: {
+                        id: {
+                            in: members.map((m) => m.workspaceId)
+                        }
+                    }
+                });
+
+                const w = workspaces.map((w) => {
+                    const member = members.find((m) => m.workspaceId == w.id);
+                    return {
+                        ...w,
+                        role: member?.role ?? Role.VIEWER,
+                        isOwner: member?.id === w.ownerId,
+                        joinedAt: member?.joinedAt,
+                    }
+
+                })
+
+                // const workspacesCount = await db.workspace.count({
+                //     where: {
+                //         id: {
+                //             in: members.map((m) => m.workspaceId)
+                //         }
+                //     }
+                // });
+
+                // const workspaceOwnedCount = await db.workspace.count({
+                //     where: {
+                //         ownerId: {
+                //             in: members.map((m) => m.id)
+                //         }
+                //     }
+                // });
+
+                // const projectCreatedCount = await db.project.count({
+                //     where: {
+                //         createdById: {
+                //             in: members.map((m) => m.id)
+                //         }
+                //     }
+                // })
+
+                // const [taskAssigned, tasksCompleted, taskOverdue] = await Promise.all([
+                //     db.task.count({
+                //         where: {
+                //             assignedToId: {
+                //                 in: members.map((m) => m.id)
+
+                //             }
+                //         }
+                //     }),
+                //     db.task.count({
+                //         where: {
+                //             assignedToId: {
+                //                 in: members.map((m) => m.id)
+                //             },
+                //             status: "DONE",
+                //         }
+                //     }),
+                //     db.task.count({
+                //         where: {
+                //             assignedToId: {
+                //                 in: members.map((m) => m.id)
+                //             },
+                //             dueDate: { lt: new Date() },
+                //             NOT: { status: "DONE" },
+                //         }
+                //     })
+                // ]);
+
+                // const allActivities = await db.activity.findMany({
+                //     where: {
+                //         id: {
+                //             in: members.map((m) => m.workspaceId)
+                //         }
+                //     }
+                // })
+
+                // const activitiesCount = await db.activity.findMany({
+                //     where: {
+                //         id: {
+                //             in: members.map((m) => m.workspaceId)
+                //         }
+                //     }
+                // })
+
+                return c.json(successResponse({
+                    workspaces: w,
+                }))
+            } catch (error) {
+                console.error("user workspaces", error)
+                return c.json(errorResponse("Something went wrong"), 500)
+            }
+        }
+    )
+    .patch("/profile", zValidator("json", requestProfileChangeSchema), sessionMiddleware, async (c) => {
+        try {
+            const user = c.get("user");
+            const data = c.req.valid("json");
+
+            const me = await db.user.findUnique({
+                where: {
+                    id: user.id
+                }
+            })
+
+            const updateData: any = {};
+
+            if (data.name !== undefined) {
+                updateData.name = data.name.trim();
+            }
+
+            // if (data.bio !== undefined) {
+            //     updateData.bio = data.bio?.trim() || null;
+            // }
+
+            if (data.imageUrl !== undefined) {
+                updateData.imageUrl = data.imageUrl;
+                updateData.imageUrlPublicId = data.imagePublicId;
+            }
+
+            if (data.imageUrl === null) {
+                // User is removing avatar
+                if (me?.imageUrl && me.imageUrlPublicId) {
+                    await cloudinary.uploader.destroy(me.imageUrlPublicId);
+                }
+
+                updateData.imageUrl = null;
+                updateData.imageUrlPublicId = null;
+            }
+
+            const updatedUser = await db.user.update({
+                where: { id: user.id },
+                data: updateData,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    updatedAt: true,
+                    imageUrl: true,
+                },
+            });
+            return c.json(successResponse(updatedUser), 200)
+        } catch (error) {
+            console.error("UPDATE_PROFILE_ERROR", error);
+            return c.json(errorResponse("Failed to update profile"), 500)
+        }
+    }
+    ).post("/email/change-request",
+        zValidator("json", resetRequestSchema),
+        async (c) => {
+            try {
+                const { email } = c.req.valid("json")
+                // let email = "doe@gmail.com";
+                // Check if user already exists
+                const existing = await db.user.findUnique({ where: { email } })
+                if (existing) {
+                    return c.json(errorResponse("This email is already in use."), 401)
+                }
+
+                // Generate email verification token
+                // 1 generate OTP
                 const otp = generateOTP()
+
+                // 2 hash otp
                 const hashedOtp = await bcrypt.hash(otp, 10)
 
+                // 3 save to db
                 const vt = await db.verificationToken.upsert({
                     where: { email },
                     update: {
+                        email,
                         otp: hashedOtp,
                         expires: new Date(Date.now() + 10 * 60 * 1000),
                         attempts: 0,
@@ -272,17 +519,76 @@ const app = new Hono()
                 })
 
                 console.log(otp)
-
+                //  send otp
                 // const { success } = await sendOTPEmail({ to: email, code: otp })
                 // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
-
-                return c.json(successResponse({ vid: vt.id }, "Verification code sent"), 200)
+                const data = {
+                    vid: vt.id
+                }
+                return c.json(successResponse(data, "Otp code sent to email"), 200);
 
             } catch (e) {
                 console.log(e)
-                return c.json(errorResponse("Something went wrong. Try again"), 500)
+                return c.json(errorResponse("Something went wrong"), 500)
             }
-        })
+        }).post("/email/verify",
+            zValidator("json", verifyEmailChangeOTPSchema), sessionMiddleware,
+            async (c) => {
+                try {
+
+                    const user = c.get("user");
+
+                    const { vid, otp, email } = c.req.valid("json")
+
+                    const record = await db.verificationToken.findUnique({
+                        where: {
+                            id: vid,
+                            email: email
+                        },
+                    })
+
+                    if (!record) {
+                        return c.json(errorResponse("Code invalid"), 400)
+                    }
+
+                    if (record.expires < new Date()) {
+                        await db.verificationToken.delete({ where: { email: record.email } })
+                        return c.json(errorResponse("Code expired"), 400)
+                    }
+
+                    if (record.attempts >= 3) {
+                        await db.verificationToken.delete({ where: { email: record.email } })
+                        return c.json(errorResponse("Too many attempts"), 429)
+                    }
+
+                    const isValid = await bcrypt.compare(otp, record.otp)
+
+                    if (!isValid) {
+                        await db.verificationToken.update({ where: { email: record.email }, data: { attempts: { increment: 1 } } })
+                        return c.json(errorResponse("Code invalid"), 400)
+                    }
+                    await db.$transaction(async (tx) => {
+                        // Create user with emailVerified = null
+                        await tx.user.update({
+                            where: {
+                                email: record.email
+                            },
+                            data: {
+                                email: record.email,
+                                emailVerified: true,
+                            },
+                        })
+                        await tx.verificationToken.delete({ where: { email: record.email } });
+                    })
+
+                    // send email change mail
+                    return c.json(successResponse("", "Code valid, proceed to login"), 200);
+
+                } catch (e) {
+                    console.log(e)
+                    return c.json(errorResponse("Something went wrong"), 500)
+                }
+            })
 
 
 export default app;

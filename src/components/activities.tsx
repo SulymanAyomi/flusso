@@ -248,7 +248,9 @@ const ActivitiesRow = ({ activities }: ActivitiesProps) => {
           <div className="flex items-center justify-center">
             <MemberAvatar
               className="size-8 hover:opacity-75 transition border border-neutral-300"
-              name="Ayomi"
+              name={activity.member.user.name!}
+              imageUrl={activity.member.user.imageUrl}
+              imgClassName="size-8"
             />
           </div>
           <div className="flex justify-between items-center flex-1">

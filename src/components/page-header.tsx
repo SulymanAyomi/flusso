@@ -3,6 +3,7 @@ import { useCreateProjectModal } from "@/features/projects/hooks/use-create-proj
 import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
 import {
   ExternalLinkIcon,
+  HomeIcon,
   LinkIcon,
   PencilIcon,
   Plus,
@@ -21,11 +22,12 @@ import { id } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { GoHome } from "react-icons/go";
 interface PageHeadePrrops {
   header: string;
   subText: string;
   button: boolean;
-  buttonType?: "workspace" | "project";
+  buttonType?: "workspace" | "project" | "dashboard";
 }
 const PageHeader = ({
   header,
@@ -50,7 +52,7 @@ const PageHeader = ({
 export default PageHeader;
 
 interface PageButtonProps {
-  buttonType?: "workspace" | "project";
+  buttonType?: "workspace" | "project" | "dashboard";
 }
 const PageButton = ({ buttonType }: PageButtonProps) => {
   const router = useRouter();
@@ -91,7 +93,8 @@ const PageButton = ({ buttonType }: PageButtonProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
     );
-  } else {
+  }
+  if (buttonType == "workspace") {
     return (
       <Button
         variant="secondary"
@@ -99,6 +102,17 @@ const PageButton = ({ buttonType }: PageButtonProps) => {
         onClick={openWorkspace}
       >
         <Plus /> <span>New workspace</span>
+      </Button>
+    );
+  }
+  if (buttonType == "dashboard") {
+    return (
+      <Button
+        variant="secondary"
+        className="rounded-[12px] text-[#1546E7] font-semibold text-[12px]"
+        onClick={() => router.push("/workspaces")}
+      >
+        <GoHome /> <span>Back to dashboard</span>
       </Button>
     );
   }

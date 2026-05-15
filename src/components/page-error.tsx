@@ -35,10 +35,8 @@ export const PageError = ({
 
         <div className="flex items-center gap-2 pt-4 animate-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-backwards">
           {primaryAction && (
-            <Button
-              className="gap-2 bg-gradient-to-r from-brand1 to-brand2 hover:opacity-90 transition-opacity"
-              onClick={() => router.push(primaryAction.href)}
-            >
+            <Button className="gap-2 bg-gradient-to-r from-brand1 to-brand2 hover:opacity-90 transition-opacity">
+              <Link href={primaryAction.href}></Link>
               {primaryAction.label}
             </Button>
           )}

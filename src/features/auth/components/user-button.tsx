@@ -8,23 +8,41 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Loader2Icon, LogOut } from "lucide-react";
+import {
+  ChevronRight,
+  Loader2Icon,
+  LogOut,
+  Settings,
+  User2Icon,
+  UserX2Icon,
+} from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
+import { useGetProfile } from "../api/use-get-profile";
 
 export const UserButton = () => {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const { data, isPending } = useGetProfile();
 
-  if (!session) {
+  if (status == "loading" || isPending) {
     return (
       <div className="size-10 rounded-full flex items-center justify-center bg-neutral-200 border border-neutral-300">
         <Loader2Icon className="size-4 animate-spin text-muted-foreground" />
       </div>
     );
   }
-  const image = session?.user.image;
-  const name = session?.user.name;
-  const email = session?.user.email!;
+  if (!data) {
+    return (
+      <div className="size-10 rounded-full flex items-center justify-center bg-neutral-200 border border-neutral-300">
+        <UserX2Icon className="size-4 text-muted-foreground" />
+      </div>
+    );
+  }
+  const image = data.user.imageUrl;
+  const name = data?.user.name;
+  const email = data?.user.email!;
   const avatarFallback = name
     ? name.charAt(0).toUpperCase()
     : email.charAt(0).toUpperCase();
@@ -32,10 +50,9 @@ export const UserButton = () => {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="outline-none relative">
         {image ? (
-          <img
-            src={image}
-            className="border border-neutral-300 size-10 object-contain"
-          />
+          <div className="rounded-full size-10 overflow-hidden border">
+            <img src={image} className="w-full h-full object-cover " />
+          </div>
         ) : (
           <Avatar className="size-10 hover:opacity-75 transition border border-neutral-300">
             <AvatarFallback className="bg-neutral-200 font-medium text-neutral-500 flex items-center justify-center">
@@ -52,13 +69,12 @@ export const UserButton = () => {
       >
         <div className="flex flex-col items-center justify-center gap-2 px-2.5 py-4">
           {image ? (
-            <img
-              src={image}
-              className="border border-neutral-300 size-10 object-contain"
-            />
+            <div className="rounded-full size-10 overflow-hidden border">
+              <img src={image} className="w-full h-full object-cover " />
+            </div>
           ) : (
-            <Avatar className="size-[52px] transition border border-neutral-300">
-              <AvatarFallback className="bg-neutral-200 text-xl font-medium text-neutral-500 flex items-center justify-center">
+            <Avatar className="size-[52px] transition border border-white">
+              <AvatarFallback className="bg-brand1 text-xl font-medium text-white flex items-center justify-center">
                 {avatarFallback}
               </AvatarFallback>
             </Avatar>
@@ -68,13 +84,37 @@ export const UserButton = () => {
             <p className="text-xs text-neutral-500 ">{email}</p>
           </div>
         </div>
+        <DropdownMenuItem
+          onClick={() => router.push("/user/profile")}
+          className="h-10 flex items-center justify-between font-medium cursor-pointer px-3"
+        >
+          <div className="flex items-center gap-2">
+            <User2Icon className="size-4" />
+            My Profile
+          </div>
+          <ChevronRight className="size-4" />
+        </DropdownMenuItem>
+        <Separator className="mb-1" />
+        <DropdownMenuItem
+          onClick={() => router.push("/user/settings")}
+          className="h-10 flex items-center justify-between font-medium cursor-pointer px-3"
+        >
+          <div className="flex items-center gap-2">
+            <Settings className="size-4" />
+            Account Settings
+          </div>
+          <ChevronRight className="size-4" />
+        </DropdownMenuItem>
         <Separator className="mb-1" />
         <DropdownMenuItem
           onClick={() => signOut({ callbackUrl: "/sign-in" })}
-          className="h-10 flex items-center justify-center text-amber-700 font-medium cursor-pointer"
+          className="h-10 flex items-center justify-between text-amber-700 hover:text-amber-600 font-medium cursor-pointer px-3"
         >
-          <LogOut className="size-4" />
-          Log out
+          <div className="flex items-center gap-2">
+            <LogOut className="size-4" />
+            Log out
+          </div>
+          <ChevronRight className="size-4" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

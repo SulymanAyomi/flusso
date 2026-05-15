@@ -58,7 +58,7 @@ import {
 interface EditTaskFormProps {
   onCancel?: () => void;
   projectOptions: { id: string; name: string; imageUrl: string | null }[];
-  memberOptions: { id: string; name: string }[];
+  memberOptions: { id: string; name: string; img: string | null }[];
   initialValues: EditTask;
 }
 
@@ -346,6 +346,8 @@ export const EditTaskForm = ({
                                 <MemberAvatar
                                   className="size-6"
                                   name={member.name}
+                                  imgClassName="size-6"
+                                  imageUrl={member.img}
                                 />
                                 {member.name}
                               </div>
