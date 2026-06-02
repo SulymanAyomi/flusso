@@ -71,8 +71,8 @@ const app = new Hono()
 
             console.log(otp)
             //  send otp
-            const { success } = await sendOTPEmail({ to: email, code: otp })
-            // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
+            const { success, error } = await sendOTPEmail({ to: email, code: otp })
+            if (error) c.json(errorResponse("Failed to send code. Try again"), 500)
             const data = {
                 vid: result.id,
                 email
@@ -104,8 +104,8 @@ const app = new Hono()
         })
         const link = `${PUBLIC_APP_URL}/reset-password?token=${token}`
 
-        // TODO: Send email via your provider (e.g. Resend, Nodemailer, Mailgun)
-        const { success } = await sendPasswordRestEmail({ to: email, user: user.name, link })
+        const { success, error } = await sendPasswordRestEmail({ to: email, user: user.name, link })
+        if (error) console.log("Failed mailing code:", error)
 
         console.log(`Reset link: https://your-app.com/auth/reset-password?token=${token}`)
 
@@ -229,8 +229,8 @@ const app = new Hono()
 
                 console.log(otp)
                 //  send otp
-                // const { success } = await sendOTPEmail({ to: email, code: otp })
-                // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
+                const { success, error } = await sendOTPEmail({ to: email, code: otp })
+                if (error) console.log("Failed mailing code:", error)
                 const data = {
                     vid: vt.id
                 }
@@ -279,8 +279,8 @@ const app = new Hono()
 
             console.log(otp)
 
-            // const { success } = await sendOTPEmail({ to: email, code: otp })
-            // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
+            const { success, error } = await sendOTPEmail({ to: email, code: otp })
+            if (error) console.log("Failed mailing code:", error)
 
             return c.json(successResponse({ vid: vt.id }, "Verification code sent"), 200)
 

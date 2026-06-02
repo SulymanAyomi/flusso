@@ -52,7 +52,6 @@ export const SignInCard = () => {
       ...values,
       redirect: false,
     });
-    console.log(res);
     if (res?.ok) {
       router.push("/workspaces");
       queryClient.invalidateQueries({ queryKey: ["current"] });
