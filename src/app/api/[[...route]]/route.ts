@@ -6,7 +6,6 @@ import workspace from "@/features/workspaces/server/route"
 import members from "@/features/members/server/route"
 import projects from "@/features/projects/server/route"
 import tasks from "@/features/tasks/server/route"
-import tags from "@/features/tags/server/route"
 
 const app = new Hono().basePath("/api")
 app.use('/api/*', cors())
@@ -18,7 +17,6 @@ const routes = app
     .route("/members", members)
     .route("/projects", projects)
     .route("/tasks", tasks)
-    .route("/tags", tags)
 
 export const GET = handle(app)
 export const POST = handle(app)
