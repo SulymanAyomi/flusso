@@ -69,7 +69,7 @@ const app = new Hono()
 
             console.log(otp)
             //  send otp
-            // const { success } = await sendOTPEmail({ to: email, code: otp })
+            const { success } = await sendOTPEmail({ to: email, code: otp })
             // if (!success) return c.json(errorResponse("Failed to send code. Try again"), 500)
             const data = {
                 vid: result.id,

@@ -29,6 +29,8 @@ export const createProjectSchema = z.object({
         z.instanceof(File),
         z.string().transform((value) => value === "" ? undefined : value)
     ]).optional(),
+    imageUrl: z.string().url().optional().nullable(),
+    imagePublicId: z.string().optional().nullable(),
     workspaceId: z.string(),
     description: z.string().optional(),
     status: z.nativeEnum(ProjectStatus, { required_error: "Required" }),

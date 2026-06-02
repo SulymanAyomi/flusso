@@ -1,6 +1,13 @@
 "use client";
 import { z } from "zod";
-import { FcGoogle } from "react-icons/fc";
+import { signIn } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import Link from "next/link";
+import { useRegister } from "../api/use-register";
+import { registerSchema } from "../schema";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,9 +17,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -20,11 +24,9 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { registerSchema } from "../schema";
-import { useRegister } from "../api/use-register";
 import { FieldLabel } from "@/components/ui/field";
 import { Loader2Icon } from "lucide-react";
-import { useState } from "react";
+import { FcGoogle } from "react-icons/fc";
 
 export const SignUpCard = () => {
   const [error, setError] = useState("");
@@ -47,6 +49,10 @@ export const SignUpCard = () => {
         },
       },
     );
+  };
+
+  const loginGoogle = async () => {
+    await signIn("google");
   };
 
   return (
@@ -131,10 +137,10 @@ export const SignUpCard = () => {
         </CardContent>
         <CardContent className="flex flex-col pb-5">
           <Button
-            disabled={false}
             variant="secondary"
             size="lg"
             className="w-full"
+            onClick={() => loginGoogle()}
           >
             <FcGoogle className="mr-2 size-5" />
             Login with Google

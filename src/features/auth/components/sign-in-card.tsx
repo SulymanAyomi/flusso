@@ -1,5 +1,6 @@
 "use client";
-import { DottedSeparator } from "@/components/dotted-separator";
+import { signIn } from "next-auth/react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,21 +17,14 @@ import {
   Form,
 } from "@/components/ui/form";
 
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { z } from "zod";
 import { loginSchema } from "../schema";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,9 +67,10 @@ export const SignInCard = () => {
     setError("Invalid email or password");
     setLoading(false);
   };
-  if (error) {
-    console.log(error);
-  }
+  const loginGoogle = async () => {
+    await signIn("google");
+  };
+
   return (
     <Card className="">
       <CardHeader className="text-center">
@@ -142,7 +137,7 @@ export const SignInCard = () => {
       </CardContent>
       <CardContent className="flex flex-col gap-y-4">
         <Button
-          disabled={false}
+          onClick={() => loginGoogle()}
           variant="secondary"
           size="lg"
           className="w-full"

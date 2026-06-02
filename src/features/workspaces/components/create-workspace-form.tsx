@@ -159,7 +159,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                           type="file"
                           accept=".jpg, .png, .jpeg, .svg"
                           ref={inputRef}
-                          disabled={isPending}
+                          disabled={isLoading}
                           onChange={handleImageChange}
                         />
                         {field.value ? (

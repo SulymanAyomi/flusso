@@ -18,9 +18,6 @@ export const metadata: Metadata = {
     "project management",
     "task management",
   ],
-  icons: {
-    icon: "http://localhost:4000/favicon.ico",
-  },
 };
 
 export default function RootLayout({

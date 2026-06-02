@@ -38,8 +38,9 @@ import { useRouter } from "next/navigation";
 import { ProjectsStatusEnum } from "../types";
 import { useCreateProject } from "../api/use-create-project";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { uploadFile } from "@/lib/upload";
 
 interface CreateProjectFormProps {
   onCancel?: () => void;
@@ -48,6 +49,7 @@ interface CreateProjectFormProps {
 function CreateProject({ onCancel }: CreateProjectFormProps) {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
+  const [isLoadingImg, setIsLoadingImg] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,33 +67,51 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof createProjectSchema>) => {
-    const finalValues = {
-      ...values,
-      // image: values.image instanceof File ? values.image : "",
-      image: "",
-    };
-    mutate(
-      { json: finalValues },
-      {
-        onSuccess: () => {
-          form.reset();
-          onCancel?.();
+  const onSubmit = async (values: z.infer<typeof createProjectSchema>) => {
+    try {
+      setIsLoadingImg(true);
+      const imageFile = values.image instanceof File ? values.image : "";
+      const finalValues = {
+        ...values,
+        imageUrl: null,
+        imageUrlPublicId: null,
+      };
+      if (imageFile) {
+        const { url, publicId } = await uploadFile(imageFile, "avatar");
+        finalValues.imageUrl = url;
+        finalValues.imageUrlPublicId = publicId;
+        setIsLoadingImg(false);
+      }
+
+      const { image, ...data } = finalValues;
+
+      mutate(
+        { json: data },
+        {
+          onSuccess: () => {
+            form.reset();
+            onCancel?.();
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingImg(false);
+    }
   };
 
   const openChatPage = () => {
     router.push(`/workspaces/${workspaceId}/projects/create/AI`);
   };
 
+  const isLoading = isPending || isLoadingImg;
+
   return (
     <div className="bg-white w-full h-full  p-2.5 px-3 mb-1.5 rounded-[12px] shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-start text-sm">
           <SparklesIcon
-            className="size-[18-px] stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-2"
+            className="size-[18-px] cursor-pointer stroke-1 shrink-0 text-blue-400 hover:opacity-75 transition mr-2"
             onClick={openChatPage}
           />
           <p className="text-xl font-bold">Create Project</p>
@@ -340,13 +360,13 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                         type="file"
                         accept=".jpg, .png, .jpeg, .svg"
                         ref={inputRef}
-                        disabled={isPending}
+                        disabled={isLoading}
                         onChange={handleImageChange}
                       />
                       {field.value ? (
                         <Button
                           type="button"
-                          disabled={isPending}
+                          disabled={isLoading}
                           variant="destructive"
                           size="xs"
                           className="w-fit mt-2"
@@ -362,7 +382,7 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                       ) : (
                         <Button
                           type="button"
-                          disabled={isPending}
+                          disabled={isLoading}
                           variant="teritary"
                           size="xs"
                           className="w-fit mt-2"
@@ -381,8 +401,8 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
             <Button variant="outline" onClick={onCancel}>
               Cancle
             </Button>
-            <Button variant="primary" disabled={isPending} size={"lg"}>
-              {isPending ? (
+            <Button variant="primary" disabled={isLoading} size={"lg"}>
+              {isLoading ? (
                 <>
                   <span>
                     <Loader2Icon className="animate-spin h-full" />
