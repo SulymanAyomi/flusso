@@ -9,6 +9,7 @@ import {
   Grid2x2CheckIcon,
   HammerIcon,
   RocketIcon,
+  SettingsIcon,
   Share2Icon,
   StarIcon,
 } from "lucide-react";
@@ -69,7 +70,7 @@ const Page = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4  overflow-hidden">
           <div className="bg-white p-8 rounded-xl border shadow-sm">
             <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center mb-5">
-              <Grid2x2CheckIcon className="size-4 text-green-400" />
+              <Share2Icon className="size-4 text-purple-600" />
             </div>
             <h3 className="text-base font-medium text-ink mb-2 tracking-tight">
               Seamless Collaboration
@@ -81,7 +82,7 @@ const Page = () => {
           </div>
           <div className="bg-white p-8 rounded-xl border shadow-sm">
             <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center mb-5">
-              <Grid2x2CheckIcon className="size-4 text-green-400" />
+              <Grid2x2CheckIcon className="size-4 text-green-600" />
             </div>
             <h3 className="text-base font-medium text-ink mb-2 tracking-tight">
               All-in-One Workspace
@@ -93,7 +94,7 @@ const Page = () => {
           </div>
           <div className="bg-white p-8 rounded-xl border shadow-sm">
             <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center mb-5">
-              <Grid2x2CheckIcon className="size-4 text-green-400" />
+              <SettingsIcon className="size-4 text-yellow-600" />
             </div>
             <h3 className="text-base font-medium text-ink mb-2 tracking-tight">
               Flexible Workflows

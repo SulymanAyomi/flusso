@@ -4,11 +4,13 @@ import { loginSchema, registerSchema, requestProfileChangeSchema, resetRequestSc
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs"
 import crypto, { randomBytes } from "crypto"
-import { sendOTPEmail } from "@/features/email/resend/resend";
+import { sendOTPEmail, sendPasswordRestEmail } from "@/features/email/resend/resend";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { sessionMiddleware } from "@/lib/require-auth";
 import cloudinary from "@/lib/clodinary";
 import { Role } from "@prisma/client";
+import { PUBLIC_APP_URL } from "@/config";
+
 
 const TOKEN_EXPIRATION_HOURS = 24
 
@@ -100,8 +102,11 @@ const app = new Hono()
                 expires,
             },
         })
+        const link = `${PUBLIC_APP_URL}/reset-password?token=${token}`
 
         // TODO: Send email via your provider (e.g. Resend, Nodemailer, Mailgun)
+        const { success } = await sendPasswordRestEmail({ to: email, user: user.name, link })
+
         console.log(`Reset link: https://your-app.com/auth/reset-password?token=${token}`)
 
         return c.json({ success: true, message: "Password reset successfully" }, 200)
@@ -128,6 +133,7 @@ const app = new Hono()
                 })
 
                 await tx.passwordResetToken.delete({ where: { token } })
+                await tx.passwordResetToken.deleteMany({ where: { userId: reset.userId } })
             })
 
             return c.json(successResponse({ success: true }), 200)
