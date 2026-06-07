@@ -1,3 +1,4 @@
+import React, { useRef, useState } from "react";
 import { DottedSeparator } from "@/components/dotted-separator";
 import {
   Card,
@@ -15,11 +16,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeftIcon, ImageIcon } from "lucide-react";
-import React, { useRef } from "react";
+import { ArrowLeftIcon, ImageIcon, Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import { updateWorkspaceSchema } from "../schemas";
+import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 import { WorkspaceType } from "../types";
 import { useUpdateWorkspace } from "../api/use-update-workspace";
 import { Button } from "@/components/ui/button";
@@ -28,37 +28,59 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { uploadFile } from "@/lib/upload";
+import { FieldError } from "@/components/ui/field";
 interface SettingsWorkspaceProp {
   workspace: WorkspaceType;
   isOwner: boolean;
 }
 const SettingsWorkspace = ({ workspace, isOwner }: SettingsWorkspaceProp) => {
+  const [isLoadingImg, setIsLoadingImg] = useState(false);
   const router = useRouter();
   const { mutate, isPending } = useUpdateWorkspace();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof updateWorkspaceSchema>>({
-    resolver: zodResolver(updateWorkspaceSchema),
+  const form = useForm<z.infer<typeof createWorkspaceSchema>>({
+    resolver: zodResolver(createWorkspaceSchema),
     defaultValues: {
       ...workspace,
-      image: workspace?.imageUrl ?? "",
+      image: workspace.imageUrl ?? "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof updateWorkspaceSchema>) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : "",
-    };
-    mutate(
-      { form: finalValues, param: { workspaceId: workspace?.id! } },
-      {
-        onSuccess: () => {
-          form.reset();
+  const onSubmit = async (values: z.infer<typeof createWorkspaceSchema>) => {
+    try {
+      setIsLoadingImg(true);
+      const image = values.image instanceof File ? values.image : "";
+      console.log(image);
+
+      const finalValues: {
+        name: string;
+        imageUrl: string | null;
+        imageUrlPublicId: string | null;
+      } = {
+        name: values.name!,
+        imageUrl: workspace.imageUrl,
+        imageUrlPublicId: workspace.imageUrlPublicId,
+      };
+      if (image) {
+        const { url, publicId } = await uploadFile(image, "avatar");
+        finalValues.imageUrl = url;
+        finalValues.imageUrlPublicId = publicId;
+        setIsLoadingImg(false);
+      }
+      console.log("fffffffff");
+      mutate(
+        { json: finalValues, param: { workspaceId: workspace?.id! } },
+        {
+          onSuccess: () => {},
         },
-      },
-    );
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingImg(false);
+    }
   };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,6 +88,8 @@ const SettingsWorkspace = ({ workspace, isOwner }: SettingsWorkspaceProp) => {
       form.setValue("image", file);
     }
   };
+
+  const isLoading = isPending || isLoadingImg;
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -143,45 +167,46 @@ const SettingsWorkspace = ({ workspace, isOwner }: SettingsWorkspaceProp) => {
                           type="file"
                           accept=".jpg, .png, .jpeg, .svg"
                           ref={inputRef}
-                          disabled={isPending}
+                          disabled={isLoading}
                           onChange={handleImageChange}
                         />
-                        {field.value ? (
-                          <>
-                            {isOwner && (
-                              <Button
-                                type="button"
-                                disabled={isPending}
-                                variant="destructive"
-                                size="xs"
-                                className="w-fit mt-2"
-                                onClick={() => {
-                                  field.onChange(null);
-                                  if (inputRef.current) {
-                                    inputRef.current.value = "";
-                                  }
-                                }}
-                              >
-                                Remove image
-                              </Button>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            {isOwner && (
-                              <Button
-                                type="button"
-                                disabled={isPending}
-                                variant="teritary"
-                                size="xs"
-                                className="w-fit mt-2"
-                                onClick={() => inputRef.current?.click()}
-                              >
-                                Upload image
-                              </Button>
-                            )}
-                          </>
-                        )}
+                        <div className="flex gap-3">
+                          {isOwner && (
+                            <Button
+                              type="button"
+                              disabled={isLoading}
+                              variant="teritary"
+                              size="xs"
+                              className="w-fit mt-2"
+                              onClick={() => inputRef.current?.click()}
+                            >
+                              Upload image
+                            </Button>
+                          )}
+
+                          {field.value && (
+                            <>
+                              {isOwner && (
+                                <Button
+                                  type="button"
+                                  disabled={isLoading}
+                                  variant="destructive"
+                                  size="xs"
+                                  className="w-fit mt-2"
+                                  onClick={() => {
+                                    field.onChange(null);
+                                    if (inputRef.current) {
+                                      inputRef.current.value = "";
+                                    }
+                                  }}
+                                >
+                                  Remove image
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <FormMessage />
                       </div>
                     </div>
                   </div>
@@ -192,8 +217,15 @@ const SettingsWorkspace = ({ workspace, isOwner }: SettingsWorkspaceProp) => {
               <>
                 <Separator className="my-7" />
                 <div className="flex items-center justify-end">
-                  <Button type="submit" size="lg" disabled={isPending}>
-                    Save Changes
+                  <Button type="submit" size="lg" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2Icon className="mr-1 h-full animate-spin " />
+                        Saving
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </Button>
                 </div>
               </>

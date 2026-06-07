@@ -364,9 +364,7 @@ const app = new Hono()
                     };
                 });
 
-                return c.json(successResponse(projectsWithStats), 200, {
-                    'Cache-Control': 'private, max-age=180' // Cache for 3 minutes
-                })
+                return c.json(successResponse(projectsWithStats), 200)
 
             } catch (error) {
                 console.error("fetch all workpace projects error:", error);
@@ -554,7 +552,7 @@ const app = new Hono()
                 const user = c.get("user");
                 const { name, image, workspaceId, description,
                     startDate,
-                    endDate, status, tags } = c.req.valid("json")
+                    endDate, status, tags, imagePublicId, imageUrl } = c.req.valid("json")
 
                 const workspace = await db.workspace.findUnique({
                     where: {
@@ -587,22 +585,7 @@ const app = new Hono()
                     return c.json(errorResponse("workspace not found"), 404);
                 }
 
-                let uploadedImageUrl: string | undefined
 
-                // if (image instanceof File) {
-                //     const file = await storage.createFile(
-                //         IMAGE_BUCKET_ID,
-                //         ID.unique(),
-                //         image
-                //     )
-                //     const arrayBuffer = await storage.getFilePreview(
-                //         IMAGE_BUCKET_ID,
-                //         file.$id
-                //     )
-                //     uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
-
-                // }
-                const imageUrl = ""
                 const now = new Date()
                 const thisMonthStart = startOfMonth(now)
                 const thisMonthEnd = endOfMonth(now)
@@ -628,10 +611,11 @@ const app = new Hono()
                     )
                     const project = await tx.project.create({
                         data: {
-                            name,
-                            imageUrl,
                             workspaceId,
+                            name,
                             description,
+                            imageUrl,
+                            imageUrlPublicId: imagePublicId,
                             status: status,
                             createdById: member.id,
                             archived: false,
@@ -639,6 +623,7 @@ const app = new Hono()
                             endDate: endDate ?? thisMonthEnd,
                         }
                     })
+
                     await tx.projectTags.createMany({
                         data: tagRecords.map((tag) => ({
                             projectId: project.id,
@@ -1579,7 +1564,7 @@ const app = new Hono()
             const user = c.get("user");
 
             const { projectId } = c.req.param()
-            const { name, image, endDate, startDate, status, description, workspaceId } = c.req.valid("json")
+            const { name, imagePublicId, imageUrl, endDate, startDate, status, description, workspaceId } = c.req.valid("json")
 
             const workspace = await db.workspace.findUnique({
                 where: {
@@ -1619,46 +1604,20 @@ const app = new Hono()
                 return c.json(errorResponse("You do not have permission to carry out action."), 403)
             }
 
-            let uploadedImageUrl: string | undefined
 
-            // if (image instanceof File) {
-            //     const file = await storage.createFile(
-            //         IMAGE_BUCKET_ID,
-            //         ID.unique(),
-            //         image
-            //     )
-            //     const arrayBuffer = await storage.getFilePreview(
-            //         IMAGE_BUCKET_ID,
-            //         file.$id
-            //     )
-            //     uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
-
-            // } else {
-            //     uploadedImageUrl = image;
-            // }
-            const imageUrl = ""
-            // const project = await databases.updateDocument(
-            //     DATABASE_ID,
-            //     PROJECTS_ID,
-            //     projectId,
-            //     {
-            //         name,
-            //         imageUrl: uploadedImageUrl,
-            //     }
-            // )
             const result = await db.$transaction(async (tx) => {
                 const project = await tx.project.update({
                     where: {
                         id: projectId,
                     },
                     data: {
-
                         name,
                         imageUrl,
                         status,
                         startDate,
                         endDate,
-                        description
+                        description,
+                        imageUrlPublicId: imagePublicId,
                     }
                 })
                 await logActivity(tx, {

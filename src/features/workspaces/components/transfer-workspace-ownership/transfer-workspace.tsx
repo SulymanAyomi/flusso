@@ -116,7 +116,7 @@ export const TransferWorkspaceForm = ({
               </Select>
             </div>
             <div className="flex items-center justify-end gap-2 mt-2">
-              <Button variant="outline" onClick={onCancel}>
+              <Button variant="outline" onClick={onCancel} type="button">
                 Cancle
               </Button>
               <Button

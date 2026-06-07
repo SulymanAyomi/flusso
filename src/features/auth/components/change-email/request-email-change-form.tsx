@@ -44,7 +44,6 @@ export function RequestEmailChangeForm({
           }
         },
         onError(data) {
-          console.log("error", data);
           setErrors(data.message);
         },
       },

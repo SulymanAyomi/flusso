@@ -25,12 +25,14 @@ import MobileBackButton from "@/components/mobile-back-button";
 
 const ProfileClient = () => {
   const { data, isPending } = useGetProfile();
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const currentSrc = preview || data?.user.imageUrl;
   const { mutate, isPending: isChangePending } = useChangeProfile();
   const { open } = useChangeEmailModal();
+
   const changeProfile = ({ value }: { value: string }) => {
     mutate({
       json: {
@@ -38,6 +40,7 @@ const ProfileClient = () => {
       },
     });
   };
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -58,25 +61,6 @@ const ProfileClient = () => {
       } finally {
         setLoading(false);
       }
-    }
-  };
-  const handleRemove = async () => {
-    try {
-      setLoading(true);
-
-      await fetch("/api/users/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          avatarUrl: null,
-          avatarPublicId: null,
-        }),
-      });
-    } catch (err) {
-      console.error(err);
-      alert("Failed to remove avatar");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -310,36 +294,27 @@ function FieldRow({
           {actionName}
         </button>
       ) : (
-        <div className="flex gap-2">
-          <button
+        <div className="flex gap-4 ml-4">
+          <Button
+            type="button"
+            variant="teritary"
+            size="xs"
+            className="w-fit"
             onClick={handleClick}
-            style={{
-              fontSize: 12,
-              color: "#185FA5",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              whiteSpace: "nowrap",
-            }}
             disabled={isPending}
           >
             Save
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            style={{
-              fontSize: 12,
-              color: "red",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              whiteSpace: "nowrap",
-            }}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="xs"
+            className="w-fit"
+            onClick={handleClick}
+            disabled={isPending}
           >
             Cancle
-          </button>
+          </Button>
         </div>
       )}
     </div>

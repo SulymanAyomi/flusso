@@ -17,8 +17,8 @@ export const useUpdateWorkspace = () => {
         Error,
         RequestType
     >({
-        mutationFn: async ({ form, param }) => {
-            const response = await client.api.workspaces[":workspaceId"]["$patch"]({ form, param })
+        mutationFn: async ({ json, param }) => {
+            const response = await client.api.workspaces[":workspaceId"]["$patch"]({ json, param })
             const res = await response.json()
             if (!res.success) {
                 throw new Error(res.error)

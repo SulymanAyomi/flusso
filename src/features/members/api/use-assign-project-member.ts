@@ -32,8 +32,7 @@ export const useAssignMemberToProjects = () => {
             }
         },
         onError: (error) => {
-            console.log(error)
-            toast.error("Failed to assigned to project")
+            toast.error("Failed to assigned member to project")
         }
     })
     return mutation

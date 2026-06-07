@@ -239,15 +239,15 @@ const Analytics = () => {
               {analytics?.totalActivities} team activities this week
             </div>
             <div>
-              {/* <Link
+              <Link
                 href={`workspaces/${workspaceId}/tasks`}
                 className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
               >
-                view activities
+                View members
                 <span>
                   <ChevronRightIcon className="size-3" />
                 </span>
-              </Link> */}
+              </Link>
             </div>
           </div>
         </CardFooter>

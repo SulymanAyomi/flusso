@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowLeftIcon,
   Calendar,
@@ -44,6 +44,7 @@ import {
 import { DatePicker } from "@/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { uploadFile } from "@/lib/upload";
 
 interface EditProjectFormProps {
   onCancel?: () => void;
@@ -60,6 +61,7 @@ export const EditProjectForm = ({
   memberOptions,
 }: EditProjectFormProps) => {
   const router = useRouter();
+  const [isLoadingImg, setIsLoadingImg] = useState(false);
   const { mutate, isPending } = useUpdateProject();
   const { mutate: deleteProject, isPending: isDeletingProject } =
     useDeleteProject();
@@ -75,7 +77,8 @@ export const EditProjectForm = ({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
       ...initialValues,
-      image: initialValues.imageUrl ?? "",
+      image: initialValues.imageUrl,
+      imageUrl: initialValues.imageUrl,
       status: initialValues.status,
       tags: [],
       startDate: initialValues.startDate
@@ -89,21 +92,39 @@ export const EditProjectForm = ({
         : undefined,
     },
   });
+  const startDate = form.watch("startDate");
 
-  const onSubmit = (values: z.infer<typeof createProjectSchema>) => {
-    const finalValues = {
-      ...values,
-      image: values.image instanceof File ? values.image : "",
-    };
-    mutate(
-      { json: finalValues, param: { projectId: initialValues.id } },
-      {
-        onSuccess: () => {
-          form.reset();
-          onCancel?.();
+  const onSubmit = async (values: z.infer<typeof createProjectSchema>) => {
+    try {
+      setIsLoadingImg(true);
+      const imageFile = values.image instanceof File ? values.image : "";
+      const finalValues = {
+        ...values,
+        imageUrl: null,
+        imageUrlPublicId: null,
+      };
+      if (imageFile) {
+        const { url, publicId } = await uploadFile(imageFile, "avatar");
+        finalValues.imageUrl = url;
+        finalValues.imageUrlPublicId = publicId;
+        setIsLoadingImg(false);
+      }
+      const { image, ...data } = finalValues;
+      mutate(
+        { json: data, param: { projectId: initialValues.id } },
+        {
+          onSuccess: () => {
+            onCancel?.();
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+    } finally {
+      setIsLoadingImg(false);
+    }
+  };
+  const onError = (error: any) => {
+    console.log("form error", error);
   };
 
   const handleDelete = async () => {
@@ -128,6 +149,8 @@ export const EditProjectForm = ({
     }
   };
 
+  const isLoading = isPending || isLoadingImg;
+
   return (
     <div className="flex flex-col gap-y-4">
       <DeleteDialog />
@@ -141,7 +164,7 @@ export const EditProjectForm = ({
         <Separator className="bg-neutral-300" />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit, onError)}>
             <FormField
               control={form.control}
               name="name"
@@ -250,6 +273,7 @@ export const EditProjectForm = ({
                       <FormControl className="w-1/2">
                         <DatePicker
                           {...field}
+                          fromdate={startDate}
                           className="h-9 rounded-md gap-1"
                         />
                       </FormControl>
@@ -258,76 +282,6 @@ export const EditProjectForm = ({
                   </FormItem>
                 )}
               ></FormField>
-
-              {/* <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center w-full">
-                        <FormLabel className="flex w-[25%] gap-1">
-                          <TagIcon className="size-5 text-neutral-400" />
-                          <p>Tags</p>
-                        </FormLabel>
-                        <Select
-                          defaultValue={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <div className="flex-1 text-sm">
-                            <FormControl className="w-1/2">
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <FormMessage />
-                            <SelectContent className="">
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                Backlog
-                              </SelectItem>
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                In Progress
-                              </SelectItem>
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                In Review
-                              </SelectItem>
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                Todo
-                              </SelectItem>
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                Done
-                              </SelectItem>
-                              <SelectSeparator />
-                              <SelectItem
-                                className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                                value={ProjectsStatusEnum.ARCHIVED}
-                              >
-                                <p className="flex items-center">
-                                  <span>
-                                    <PlusIcon className="size-4 mr-1" />
-                                  </span>
-                                  Add New Tag
-                                </p>
-                              </SelectItem>
-                            </SelectContent>
-                          </div>
-                        </Select>
-                      </FormItem>
-                    )}
-                  ></FormField> */}
 
               <FormField
                 control={form.control}
@@ -419,18 +373,20 @@ export const EditProjectForm = ({
                         )}
                       </div>
                     </div>
+                    <FormMessage />
                   </div>
                 )}
               ></FormField>
             </div>
             <div className="flex items-center justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={onCancel}>
+              <Button variant="outline" onClick={onCancel} type="button">
                 Cancle
               </Button>
               <Button
                 variant="primary"
                 disabled={isPending}
                 className="min-w-[105px]"
+                type="submit"
               >
                 {isPending ? (
                   <>

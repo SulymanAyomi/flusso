@@ -64,7 +64,13 @@ import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 interface CreateTaskFormProps {
   onCancel: () => void;
-  projectOptions: { id: string; name: string; imageUrl: string | null }[];
+  projectOptions: {
+    id: string;
+    name: string;
+    imageUrl: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  }[];
   memberOptions: { id: string; name: string; img: string | null }[];
   taskOptions?: { id: string; name: string }[];
 }
@@ -88,6 +94,9 @@ export const CreateTaskForm = ({
     "review",
   ]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const project = projectOptions.find((p) => p.id == projectId);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev: string[]) => {
       return prev.includes(tag)
@@ -120,18 +129,26 @@ export const CreateTaskForm = ({
     },
   });
 
+  const startDate = form.watch("startDate");
+  const projectStartDate = project?.startDate
+    ? new Date(project?.startDate)
+    : undefined;
+  const projectEndDate = project?.endDate
+    ? new Date(project?.endDate)
+    : undefined;
+
   const onSubmit = (values: z.infer<typeof createTaskSchema>) => {
-    console.log("hello");
-    setComments(commentInput);
+    console.log("commentInput:", commentInput);
+    console.log("comment:", comment);
+    console.log("assigned:", values.assignedToId);
 
     mutate(
       {
         json: {
           ...values,
-          assignedToId:
-            values.assignedToId == "999" ? values.assignedToId : null,
           subTask,
-          comment,
+          assignedToId: values.assignedToId,
+          comment: commentInput,
           tags: selectedTags,
           dependencies: selectedTasks.map((task) => task.id),
         },
@@ -159,11 +176,9 @@ export const CreateTaskForm = ({
   const addComment = () => {
     // if (commentInput.trim() === "") {
     //   toast.error("Add a comment");
-
     //   return;
     // }
     // setComments(commentInput);
-    console.log("hello");
   };
 
   return (
@@ -331,7 +346,12 @@ export const CreateTaskForm = ({
                   </FormLabel>
                   <div className="flex-1 text-sm">
                     <FormControl className="w-1/2">
-                      <DatePicker {...field} className="h-9 rounded-md gap-1" />
+                      <DatePicker
+                        {...field}
+                        className="h-9 rounded-md gap-1"
+                        fromdate={projectStartDate}
+                        toDate={projectEndDate}
+                      />
                     </FormControl>
                     <FormMessage />
                   </div>
@@ -349,7 +369,12 @@ export const CreateTaskForm = ({
                   </FormLabel>
                   <div className="flex-1 text-sm">
                     <FormControl className="w-1/2">
-                      <DatePicker {...field} className="h-9 rounded-md gap-1" />
+                      <DatePicker
+                        {...field}
+                        className="h-9 rounded-md gap-1"
+                        fromdate={startDate}
+                        toDate={projectEndDate}
+                      />
                     </FormControl>
                     <FormMessage />
                   </div>
@@ -383,11 +408,6 @@ export const CreateTaskForm = ({
                       </FormControl>
                       <FormMessage />
                       <SelectContent>
-                        <SelectItem value={"999"}>
-                          <div className="flex items-center gap-x-2">
-                            <p>Select assignee</p>
-                          </div>
-                        </SelectItem>
                         {memberOptions.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-x-2">
@@ -576,17 +596,17 @@ export const CreateTaskForm = ({
                       Comment
                     </Button> */}
                   </div>
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <File className="size-4" />
                     <SmileIcon className="size-4" />
                     <Image className="size-4" />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
           </div>
           <div className="flex items-center justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancle
             </Button>
             <Button disabled={isPending} variant="primary" type="submit">

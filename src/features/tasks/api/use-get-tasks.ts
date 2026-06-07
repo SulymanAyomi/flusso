@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { InferResponseType } from "hono";
 import { client } from "@/lib/rpc"
-import { TaskStatus } from "../types";
+import { TaskStatus, TaskPriority } from "../types";
 
 interface useGetTasksProps {
     workspaceId: string;
     projectId?: string | null;
     search?: string | null;
     status?: TaskStatus | null;
+    priority?: TaskPriority | null;
     assignedToId?: string | null;
     dueDate?: string | null;
     toDate?: string | null;
@@ -21,6 +22,7 @@ export const useGetTasks = ({
     workspaceId,
     projectId,
     status,
+    priority,
     assignedToId,
     dueDate,
     search,
@@ -33,6 +35,7 @@ export const useGetTasks = ({
             workspaceId,
             projectId,
             status,
+            priority,
             assignedToId,
             dueDate,
             search,
@@ -46,11 +49,12 @@ export const useGetTasks = ({
                     workspaceId,
                     projectId: projectId ?? undefined,
                     status: status ?? undefined,
+                    priority: priority ?? undefined,
                     assignedToId: assignedToId ?? undefined,
                     dueDate: dueDate ?? undefined,
                     search: search ?? undefined,
                     toDate: toDate ?? undefined,
-                    fromDate: fromDate ?? undefined
+                    fromDate: fromDate ?? undefined,
                 }
             });
 

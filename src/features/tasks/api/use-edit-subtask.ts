@@ -25,7 +25,6 @@ export const useEditSubTask = () => {
         onMutate: async ({ json, param }) => {
             await queryClient.cancelQueries({ queryKey: ["sub-tasks", param.taskId] })
             const previous = queryClient.getQueryData(["sub-tasks", param.taskId])
-            console.log("previous", previous)
             queryClient.setQueryData(["sub-tasks", param.taskId], (old: ResponseType["data"][]) => old ? old.map((task) => (task.id === json.id ? { ...task, isDone: json.isDone } : task)) : [])
             return { previous }
         },

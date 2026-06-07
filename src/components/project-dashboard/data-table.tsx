@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "../ui/skeleton";
+import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -37,9 +38,11 @@ export function DataTable<TData, TValue>({
   data,
   isLoadingProjects,
 }: DataTableProps<TData, TValue>) {
+  const { open: openProject } = useCreateProjectModal();
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -72,7 +75,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -104,7 +107,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -114,9 +117,21 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center space-y-2"
+                  className="h-24 text-center space-y-2 text-sm"
                 >
-                  <p>No result</p>
+                  <p className="w-full mt-2">Your workspace is empty.</p>
+                  <p>
+                    Projects help you organize tasks, track progress and
+                    collaborate with your team. Create your first project to
+                    begin.
+                  </p>
+                  <Button
+                    onClick={openProject}
+                    className="mt-3 text-sm"
+                    size="sm"
+                  >
+                    Create Project
+                  </Button>
                 </TableCell>
               </TableRow>
             )}

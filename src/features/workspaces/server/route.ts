@@ -53,6 +53,14 @@ const app = new Hono()
                             userId: user.id
                         }
                     }
+                },
+                include: {
+                    _count: {
+                        select: {
+                            projects: true,
+                            members: true
+                        }
+                    }
                 }
             });
 
@@ -110,13 +118,13 @@ const app = new Hono()
     )
     .patch(
         "/:workspaceId",
-        zValidator("form", updateWorkspaceSchema),
+        zValidator("json", updateWorkspaceSchema),
         sessionMiddleware,
         async (c) => {
             try {
                 const user = c.get("user");
                 const { workspaceId } = c.req.param()
-                const { name, image } = c.req.valid("form")
+                const { name, imagePublicId, imageUrl } = c.req.valid("json")
 
                 const workspace = await db.workspace.findUnique({
                     where: {
@@ -146,23 +154,7 @@ const app = new Hono()
                     return c.json(errorResponse("Unauthorized"), 401)
                 }
 
-                let uploadedImageUrl: string | undefined
 
-                if (image instanceof File) {
-                    // const file = await storage.createFile(
-                    //     IMAGE_BUCKET_ID,
-                    //     ID.unique(),
-                    //     image
-                    // )
-                    // const arrayBuffer = await storage.getFilePreview(
-                    //     IMAGE_BUCKET_ID,
-                    //     file.$id
-                    // )
-                    // uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`
-
-                } else {
-                    uploadedImageUrl = image;
-                }
 
                 const result = await db.$transaction(async (tx) => {
                     const newWorkspace = await tx.workspace.update({
@@ -171,7 +163,8 @@ const app = new Hono()
                         },
                         data: {
                             name,
-                            imageUrl: uploadedImageUrl
+                            imageUrl,
+                            imageUrlPublicId: imagePublicId
                         }
                     })
 
@@ -185,7 +178,7 @@ const app = new Hono()
                         userName: user.name,
                         metadata: {
                             "oldName": workspace.name,
-                            "image": workspace.imageUrl === uploadedImageUrl
+                            "image": workspace.imageUrl === imageUrl
                         },
                     })
 

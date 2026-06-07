@@ -94,10 +94,10 @@ function ProjectsClientPage({ user }: ProjectsClientPageProps) {
             </div>
           </div>
           <div className=" hidden lg:flex gap-6">
-            <div className="border rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2">
+            {/* <div className="border rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2">
               <Archive className="size-4" />
               <span>Archived</span>
-            </div>
+            </div> */}
             <div
               className={cn(
                 "cursor-pointer border rounded-xl flex items-center gap-1 text-gray-600 text-xs p-2",

@@ -42,9 +42,6 @@ export const TaskDependenciesWrapper = ({
   if (!data) {
     return null;
   }
-  if (initDep) {
-    console.log("iniitt", initDep, data);
-  }
 
   return (
     <TaskDependency

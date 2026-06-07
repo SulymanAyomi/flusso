@@ -1,7 +1,7 @@
 "use client";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { cn } from "@/lib/utils";
-import { Folder, SettingsIcon, UsersIcon } from "lucide-react";
+import { SettingsIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,8 +37,7 @@ export const Navigation = () => {
       href: "tasks",
       icon: GoCheckCircle,
       activeIcon: GoCheckCircleFill,
-      isActive:
-        pathname.includes("/workspaces") && pathname.includes("/my-tasks"),
+      isActive: pathname.includes("/workspaces") && pathname.includes("/tasks"),
     },
     {
       label: "Members",

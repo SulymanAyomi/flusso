@@ -35,7 +35,6 @@ export const useCreateProject = () => {
             }
         },
         onError: (error) => {
-            console.log(error)
             toast.error("Failed to create project")
         }
     })

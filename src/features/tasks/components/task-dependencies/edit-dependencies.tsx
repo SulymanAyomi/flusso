@@ -40,10 +40,8 @@ export const TaskDependency = ({
         onSuccess: () => {
           onCancel?.();
         },
-        onError(error) {
-          console.log("i am error", error);
-        },
-      }
+        onError(error) {},
+      },
     );
   };
 
@@ -75,30 +73,34 @@ export const TaskDependency = ({
           {/* <DottedSeparator /> */}
           <div className="border rounded-md min-h-4">
             <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
-              {otherTasks?.map((task, index) => (
-                <div
-                  key={index}
-                  className="flex gap-2  p-3 items-center justify-start py-2 rounded-md hover:bg-primary-foreground w-full"
-                >
-                  <label
-                    key={task.id}
-                    className="flex items-center cursor-pointer gap-2 hover:bg-gray-50 px-2 py-1 rounded"
-                    onClick={() => toggleTask(task.id)}
+              {otherTasks?.length != 0 ? (
+                otherTasks?.map((task, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-2  p-3 items-center justify-start py-2 rounded-md hover:bg-primary-foreground w-full"
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedTasks.includes(task.id)}
-                      onChange={() => {}}
-                      onClick={(e) => e.stopPropagation()} // Prevent label click from triggering twice
-                    />
-                    <span>{task.name}</span>
-                  </label>
-                </div>
-              ))}
+                    <label
+                      key={task.id}
+                      className="flex items-center cursor-pointer gap-2 hover:bg-gray-50 px-2 py-1 rounded"
+                      onClick={() => toggleTask(task.id)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTasks.includes(task.id)}
+                        onChange={() => {}}
+                        onClick={(e) => e.stopPropagation()} // Prevent label click from triggering twice
+                      />
+                      <span>{task.name}</span>
+                    </label>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs"> There are no tasks in this project.</p>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancle
             </Button>
             <Button

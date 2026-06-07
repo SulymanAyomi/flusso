@@ -33,6 +33,7 @@ import { DataFilters } from "./data-filters";
 import { useProjectsFilters } from "@/features/projects/hooks/use-project-filters";
 import ProjectTags from "./project-tags";
 import { useRouter } from "next/navigation";
+import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 
 interface ProjectCardProp {
   view: string;
@@ -103,6 +104,8 @@ interface ProjectsType {
 const ProjectGrid = ({ projects }: ProjectsType) => {
   const workspaceId = useWorkspaceId();
   const router = useRouter();
+  const { open: openProject } = useCreateProjectModal();
+
   const onOpenProject = (id: string) =>
     router.push(`/workspaces/${workspaceId}/projects/${id}`);
   return (
@@ -196,8 +199,12 @@ const ProjectGrid = ({ projects }: ProjectsType) => {
                 <div className="text-[10px] flex items-center hover:underline hover:cursor-pointer">
                   <Link
                     href={`/workspaces/${workspaceId}/projects/${project.id}`}
+                    className="flex items-center"
                   >
                     view projects
+                    <span>
+                      <ChevronRightIcon className="size-3" />
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -205,11 +212,17 @@ const ProjectGrid = ({ projects }: ProjectsType) => {
           ))}
         </div>
       ) : (
-        <div className="w-full text-center">
-          <p>
-            No project. Click on the create project button to create a new
-            project.
-          </p>
+        <div className="w-full text-center h-32">
+          <div className="flex flex-col items-center justify-center h-full text-sm">
+            <p className="w-full">Your workspace is empty.</p>
+            <p>
+              Projects help you organize tasks, track progress and collaborate
+              with your team. Create your first project to begin.
+            </p>
+            <Button onClick={openProject} className="mt-3 text-sm" size="sm">
+              Create Project
+            </Button>
+          </div>
         </div>
       )}
     </div>

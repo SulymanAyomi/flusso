@@ -18,8 +18,11 @@ import { useTransferWorkspaceModal } from "@/features/workspaces/hooks/use-trans
 import { useLeaveWorkspace } from "@/features/workspaces/api/use-leave-workspace";
 import { useConfirm } from "@/hooks/use-confirm";
 import MobileBackButton from "@/components/mobile-back-button";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const WorkspacesClient = () => {
+  const router = useRouter();
   const { data, isPending } = useGetMyWorkspaces();
   const { open } = useTransferWorkspaceModal();
   const { mutate } = useLeaveWorkspace();
@@ -83,13 +86,24 @@ const WorkspacesClient = () => {
                     key={ws.id}
                   >
                     <div className="flex items-center gap-4 px-3 w-full">
-                      <ProjectAvatar
-                        name={ws.name}
-                        image=""
-                        className="size-12"
-                      />
+                      <div
+                        onClick={() => router.push(`/workspaces/${ws.id}`)}
+                        className="w-fit cursor-pointer"
+                      >
+                        <ProjectAvatar
+                          name={ws.name}
+                          image={ws.imageUrl ?? ""}
+                          className="size-12 cursor-pointer"
+                        />
+                      </div>
+
                       <div className="flex flex-col">
-                        <p className="text-sm font-medium">{ws.name}</p>
+                        <Link
+                          href={`/workspaces/${ws.id}`}
+                          className="text-sm font-medium hover:underline"
+                        >
+                          {ws.name}
+                        </Link>
                         <p className="text-xs text-muted-foreground">
                           {/* @ts-ignore */}
                           Joined {format(new Date(ws.joinedAt), "PP")}

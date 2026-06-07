@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import Link from "next/link";
 
 const ProjectsAnalytics = () => {
   const workspaceId = useWorkspaceId();
@@ -95,7 +96,7 @@ const ProjectsAnalytics = () => {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="px-3 py-0">
+        {/* <CardFooter className="px-3 py-0">
           <div className="flex flex-1  items-center justify-end">
             <div className="text-[10px] flex items-center hover:underline hover:cursor-pointer">
               view tasks
@@ -104,7 +105,7 @@ const ProjectsAnalytics = () => {
               </span>
             </div>
           </div>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
       <Card className=" bg-red-100 text-red-900 flex flex-col gap-6 py-6 shadow-sm">
         <CardHeader className="px-3 py-0">
@@ -216,7 +217,15 @@ const ProjectsAnalytics = () => {
         </CardContent>
         <CardFooter className="px-3 py-0">
           <div className="flex flex-1  items-center justify-end">
-            <div className="text-[10px] underline">view members</div>
+            <Link
+              href={`/workspaces/${workspaceId}/members`}
+              className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
+            >
+              View members
+              <span>
+                <ChevronRightIcon className="size-3" />
+              </span>
+            </Link>
           </div>
         </CardFooter>
       </Card>

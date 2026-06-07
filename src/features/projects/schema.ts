@@ -28,7 +28,7 @@ export const createProjectSchema = z.object({
     image: z.union([
         z.instanceof(File),
         z.string().transform((value) => value === "" ? undefined : value)
-    ]).optional(),
+    ]).optional().nullable(),
     imageUrl: z.string().url().optional().nullable(),
     imagePublicId: z.string().optional().nullable(),
     workspaceId: z.string(),
@@ -37,7 +37,9 @@ export const createProjectSchema = z.object({
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
     tags: z.array(z.string())
-
+}).refine((data) => data.endDate >= data.startDate, {
+    message: "End date must be after start date.",
+    path: ["endDate"]
 })
 
 export const PromptSchema = z.object({

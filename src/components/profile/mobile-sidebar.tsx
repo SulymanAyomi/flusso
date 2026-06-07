@@ -13,7 +13,6 @@ export const MobileSidebar = () => {
   const pathname = usePathname();
   const pathnameParts = pathname.split("/");
   const pathnameKey = pathnameParts[1];
-  console.log(pathnameParts, pathnameKey);
 
   useEffect(() => {
     if (pathnameKey === "user") {

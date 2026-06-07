@@ -44,9 +44,7 @@ export const AssignMember = ({
         onSuccess: () => {
           onCancel?.();
         },
-        onError(error) {
-          console.log("i am error", error);
-        },
+        onError(error) {},
       },
     );
   };
@@ -69,43 +67,47 @@ export const AssignMember = ({
           {/* <DottedSeparator /> */}
           <div className="border rounded-md min-h-4 bg-neutral-200 p-2">
             <div className="flex-1 flex gap-2 p-1 items-center justify-items-start flex-wrap">
-              {allMembers?.map((member, index) => (
-                <div
-                  onClick={() => toggleTask(member.id)}
-                  key={index}
-                  className="flex gap-2 p-3 items-center cursor-pointer justify-start py-2 rounded-md hover:bg-primary-foreground w-full bg-white"
-                >
-                  <label
-                    key={member.id}
-                    className="flex items-center cursor-pointer gap-2 hover:bg-gray-50 px-2 py-1 rounded"
+              {allMembers.length != 0 ? (
+                allMembers?.map((member, index) => (
+                  <div
+                    onClick={() => toggleTask(member.id)}
+                    key={index}
+                    className="flex gap-2 p-3 items-center cursor-pointer justify-start py-2 rounded-md hover:bg-primary-foreground w-full bg-white"
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedMembers.includes(member.id)}
-                      onChange={() => {}}
-                      onClick={(e) => e.stopPropagation()} // Prevent label click from triggering twice
+                    <label
+                      key={member.id}
+                      className="flex items-center cursor-pointer gap-2 hover:bg-gray-50 px-2 py-1 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(member.id)}
+                        onChange={() => {}}
+                        onClick={(e) => e.stopPropagation()} // Prevent label click from triggering twice
+                      />
+                    </label>
+                    <MemberAvatar
+                      className="size-10"
+                      fallbackClassName="text-lg"
+                      name={member.user.name!}
                     />
-                  </label>
-                  <MemberAvatar
-                    className="size-10"
-                    fallbackClassName="text-lg"
-                    name={member.user.name!}
-                  />
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium">{member.user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {member.user.email}
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium">{member.user.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.user.email}
+                      </p>
+                    </div>
+                    <Badge variant={member.role} className="capitalize">
+                      {member.role.toLowerCase()}
+                    </Badge>
                   </div>
-                  <Badge variant={member.role} className="capitalize">
-                    {member.role.toLowerCase()}
-                  </Badge>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-xs"> There are no member in workspace</p>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancle
             </Button>
             <Button

@@ -20,7 +20,7 @@ export type AllProjectsResponseType = InferResponseType<typeof client.api.projec
 export const useGetProjects = ({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId, limit }: useGetProjectsProps) => {
 
     const query = useQuery({
-        queryKey: ["projects", JSON.stringify({ workspaceId, status, ownerId, dueDate, archived, search, assigneeId, limit })
+        queryKey: ["projects", workspaceId, { status, ownerId, dueDate, archived, search, assigneeId, limit }
         ],
         queryFn: async () => {
             const response = await client.api.projects["$get"]({

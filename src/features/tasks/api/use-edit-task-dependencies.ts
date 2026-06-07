@@ -30,7 +30,6 @@ export const useEditTaskDependencies = () => {
         },
         // @ts-ignore
         onSuccess: ({ data }) => {
-            console.log("success", data)
             toast.success("Task dependencies updated!!")
             // queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             // queryClient.invalidateQueries({ queryKey: ["project-analytics"] })

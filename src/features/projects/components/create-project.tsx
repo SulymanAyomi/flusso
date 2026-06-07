@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar,
-  File,
   ImageIcon,
   Loader,
   Loader2Icon,
@@ -66,6 +65,8 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
       tags: [],
     },
   });
+
+  const startDate = form.watch("startDate");
 
   const onSubmit = async (values: z.infer<typeof createProjectSchema>) => {
     try {
@@ -224,84 +225,17 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                   </FormLabel>
                   <div className="flex-1 text-sm">
                     <FormControl className="w-1/2">
-                      <DatePicker {...field} className="h-9 rounded-md gap-1" />
+                      <DatePicker
+                        {...field}
+                        fromdate={startDate}
+                        className="h-9 rounded-md gap-1"
+                      />
                     </FormControl>
                     <FormMessage />
                   </div>
                 </FormItem>
               )}
             ></FormField>
-
-            {/* <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem className="flex items-center w-full">
-                  <FormLabel className="flex w-[25%] gap-1">
-                    <TagIcon className="size-5 text-neutral-400" />
-                    <p>Tags</p>
-                  </FormLabel>
-                  <Select
-                    defaultValue={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <div className="flex-1 text-sm">
-                      <FormControl className="w-1/2">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <FormMessage />
-                      <SelectContent className="">
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          Backlog
-                        </SelectItem>
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          In Progress
-                        </SelectItem>
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          In Review
-                        </SelectItem>
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          Todo
-                        </SelectItem>
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          Done
-                        </SelectItem>
-                        <SelectSeparator />
-                        <SelectItem
-                          className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
-                          value={ProjectsStatus.ARCHIVED}
-                        >
-                          <p className="flex items-center">
-                            <span>
-                              <PlusIcon className="size-4 mr-1" />
-                            </span>
-                            Add New Tag
-                          </p>
-                        </SelectItem>
-                      </SelectContent>
-                    </div>
-                  </Select>
-                </FormItem>
-              )}
-            ></FormField> */}
-
             <FormField
               control={form.control}
               name="description"
@@ -331,7 +265,6 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
                   <div className="flex items-center gap-x-5">
                     {field.value ? (
                       <div className="size-[72px] relative rounded-md overflow-hidden">
-                        {/* @ts-ignore */}
                         <Image
                           src={
                             field.value instanceof File
@@ -398,7 +331,7 @@ function CreateProject({ onCancel }: CreateProjectFormProps) {
             ></FormField>
           </div>
           <div className="flex items-center justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancle
             </Button>
             <Button variant="primary" disabled={isLoading} size={"lg"}>

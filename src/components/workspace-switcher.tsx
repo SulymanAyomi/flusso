@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { WorkspaceType } from "@/features/workspaces/types";
+import { WorkspacesType } from "@/features/workspaces/types";
 
 import {
   DropdownMenu,
@@ -21,11 +21,12 @@ import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 export const WorkspaceSwitcher = () => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
+  const [isFull, setIsFull] = useState(false);
   const { isLoading, data: workspaces } = useGetWorkspaces();
-  const [selected, setSelected] = useState<WorkspaceType>();
+  const [selected, setSelected] = useState<WorkspacesType>();
   const { open } = useCreateWorkspaceModal();
 
-  const onSelect = (workspace: WorkspaceType) => {
+  const onSelect = (workspace: WorkspacesType) => {
     setSelected(workspace);
     router.push(`/workspaces/${workspace.id}`);
   };
@@ -36,7 +37,12 @@ export const WorkspaceSwitcher = () => {
         return workspaces?.find((workspace) => workspace.id == workspaceId);
       });
     }
-  }, [workspaces]);
+    if (workspaces && workspaces?.length < 3) {
+      setIsFull(true);
+    } else {
+      setIsFull(false);
+    }
+  }, [workspaces, workspaceId]);
 
   // if (workspaces && workspaces.length > 0) {
   //   const d = workspaces.find((workspace) => workspace.id == workspaceId);
@@ -96,7 +102,7 @@ export const WorkspaceSwitcher = () => {
               {workspace.name}
             </DropdownMenuItem>
           ))}
-          {workspaces?.length && workspaces?.length < 2 && (
+          {isFull && (
             <DropdownMenuItem
               onSelect={() => open()}
               className="font-semibold py-3"

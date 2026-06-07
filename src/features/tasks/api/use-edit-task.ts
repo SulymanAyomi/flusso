@@ -17,10 +17,11 @@ export const useEditTask = () => {
     >({
         mutationFn: async ({ json, param }) => {
             const response = await client.api.tasks[":taskId"]["$patch"]({ json, param })
-            if (!response.ok) {
-                throw new Error("Failed to update task")
+            const data = await response.json()
+            if (!data.success) {
+                throw new Error(data.error)
             }
-            return await response.json()
+            return data
         },
         // @ts-ignore
         onSuccess: ({ data, }) => {
@@ -30,8 +31,8 @@ export const useEditTask = () => {
             queryClient.invalidateQueries({ queryKey: ["tasks"] })
             queryClient.invalidateQueries({ queryKey: ["task", data] })
         },
-        onError: () => {
-            toast.error("Failed to update task")
+        onError: ({ message }) => {
+            toast.error(message)
         }
     })
     return mutation

@@ -115,11 +115,20 @@ const TaskDetails = ({ task }: GetTaskResponseType["data"]) => {
           </div>
           <div className="flex-1">
             {task.assignedTo ? (
-              <MemberAvatar
-                name={task.assignedTo?.user.name!}
-                imageUrl={task.assignedTo?.user.imageUrl}
-                fallbackClassName="bg-blue-500 text-white"
-              />
+              <div className="bg-sky-100 text-sky-800 px-1 pr-1.5 py-1 flex items-center justify-center rounded-xl text-xs font-semibold w-fit">
+                <div className="flex items-center justify-center rounded-full bg-red-50 p-1 size-5 mr-1">
+                  {task.assignedTo?.user.imageUrl ? (
+                    <img
+                      src={task.assignedTo?.user.imageUrl}
+                      alt={task.assignedTo?.user.name![0]}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    task.assignedTo?.user.name![0].toUpperCase()
+                  )}
+                </div>
+                <p>{task.assignedTo?.user.name}</p>
+              </div>
             ) : (
               "unassigned"
             )}

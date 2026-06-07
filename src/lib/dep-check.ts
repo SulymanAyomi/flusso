@@ -18,7 +18,6 @@ export async function hasCircularDependency(taskId: string, dependencies: string
         if (!task) return false
 
         for (const dep of task.dependencies) {
-            console.log(dep, taskId)
             if (dep.dependsOnId === taskId) return true
             if (await dfs(dep.dependsOnId)) return true
         }

@@ -5,7 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 
 import { getMember } from "@/features/members/utils";
 import { changeSubTaskSchema, createCommentsSchema, createSubTaskSchema, createTaskDependenciesSchema, createTaskSchema } from "../schema";
-import { Task, TaskStatus } from "../types";
+import { Task, TaskPriority, TaskStatus } from "../types";
 import { ProjectType } from "@/features/projects/types";
 import { db } from "@/lib/db";
 import { endOfMonth, startOfMonth } from "date-fns";
@@ -92,6 +92,7 @@ const app = new Hono()
                 projectId: z.string().nullish(),
                 assignedToId: z.string().nullish(),
                 status: z.nativeEnum(TaskStatus).nullish(),
+                priority: z.nativeEnum(TaskPriority).nullish(),
                 search: z.string().nullish(),
                 dueDate: z.string().nullish(),
                 toDate: z.string().nullish(),
@@ -105,6 +106,7 @@ const app = new Hono()
                 projectId,
                 assignedToId,
                 status,
+                priority,
                 search,
                 dueDate,
                 toDate,
@@ -155,6 +157,12 @@ const app = new Hono()
             if (status) {
                 query.status = {
                     equals: status
+                }
+            }
+
+            if (priority) {
+                query.priority = {
+                    equals: priority
                 }
             }
 
@@ -389,13 +397,6 @@ const app = new Hono()
                     dependencies
                 } = c.req.valid("json")
 
-                // const member = await getMember({
-                //     workspaceId,
-                //     userId: user.id
-                // })
-                // if (!member) {
-                //     c.json({ error: "Unauthorized" }, 401)
-                // }
 
                 const workspace = await db.workspace.findUnique({
                     where: {
@@ -553,12 +554,14 @@ const app = new Hono()
                     dueDate,
                     assignedToId,
                     dependencies,
-                    workspaceId
+                    workspaceId,
+                    priority
                 } = c.req.valid("json")
 
                 const exisitingTask = await db.task.findUnique({
                     where: {
-                        id: taskId
+                        id: taskId,
+                        workspaceId
                     },
                     select: {
                         id: true,
@@ -574,7 +577,7 @@ const app = new Hono()
                 })
 
                 if (!exisitingTask) {
-                    return c.json({ error: "Task not found" }, 400)
+                    return c.json(errorResponse("Task not found"), 400)
                 }
 
                 const workspace = await db.workspace.findUnique({
@@ -638,8 +641,8 @@ const app = new Hono()
                     }
                 })
 
-                if (nonCompletedDependencies > 0) {
-                    return c.json(errorResponse("One or more dependencies not completed"), 403)
+                if (nonCompletedDependencies > 0 && status == "DONE") {
+                    return c.json(errorResponse("One or more dependencies not completed"), 400)
                 }
 
                 const result = await db.$transaction(async (tx) => {
@@ -654,6 +657,7 @@ const app = new Hono()
                             projectId,
                             dueDate,
                             assignedToId,
+                            priority
                         }
                     })
                     if (dependencies && dependencies?.length > 0) {
@@ -688,8 +692,7 @@ const app = new Hono()
                 return c.json(successResponse(id), 200)
             } catch (error) {
                 console.log(error)
-                return c.json(errorResponse("Something went wrong"), 500)
-
+                return c.json(errorResponse("Failed to update task"), 500)
             }
         }
     )

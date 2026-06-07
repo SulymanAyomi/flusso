@@ -32,19 +32,19 @@ export const columns: ColumnDef<ProjectType>[] = [
     cell: ({ row }) => {
       const project = row.original;
       return (
-        <div className="flex items-center gap-x-2 font-medium">
-          <ProjectAvatar
-            className="size-6 rounded-full"
-            name={project.name}
-            image={project.imageUrl ?? ""}
-            fallbackClassname=""
-          />
-          <Link
-            href={`/workspaces/${project.workspaceId}/projects/${project.id}`}
-          >
+        <Link
+          href={`/workspaces/${project.workspaceId}/projects/${project.id}`}
+        >
+          <div className="flex items-center gap-x-2 font-medium">
+            <ProjectAvatar
+              className="size-6 rounded-full"
+              name={project.name}
+              image={project.imageUrl ?? ""}
+              fallbackClassname=""
+            />
             <p className="line-clamp-1">{project.name}</p>
-          </Link>
-        </div>
+          </div>
+        </Link>
       );
     },
   },

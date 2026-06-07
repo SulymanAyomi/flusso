@@ -26,6 +26,7 @@ export const useChangeProfile = () => {
             if (data.success) {
                 router.refresh()
                 toast.success("Profile updated successfully")
+                queryClient.invalidateQueries({ queryKey: ["profile"] })
                 queryClient.invalidateQueries({ queryKey: ["workspaces"] })
             }
         },

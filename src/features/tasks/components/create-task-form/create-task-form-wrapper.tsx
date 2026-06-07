@@ -32,6 +32,8 @@ export const CreateTaskFormWrapper = ({
     id: project.id,
     name: project.name,
     imageUrl: project.imageUrl,
+    startDate: project.startDate,
+    endDate: project.endDate,
   }));
 
   const memberOptions = members?.populateMembers.map((member) => ({

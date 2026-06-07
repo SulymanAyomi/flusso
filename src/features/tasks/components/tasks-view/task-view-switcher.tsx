@@ -33,7 +33,7 @@ interface TaskViewSwitcherProps {
 export const TaskViewSwitcher = ({
   hideProjectFilter,
 }: TaskViewSwitcherProps) => {
-  const [{ assignedToId, projectId, dueDate, status, search }] =
+  const [{ assignedToId, projectId, dueDate, status, priority, search }] =
     useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
     defaultValue: "table",
@@ -46,6 +46,7 @@ export const TaskViewSwitcher = ({
     workspaceId,
     assignedToId,
     status,
+    priority,
     projectId: paramProjectId || projectId,
     dueDate,
     search,

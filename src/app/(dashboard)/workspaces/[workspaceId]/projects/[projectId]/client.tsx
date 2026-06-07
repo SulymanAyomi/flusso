@@ -69,6 +69,15 @@ export const ProjectIdClient = () => {
   // }
   const openEdit = () => open(project.id);
 
+  const dayDifference = (endDate: string | null) => {
+    if (endDate) {
+      const diff = differenceInDays(new Date(endDate), today);
+      if (diff > 0) return `${diff} day(s) more`;
+      if (diff == 0) return "due today";
+      if (diff < 0) return `${Math.abs(diff)} day(s) overdue`;
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -138,8 +147,7 @@ export const ProjectIdClient = () => {
                 <p>
                   {format(new Date(project.startDate!), "MMM d, yyyy")} -{" "}
                   {format(new Date(project.endDate!), "MMM d, yyyy")} (
-                  {differenceInDays(new Date(project.endDate!), today)} day(s)
-                  more)
+                  {dayDifference(project.endDate)})
                 </p>
               </div>
             </div>

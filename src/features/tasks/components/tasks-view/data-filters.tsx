@@ -8,8 +8,14 @@ import {
 } from "@/components/ui/select";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { FolderIcon, ListChecksIcon, SearchIcon, UserIcon } from "lucide-react";
-import { TaskStatus } from "../../types";
+import {
+  CheckCircle2Icon,
+  FolderIcon,
+  ListChecksIcon,
+  SearchIcon,
+  UserIcon,
+} from "lucide-react";
+import { TaskStatus, TaskPriority } from "../../types";
 import { useTaskFilters } from "../../hooks/use-task-filters";
 import { DatePicker } from "@/components/date-picker";
 import { Input } from "@/components/ui/input";
@@ -41,11 +47,14 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
     name: member.user.name,
   }));
 
-  const [{ status, assignedToId, projectId, dueDate }, setFilters] =
+  const [{ status, priority, assignedToId, projectId, dueDate }, setFilters] =
     useTaskFilters();
 
   const onStatusChange = (value: string) => {
     setFilters({ status: value === "all" ? null : (value as TaskStatus) });
+  };
+  const onPriorityChange = (value: string) => {
+    setFilters({ priority: value === "all" ? null : (value as TaskPriority) });
   };
   const onAssigneeChange = (value: string) => {
     setFilters({ assignedToId: value === "all" ? null : (value as string) });
@@ -96,6 +105,37 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
 
             <SelectItem value={TaskStatus.DONE}>
               {snakeCaseToTitleCase(TaskStatus.DONE)}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          defaultValue={priority ?? undefined}
+          onValueChange={(value) => onPriorityChange(value)}
+        >
+          <SelectTrigger className="w-full lg:w-auto h-8">
+            <div className="flex items-center pr-2">
+              <CheckCircle2Icon className="size-4 mr-2" />
+              <SelectValue placeholder="All priorities" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All priority</SelectItem>
+            <SelectSeparator />
+
+            <SelectItem value={TaskPriority.LOW}>
+              {snakeCaseToTitleCase(TaskPriority.LOW)}
+            </SelectItem>
+
+            <SelectItem value={TaskPriority.MEDIUM}>
+              {snakeCaseToTitleCase(TaskPriority.MEDIUM)}
+            </SelectItem>
+
+            <SelectItem value={TaskPriority.HIGH}>
+              {snakeCaseToTitleCase(TaskPriority.HIGH)}
+            </SelectItem>
+
+            <SelectItem value={TaskPriority.CRITICAL}>
+              {snakeCaseToTitleCase(TaskPriority.CRITICAL)}
             </SelectItem>
           </SelectContent>
         </Select>

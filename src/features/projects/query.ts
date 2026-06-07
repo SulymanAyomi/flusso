@@ -35,7 +35,6 @@ export const getProject = async ({ projectId }: GetProjectProps) => {
         return project
 
     } catch (error) {
-        console.log(error);
         // throw new Error(error.message)
     }
 }
@@ -73,7 +72,6 @@ export const getProjectChats = async ({ projectId }: GetProjectProps) => {
         // return chat.documents[0] as Chat
 
     } catch (error) {
-        console.log(error);
 
         return null
     }

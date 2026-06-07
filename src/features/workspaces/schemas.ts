@@ -5,7 +5,7 @@ export const createWorkspaceSchema = z.object({
     image: z.union([
         z.instanceof(File),
         z.string().transform((value) => value === "" ? undefined : value)
-    ]).optional(),
+    ]).optional().nullable(),
 })
 
 export const createWorkspaceSchema1 = z.object({
@@ -15,11 +15,9 @@ export const createWorkspaceSchema1 = z.object({
 })
 
 export const updateWorkspaceSchema = z.object({
-    name: z.string().trim().min(1, "Must be 1 or more characters").optional(),
-    image: z.union([
-        z.instanceof(File),
-        z.string().transform((value) => value === "" ? undefined : value)
-    ]).optional(),
+    name: z.string().trim().min(1, "Must be 1 or more characters"),
+    imageUrl: z.string().url().optional().nullable(),
+    imagePublicId: z.string().optional().nullable(),
 })
 
 export const transferWorkspaceOwnershipSchema = z.object({

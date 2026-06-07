@@ -102,11 +102,11 @@ const TaskComments = ({ taskId }: TaskCommentsProps) => {
                           {isPending ? "Saving..." : "Comment"}
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <FileIcon className="size-4" />
                         <SmileIcon className="size-4" />
                         <ImageIcon className="size-4" />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </FormItem>

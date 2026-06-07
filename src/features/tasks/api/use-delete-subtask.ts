@@ -25,7 +25,6 @@ export const useDeleteSubTask = () => {
         onMutate: async ({ param }) => {
             await queryClient.cancelQueries({ queryKey: ["sub-tasks", param.taskId] })
             const previous = queryClient.getQueryData(["sub-tasks", param.taskId])
-            console.log("previous", previous)
             queryClient.setQueryData(["sub-tasks", param.taskId], (old: ResponseType["data"][]) => old ? old.filter((task) => (task.id !== param.taskId)) : [])
             return { previous }
         },
