@@ -9,6 +9,7 @@ import {
   CheckCircle2Icon,
   Clock,
   File,
+  FolderIcon,
   Image,
   LinkIcon,
   Loader,
@@ -61,6 +62,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 
 interface CreateTaskFormProps {
   onCancel: () => void;
@@ -73,6 +75,7 @@ interface CreateTaskFormProps {
   }[];
   memberOptions: { id: string; name: string; img: string | null }[];
   taskOptions?: { id: string; name: string }[];
+  currentUser: string | undefined;
 }
 
 export const CreateTaskForm = ({
@@ -80,6 +83,7 @@ export const CreateTaskForm = ({
   projectOptions,
   memberOptions,
   taskOptions,
+  currentUser,
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const projectId = useProjectId();
@@ -94,8 +98,6 @@ export const CreateTaskForm = ({
     "review",
   ]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  const project = projectOptions.find((p) => p.id == projectId);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev: string[]) => {
@@ -126,9 +128,12 @@ export const CreateTaskForm = ({
       tags: [],
       subTask: [],
       dependencies: [],
+      assignedToId: currentUser,
     },
   });
 
+  const selectedProjectId = form.watch("projectId");
+  const project = projectOptions.find((p) => p.id == selectedProjectId);
   const startDate = form.watch("startDate");
   const projectStartDate = project?.startDate
     ? new Date(project?.startDate)
@@ -214,6 +219,56 @@ export const CreateTaskForm = ({
           ></FormField>
 
           <div className="flex flex-col gap-4 text-black text-xs pt-2">
+            {!projectId && (
+              <FormField
+                control={form.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem className="flex items-center w-full space-y-0">
+                    <FormLabel className="flex items-center text-black  w-[25%] gap-1">
+                      <FolderIcon className="size-5 text-neutral-700" />
+                      <p>Project</p>
+                    </FormLabel>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <div className="flex-1 text-sm">
+                        <FormControl className="w-1/2">
+                          <SelectTrigger
+                            className={cn(
+                              field.value == undefined
+                                ? "text-neutral-400"
+                                : "text-black",
+                            )}
+                          >
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <FormMessage />
+                        <SelectContent className="">
+                          {projectOptions.map((p) => (
+                            <SelectItem
+                              className="hover:bg-blue-100 p-1 cursor-pointer border-blue-100"
+                              value={p.id}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <ProjectAvatar
+                                  name={p.name}
+                                  className=""
+                                  image={p.imageUrl ?? undefined}
+                                />
+                                {p.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </div>
+                    </Select>
+                  </FormItem>
+                )}
+              ></FormField>
+            )}
             <FormField
               control={form.control}
               name="status"

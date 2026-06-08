@@ -30,12 +30,16 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   hideproject?: boolean;
+  emptyState: string;
+  emptyState2: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   hideproject,
+  emptyState,
+  emptyState2,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -117,10 +121,8 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <p>No tasks yet.</p>
-                  <p>
-                    Create your first task to start planning and tracking work.
-                  </p>
+                  <p>{emptyState}</p>
+                  <p>{emptyState2}</p>
                 </TableCell>
               </TableRow>
             )}

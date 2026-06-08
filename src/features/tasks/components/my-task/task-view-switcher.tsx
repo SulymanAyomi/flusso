@@ -213,6 +213,8 @@ export const TaskViewSwitcher = ({
                 columns={columns}
                 data={tasks?.documents ?? []}
                 hideproject={hideProjectFilter}
+                emptyState="No task assigned to you."
+                emptyState2="Create your first task to start planning and tracking work."
               />
             </TabsContent>
 

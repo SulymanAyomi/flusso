@@ -114,6 +114,8 @@ export const TaskViewSwitcher = ({
                 columns={columns}
                 data={tasks?.documents ?? []}
                 hideproject={hideProjectFilter}
+                emptyState="No task found in project."
+                emptyState2="Create your first task to start planning and tracking work."
               />
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">

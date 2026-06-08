@@ -23,12 +23,12 @@ export const useEditTask = () => {
             }
             return data
         },
-        // @ts-ignore
         onSuccess: ({ data, }) => {
             toast.success("Task updated successfully")
             queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["project-analytics"] })
             queryClient.invalidateQueries({ queryKey: ["tasks"] })
+            queryClient.invalidateQueries({ queryKey: ["my-task"] })
             queryClient.invalidateQueries({ queryKey: ["task", data] })
         },
         onError: ({ message }) => {

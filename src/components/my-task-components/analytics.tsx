@@ -165,7 +165,7 @@ export const MyTaskAnalytics = () => {
               ) : null}
               {analytics?.overdueAndUrgent.trend} since yesterday
             </div>
-            <Link
+            {/* <Link
               href={`workspaces/${workspaceId}/tasks`}
               className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
             >
@@ -173,7 +173,7 @@ export const MyTaskAnalytics = () => {
               <span>
                 <ChevronRightIcon className="size-3" />
               </span>
-            </Link>
+            </Link> */}
           </div>
         </CardFooter>
       </Card>
@@ -213,7 +213,7 @@ export const MyTaskAnalytics = () => {
               dependencies
             </div>
             <div>
-              <Link
+              {/* <Link
                 href={`workspaces/${workspaceId}/tasks`}
                 className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
               >
@@ -221,7 +221,7 @@ export const MyTaskAnalytics = () => {
                 <span>
                   <ChevronRightIcon className="size-3" />
                 </span>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </CardFooter>
@@ -255,7 +255,7 @@ export const MyTaskAnalytics = () => {
               {analytics?.completedThisWeek.trend}% from last week
             </div>
             <div>
-              <Link
+              {/* <Link
                 href={`workspaces/${workspaceId}/tasks`}
                 className="text-[10px] flex items-center hover:underline hover:cursor-pointer"
               >
@@ -263,7 +263,7 @@ export const MyTaskAnalytics = () => {
                 <span>
                   <ChevronRightIcon className="size-3" />
                 </span>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </CardFooter>
@@ -288,28 +288,40 @@ export const MyTaskAnalytics = () => {
           </div>
 
           <div className="w-full h-8 flex rounded-lg overflow-hidden">
-            <div
-              className="bg-red-500 flex items-center justify-center text-white text-xs font-semibold"
-              style={{
-                width: `${analytics?.priortyCard.distribution.high}%`,
-              }}
-            >
-              {`${analytics?.priortyCard.distribution.high}%`}
-            </div>
-            <div
-              className="bg-amber-400 flex items-center justify-center text-white text-xs font-semibold"
-              style={{
-                width: `${analytics?.priortyCard.distribution.medium}%`,
-              }}
-            >
-              {`${analytics?.priortyCard.distribution.medium}%`}
-            </div>
-            <div
-              className="bg-green-500 flex items-center justify-center text-white text-xs font-semibold"
-              style={{ width: `${analytics?.priortyCard.distribution.low}%` }}
-            >
-              {`${analytics?.priortyCard.distribution.low}%`}
-            </div>
+            {analytics?.priortyCard.distribution.high ? (
+              <div
+                className="bg-red-500 flex items-center justify-center text-white text-xs font-semibold"
+                style={{
+                  width: `${analytics?.priortyCard.distribution.high}%`,
+                }}
+              >
+                {`${analytics?.priortyCard.distribution.high}%`}
+              </div>
+            ) : (
+              <></>
+            )}
+            {analytics?.priortyCard.distribution.medium ? (
+              <div
+                className="bg-amber-400 flex items-center justify-center text-white text-xs font-semibold"
+                style={{
+                  width: `${analytics?.priortyCard.distribution.medium}%`,
+                }}
+              >
+                {`${analytics?.priortyCard.distribution.medium}%`}
+              </div>
+            ) : (
+              <></>
+            )}
+            {analytics?.priortyCard.distribution.low ? (
+              <div
+                className="bg-green-500 flex items-center justify-center text-white text-xs font-semibold"
+                style={{ width: `${analytics?.priortyCard.distribution.low}%` }}
+              >
+                {`${analytics?.priortyCard.distribution.low}%`}
+              </div>
+            ) : (
+              <></>
+            )}
           </div>
 
           {/* Legend */}

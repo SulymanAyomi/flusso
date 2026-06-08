@@ -6,6 +6,7 @@ import { Loader } from "lucide-react";
 import { CreateTaskForm } from "./create-task-form";
 import { useGetTasks } from "../../api/use-get-tasks";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { useGetProfile } from "@/features/auth/api/use-get-profile";
 
 interface CreateTaskFormWrapperProps {
   onCancel: () => void;
@@ -27,6 +28,7 @@ export const CreateTaskFormWrapper = ({
     workspaceId,
     projectId,
   });
+  const { data: profile, isPending } = useGetProfile();
 
   const projectOptions = projects?.map((project) => ({
     id: project.id,
@@ -41,10 +43,18 @@ export const CreateTaskFormWrapper = ({
     name: member.user.name!,
     img: member.user.imageUrl,
   }));
-  const taskOptions = tasks?.documents.map((task) => ({
-    id: task.id,
-    name: task.name,
-  }));
+  const taskOptions = projectId
+    ? tasks?.documents.map((task) => ({
+        id: task.id,
+        name: task.name,
+      }))
+    : undefined;
+
+  const cUser = members?.populateMembers?.find(
+    (m) =>
+      m.user.name == profile?.user.name && m.user.email == profile?.user.email,
+  );
+  const currentUser = memberOptions?.find((m) => m.id == cUser?.id)?.id;
 
   const isLoading = isLoadindMembers || isLoadingProject || isLoadindTask;
   if (isLoading) {
@@ -63,6 +73,7 @@ export const CreateTaskFormWrapper = ({
       projectOptions={projectOptions ?? []}
       memberOptions={memberOptions ?? []}
       taskOptions={taskOptions ?? []}
+      currentUser={currentUser}
     />
   );
 };
