@@ -6,14 +6,14 @@ import React from "react";
 
 const LogoutButton = () => {
   const [ConfirmDialog, confirm] = useConfirm(
-    "Sign out",
-    "You will be signed out of the app",
+    "Log out",
+    "You will be logged out of the app",
     "destructive",
   );
   const onLogout = async () => {
     const ok = await confirm();
     if (!ok) return;
-    await signOut({ callbackUrl: "/" });
+    await signOut({ callbackUrl: "/sign-in" });
   };
   return (
     <>
@@ -24,7 +24,7 @@ const LogoutButton = () => {
       >
         <div className="flex items-center gap-2">
           <LogOutIcon />
-          Logout
+          Log out
         </div>
         <ChevronRightIcon className="size-4" />
       </button>

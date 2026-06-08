@@ -50,6 +50,29 @@ const MemberAction = ({
   // const canRemove = isOwner
   //   ? !isTargetOwner
   //   : isAdmin && memberRole === MemberRole.MEMBER;
+  if (isOwner) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <Button
+            className="ml-auto border-none"
+            variant="secondary"
+            size="icon"
+          >
+            <MoreVerticalIcon className="size-4 text-muted-foreground " />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="bottom" align="end">
+          <DropdownMenuItem
+            onClick={() => openProfile(memberId)}
+            disabled={isDeletingMember}
+          >
+            View profile
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -75,7 +98,7 @@ const MemberAction = ({
           onClick={() => openProfile(memberId)}
           disabled={isDeletingMember}
         >
-          view profile
+          View profile
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => open(memberId)}

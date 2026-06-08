@@ -1,3 +1,4 @@
+import { PageLoader } from "@/components/page-loader";
 import { getCurrent } from "@/features/auth/query";
 import { getWorkspaces } from "@/features/workspaces/query";
 import { redirect } from "next/navigation";
@@ -11,5 +12,9 @@ export default async function Workspaces() {
   } else {
     redirect(`/workspaces/${workspace?.workspaces.id}`);
   }
-  return <div className="flex gap-5">Home Page</div>;
+  return (
+    <div className="flex gap-5">
+      <PageLoader />
+    </div>
+  );
 }
