@@ -35,6 +35,7 @@ interface ActivityInterface {
   } | null;
   metadata: any;
   id: string;
+  userName: string;
   createdAt: Date | string;
   workspaceId: string;
   memberId: string;
@@ -50,6 +51,7 @@ const renderActivityText = ({
   entityTitle,
   createdAt,
   metadata,
+  userName,
 }: TasksActivityType["activities"][0]) => {
   const Bold = ({ children }: { children: React.ReactNode }) => (
     <span className="font-semibold">{children}</span>
@@ -61,7 +63,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs ">
-            <Bold>{member?.user.name}</Bold> joined workspace
+            <Bold>{userName}</Bold> joined workspace
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -73,7 +75,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> left workspace
+            <Bold>{userName}</Bold> left workspace
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -86,7 +88,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> created project{" "}
+            <Bold>{userName}</Bold> created project{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -99,7 +101,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> change project{" "}
+            <Bold>{userName}</Bold> change project{" "}
             <Bold>{`${entityTitle}`}</Bold> status from
             {/* @ts-ignore */}
             {metadata?.previousValue} to {metadata?.newValue}
@@ -114,8 +116,8 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> mark project{" "}
-            <Bold>{`${entityTitle}`}</Bold> as completed
+            <Bold>{userName}</Bold> mark project <Bold>{`${entityTitle}`}</Bold>{" "}
+            as completed
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -127,7 +129,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> edited project{" "}
+            <Bold>{userName}</Bold> edited project{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -140,8 +142,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> created task{" "}
-            <Bold>{`${entityTitle}`}</Bold>
+            <Bold>{userName}</Bold> created task <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -153,8 +154,8 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> change task{" "}
-            <Bold>{`${entityTitle}`}</Bold> status from {/* @ts-ignore */}
+            <Bold>{userName}</Bold> change task <Bold>{`${entityTitle}`}</Bold>{" "}
+            status from {/* @ts-ignore */}
             {metadata?.previousValue} to {metadata.newValue}
           </div>
           <div className="text-[10px] flex flex-col">
@@ -167,7 +168,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> assigned task{" "}
+            <Bold>{userName}</Bold> assigned task{" "}
             <Bold>{`${entityTitle}`}</Bold> to
             {/* @ts-ignore */}
             {metadata.newAssignee}
@@ -182,8 +183,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> edit task{" "}
-            <Bold>{`${entityTitle}`}</Bold>
+            <Bold>{userName}</Bold> edit task <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -195,7 +195,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> added a new comment on task{" "}
+            <Bold>{userName}</Bold> added a new comment on task{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -208,7 +208,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> added a new subtask to task{" "}
+            <Bold>{userName}</Bold> added a new subtask to task{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -222,7 +222,7 @@ const renderActivityText = ({
       return (
         <>
           <div className="text-xs">
-            <Bold>{member?.user.name}</Bold> performed{" "}
+            <Bold>{userName}</Bold> performed{" "}
             <Bold>{snakeCaseToTitleCase(actionType)}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -252,7 +252,7 @@ const ActivitiesRow = ({ activities }: TasksActivityType) => {
           <div className="flex items-center justify-center">
             <MemberAvatar
               className="size-8 hover:opacity-75 transition border border-neutral-300"
-              name={activity.member?.user.name!}
+              name={activity.userName!}
               imageUrl={activity.member?.user.imageUrl}
               imgClassName="size-8"
             />

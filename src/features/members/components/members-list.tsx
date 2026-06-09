@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageError } from "@/components/page-error";
 import InviteCard from "./invite-card";
 import MemberAction from "./member-action";
+import OwnerAction from "./owner-action";
 
 export const MembersList = () => {
   const workspaceId = useWorkspaceId();
@@ -99,17 +100,7 @@ export const MembersList = () => {
                 </p>
               </div>
               <Badge variant="CRITICAL">Owner</Badge>
-              <MemberAction
-                userId={currentUser.id}
-                ownerId={owner?.id!}
-                userRole={currentUser.role!}
-                memberRole={owner?.role!}
-                memberId={owner?.id!}
-                handleDeleteMember={handleDeleteMember}
-                handleUpdateMember={handleUpdateMember}
-                isDeletingMember={isDeletingMember}
-                isUpdatingMember={isUpdatingMember}
-              />
+              <OwnerAction memberId={owner?.id!} />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">

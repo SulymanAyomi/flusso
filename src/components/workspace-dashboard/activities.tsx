@@ -55,6 +55,7 @@ const ActivityLoader = () => (
 
 type Activity = {
   id: string;
+  userName: string;
   createdAt: Date | string;
   actionType: string;
   entityType: string | null;
@@ -73,9 +74,9 @@ type Activity = {
 };
 
 const renderActivityText = (activity: Activity) => {
-  const { member, actionType, entityTitle, createdAt, metadata } = activity;
+  const { member, actionType, entityTitle, createdAt, metadata, userName } =
+    activity;
 
-  if (!member) return null;
   const Bold = ({ children }: { children: React.ReactNode }) => (
     <span className="font-semibold">{children}</span>
   );
@@ -86,7 +87,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs ">
-            <Bold>{member.user.name}</Bold> joined workspace
+            <Bold>{userName}</Bold> joined workspace
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -98,7 +99,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> left workspace
+            <Bold>{userName}</Bold> left workspace
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -111,7 +112,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> created project{" "}
+            <Bold>{userName}</Bold> created project{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -124,7 +125,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> change project{" "}
+            <Bold>{userName}</Bold> change project{" "}
             <Bold>{`${entityTitle}`}</Bold> status from {metadata.previousValue}{" "}
             to {metadata.newValue}
           </div>
@@ -138,8 +139,8 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> mark project{" "}
-            <Bold>{`${entityTitle}`}</Bold> as completed
+            <Bold>{userName}</Bold> mark project <Bold>{`${entityTitle}`}</Bold>{" "}
+            as completed
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -151,7 +152,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> edited project{" "}
+            <Bold>{userName}</Bold> edited project{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -164,8 +165,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> created task{" "}
-            <Bold>{`${entityTitle}`}</Bold>
+            <Bold>{userName}</Bold> created task <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -177,9 +177,8 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> change task{" "}
-            <Bold>{`${entityTitle}`}</Bold> status from {metadata.previousValue}{" "}
-            to {metadata.newValue}
+            <Bold>{userName}</Bold> change task <Bold>{`${entityTitle}`}</Bold>{" "}
+            status from {metadata.previousValue} to {metadata.newValue}
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -191,7 +190,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> assigned task{" "}
+            <Bold>{userName}</Bold> assigned task{" "}
             <Bold>{`${entityTitle}`}</Bold> to {metadata.newAssignee}
           </div>
           <div className="text-[10px] flex flex-col">
@@ -204,8 +203,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> edit task{" "}
-            <Bold>{`${entityTitle}`}</Bold>
+            <Bold>{userName}</Bold> edit task <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
             <p>{format(date, "PP")},</p>
@@ -217,7 +215,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> added a new comment on task{" "}
+            <Bold>{userName}</Bold> added a new comment on task{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -230,7 +228,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> added a new subtask to task{" "}
+            <Bold>{userName}</Bold> added a new subtask to task{" "}
             <Bold>{`${entityTitle}`}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">
@@ -244,7 +242,7 @@ const renderActivityText = (activity: Activity) => {
       return (
         <>
           <div className="text-xs">
-            <Bold>{member.user.name}</Bold> performed{" "}
+            <Bold>{userName}</Bold> performed{" "}
             <Bold>{snakeCaseToTitleCase(actionType)}</Bold>
           </div>
           <div className="text-[10px] flex flex-col">

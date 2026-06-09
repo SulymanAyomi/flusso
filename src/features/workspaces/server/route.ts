@@ -1337,6 +1337,7 @@ const app = new Hono()
                         entityTitle: true,
                         metadata: true,
                         createdAt: true,
+                        userName: true,
                         member: {
                             select: {
                                 id: true,
